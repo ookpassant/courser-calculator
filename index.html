@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeon Coursers Breeding Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Pirata+One&family=Silkscreen&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            background-color: #1d181d;
+            background-image: 
+                linear-gradient(rgba(29, 24, 29, 0.9), rgba(29, 24, 29, 0.95)),
+                url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect fill="%23302530" width="100" height="100"/><path d="M0 0L50 50L0 100M100 0L50 50L100 100" stroke="%23543954" stroke-width="0.5" fill="none"/></svg>');
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .site-header {
+            background-color: #302530;
+            background-image: 
+                linear-gradient(rgba(48, 37, 48, 0.9), rgba(48, 37, 48, 0.95)),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(84, 57, 84, 0.1) 2px, rgba(84, 57, 84, 0.1) 4px),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(84, 57, 84, 0.1) 2px, rgba(84, 57, 84, 0.1) 4px);
+            border-bottom: 2px solid #543954;
+            border-top: 2px solid #543954;
+            padding: 40px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .site-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            opacity: 0.5;
+        }
+
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            opacity: 0.5;
+        }
+
+        .site-header h1 {
+            color: #d4af37;
+            font-size: 3em;
+            text-shadow:
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(212, 175, 55, 0.3);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            font-weight: 400;
+            text-transform: none;
+            font-family: 'Pirata One', serif;
+        }
+
+        .site-header .subtitle {
+            color: #b8a89f;
+            font-size: 1.1em;
+            font-style: normal;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+            font-weight: 400;
+            font-family: 'Silkscreen', serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #2a232a;
+            border: 3px solid #543954;
+            box-shadow: 
+                0 0 30px rgba(84, 57, 84, 0.5), 
+                inset 0 0 50px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(212, 175, 55, 0.1);
+            padding: 40px;
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d4af37;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 400;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-family: 'Pirata One', serif;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #b8a89f;
+            margin-bottom: 30px;
+            font-size: 1em;
+            font-style: normal;
+            font-weight: 400;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        .parents-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .parent-card {
+            background: #3a2f3a;
+            padding: 25px;
+            border: 2px solid #543954;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .parent-card::before,
+        .parent-card::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d4af37;
+        }
+
+        .parent-card::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .parent-card::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .parent-card h2 {
+            color: #d4af37;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid #543954;
+            padding-bottom: 10px;
+            text-transform: none;
+            letter-spacing: 1px;
+            font-family: 'Pirata One', serif;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b8a89f;
+            font-weight: 700;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #543954;
+            background: #1d181d;
+            color: #d4af37;
+            font-size: 14px;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #543954 0%, #6b4f6b 100%);
+            color: #d4af37;
+            border: 2px solid #d4af37;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            letter-spacing: 1px;
+            font-family: 'Silkscreen', serif;
+        }
+
+        .generate-btn:hover {
+            background: linear-gradient(135deg, #6b4f6b 0%, #543954 100%);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: #3d1f1f;
+            color: #ff6b6b;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #8b3a3a;
+            display: none;
+            font-style: italic;
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .foal-card {
+            background: #3a2f3a;
+            padding: 25px;
+            border: 2px solid #543954;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .foal-card::before,
+        .foal-card::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 2px solid #543954;
+            opacity: 0.5;
+        }
+
+        .foal-card::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .foal-card::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .foal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(84, 57, 84, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .foal-card:hover::before,
+        .foal-card:hover::after {
+            border-color: #d4af37;
+            opacity: 1;
+        }
+
+        .foal-card h3 {
+            color: #d4af37;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #543954;
+            padding-bottom: 10px;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            text-transform: none;
+            letter-spacing: 1px;
+            font-family: 'Pirata One', serif;
+        }
+
+        .foal-detail {
+            margin-bottom: 12px;
+        }
+
+        .foal-detail strong {
+            display: block;
+            color: #b8a89f;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+
+        .foal-detail span {
+            display: block;
+            color: #d4af37;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #1d181d;
+            padding: 8px;
+            border: 1px solid #543954;
+            word-wrap: break-word;
+        }
+
+        .rarity-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            font-size: 0.8em;
+            font-weight: 400;
+            margin-top: 10px;
+            border: 2px solid;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Silkscreen', serif;
+        }
+
+        .legendary { 
+            background: rgba(255, 215, 0, 0.2); 
+            color: #ffd700; 
+            border-color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        .epic { 
+            background: rgba(163, 53, 238, 0.2); 
+            color: #c084fc; 
+            border-color: #a855f7;
+            text-shadow: 0 0 10px rgba(163, 53, 238, 0.5);
+        }
+        .rare { 
+            background: rgba(59, 130, 246, 0.2); 
+            color: #60a5fa; 
+            border-color: #3b82f6;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        .uncommon { 
+            background: rgba(34, 197, 94, 0.2); 
+            color: #4ade80; 
+            border-color: #22c55e;
+        }
+        .common { 
+            background: rgba(156, 163, 175, 0.2); 
+            color: #9ca3af; 
+            border-color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .parents-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+
+            .site-header h1 {
+                font-size: 2em;
+            }
+        }
+
+        .info-box {
+            background: #3a2f3a;
+            border: 2px solid #543954;
+            border-left: 4px solid #d4af37;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #b8a89f;
+            font-style: italic;
+        }
+
+        .info-box strong {
+            color: #d4af37;
+        }
+
+        .card {
+            background: #3a2f3a;
+            border: 2px solid #543954;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background: #302530;
+            border-bottom: 2px solid #543954;
+            padding: 15px 20px;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .search-result-item {
+            background: #2a232a;
+            border: 2px solid #543954;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .search-result-item h4 {
+            color: #d4af37;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .search-result-item p {
+            color: #b8a89f;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .search-result-item .geno {
+            font-family: 'Courier New', monospace;
+            background: #1d181d;
+            padding: 8px;
+            border: 1px solid #543954;
+            display: block;
+            margin: 8px 0;
+            color: #d4af37;
+            font-size: 0.85em;
+        }
+
+        .scroll-result-card {
+            background: #3a2f3a;
+            padding: 25px;
+            border: 2px solid #543954;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-result-card::before,
+        .scroll-result-card::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 2px solid #d4af37;
+            opacity: 0.7;
+        }
+
+        .scroll-result-card::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .scroll-result-card::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .scroll-result-card h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #543954;
+            padding-bottom: 10px;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.3);
+            text-transform: none;
+            letter-spacing: 1px;
+            text-align: center;
+            font-family: 'Pirata One', serif;
+        }
+
+        .scroll-result-card .result-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #2a232a;
+            border-left: 4px solid #d4af37;
+        }
+
+        .scroll-result-card .result-section h4 {
+            color: #b8a89f;
+            margin-bottom: 10px;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 400;
+            font-family: 'Silkscreen', serif;
+        }
+
+        .scroll-result-card .phenotype {
+            color: #d4af37;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            padding: 10px;
+            background: #1d181d;
+            border: 2px solid #543954;
+            text-align: center;
+        }
+
+        .scroll-result-card .geno {
+            font-family: 'Courier New', monospace;
+            background: #1d181d;
+            padding: 12px;
+            border: 2px solid #543954;
+            display: block;
+            color: #d4af37;
+            font-size: 0.9em;
+            word-wrap: break-word;
+        }
+
+        .scroll-result-card p {
+            color: #b8a89f;
+            margin: 8px 0;
+        }
+
+        .scroll-result-card p strong {
+            color: #d4af37;
+        }
+
+        /* Search Results Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 40px 20px;
+        }
+
+        .modal-overlay.active {
+            display: block;
+        }
+
+        .modal {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #2a232a;
+            border: 3px solid #543954;
+            box-shadow: 0 0 40px rgba(84, 57, 84, 0.6), inset 0 0 0 1px rgba(212, 175, 55, 0.1);
+            position: relative;
+        }
+
+        .modal-header {
+            background: #302530;
+            border-bottom: 2px solid #543954;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: #d4af37;
+            font-family: 'Pirata One', serif;
+            font-weight: 400;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: 2px solid #543954;
+            color: #b8a89f;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 4px 12px;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 25px;
+            border-top: 2px solid #543954;
+            background: #302530;
+        }
+
+        .modal-pagination button {
+            background: linear-gradient(135deg, #543954 0%, #6b4f6b 100%);
+            color: #d4af37;
+            border: 2px solid #543954;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Silkscreen', serif;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .modal-pagination button:hover:not(:disabled) {
+            border-color: #d4af37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .modal-pagination button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .modal-pagination .page-info {
+            color: #b8a89f;
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            font-size: 0.9em;
+        }
+
+        .modal .search-result-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal .search-result-item:hover {
+            border-color: #d4af37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .modal-overlay {
+                padding: 20px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="site-header">
+        <h1>Dungeon Coursers</h1>
+        <p class="subtitle">Breeding Calculator</p>
+        <p style="color: #b8a89f; font-size: 0.85em; margin-top: 12px; font-family: 'Atkinson Hyperlegible', sans-serif;">Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener" style="color: #c084fc; text-decoration: underline;">Ook</a> because she can't maths</p>
+    </div>
+
+    <div class="container">
+        <p class="subtitle">Generate foal possibilities from two parent horses</p>
+
+        <div class="info-box">
+            <p><strong>Note:</strong> Parents must have different Temperaments to breed!</p>
+            <p><strong>Tip:</strong> Paste the full genotype string (e.g., "Ee Aa nCr nT + Brindle")</p>
+        </div>
+
+        <div class="card mb-4" style="background: #3a2f3a; border: 2px solid #543954;">
+            <div class="card-header" style="background: #302530; border-bottom: 2px solid #543954;">
+                <h2 style="color: #d4af37; margin: 0; font-size: 1.5em; font-weight: 400; letter-spacing: 1px; font-family: 'Pirata One', serif;">My Horse Collection</h2>
+            </div>
+            <div class="card-body" style="padding: 25px;">
+                <div class="mb-3">
+                    <label for="csvUpload" style="color: #d4af37; font-weight: 600;">Upload Your Horses CSV:</label>
+                    <input type="file" id="csvUpload" accept=".csv" style="background: #1d181d; color: #b8a89f; border: 2px solid #543954; padding: 10px;">
+                    <p style="color: #b8a89f; font-size: 0.9em; margin-top: 8px; font-style: italic;">Upload a CSV with columns: ID, Name, Genotype, Temperament, Variant</p>
+                    <div style="background: #1d181d; border: 1px solid #543954; padding: 15px; margin-top: 12px;">
+                        <p style="color: #d4af37; font-weight: 600; margin-bottom: 8px;">Need a template?</p>
+                        <p style="color: #b8a89f; font-size: 0.9em; margin-bottom: 8px;">
+                            <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener" style="color: #c084fc; text-decoration: underline;">Google Sheets Template</a>
+                        </p>
+                        <ol style="color: #b8a89f; font-size: 0.85em; margin: 0; padding-left: 20px; line-height: 1.6;">
+                            <li>Open the template and go to <strong style="color: #d4af37;">File &gt; Make a copy</strong></li>
+                            <li>Fill in your horses &mdash; one per row. Copy genotypes directly from the Dungeon Coursers site (e.g. <code style="color: #c084fc;">Ee Aa nCr nT + Birdcatcher Spots</code>)</li>
+                            <li>When done, go to <strong style="color: #d4af37;">File &gt; Download &gt; Comma-separated values (.csv)</strong></li>
+                            <li>Upload the downloaded .csv file above!</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div id="collectionStatus" style="color: #b8a89f; margin-bottom: 15px; display: none;">
+                    <strong style="color: #d4af37;">Loaded:</strong> <span id="horseCount">0</span> horses
+                </div>
+
+                <div class="search-section">
+                    <label for="breedingQuery" style="color: #d4af37; font-weight: 600;">Ask a Breeding Question:</label>
+                    <input type="text" id="breedingQuery" placeholder='e.g., "How can I make Amber Champagne?" or "Who can breed for fewspot and starfield?"' style="background: #1d181d; color: #d4af37; border: 2px solid #543954; padding: 12px; margin-bottom: 15px; font-family: 'Atkinson Hyperlegible', sans-serif;">
+                    <button onclick="searchBreeding()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #6b4f6b 0%, #543954 100%); color: #d4af37; border: 2px solid #543954; font-weight: 400; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; font-family: 'Silkscreen', serif;">Search My Horses</button>
+                </div>
+
+                <div id="searchResults" style="margin-top: 20px; display: none;">
+                    <h3 style="color: #d4af37; font-size: 1.4em; margin-bottom: 15px; border-bottom: 2px solid #543954; padding-bottom: 10px; font-family: 'Pirata One', serif; font-weight: 400;">Search Results</h3>
+                    <div id="searchResultsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="parents-container">
+            <!-- Parent 1 -->
+            <div class="parent-card">
+                <h2>Parent 1</h2>
+                <label for="parent1Name">Name:</label>
+                <input type="text" id="parent1Name" placeholder="Horse name" style="font-family: 'Atkinson Hyperlegible', sans-serif;">
+
+                <label for="parent1Geno">Genotype:</label>
+                <textarea id="parent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+
+                <label for="parent1Temp">Temperament:</label>
+                <select id="parent1Temp">
+                    <option value="">Select Temperament</option>
+                    <option value="Choleric">Choleric</option>
+                    <option value="Melancholic">Melancholic</option>
+                    <option value="Phlegmatic">Phlegmatic</option>
+                    <option value="Sanguine">Sanguine</option>
+                </select>
+
+                <label for="parent1Variant">Variant (Optional):</label>
+                <select id="parent1Variant">
+                    <option value="">Standard</option>
+                    <option value="Heraldic">Heraldic</option>
+                    <option value="Puck">Puck</option>
+                    <option value="Cavedweller">Cavedweller</option>
+                    <option value="Restored">Restored</option>
+                </select>
+            </div>
+
+            <!-- Parent 2 -->
+            <div class="parent-card">
+                <h2>Parent 2</h2>
+                <label for="parent2Name">Name:</label>
+                <input type="text" id="parent2Name" placeholder="Horse name" style="font-family: 'Atkinson Hyperlegible', sans-serif;">
+
+                <label for="parent2Geno">Genotype:</label>
+                <textarea id="parent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
+
+                <label for="parent2Temp">Temperament:</label>
+                <select id="parent2Temp">
+                    <option value="">Select Temperament</option>
+                    <option value="Choleric">Choleric</option>
+                    <option value="Melancholic">Melancholic</option>
+                    <option value="Phlegmatic">Phlegmatic</option>
+                    <option value="Sanguine">Sanguine</option>
+                </select>
+
+                <label for="parent2Variant">Variant (Optional):</label>
+                <select id="parent2Variant">
+                    <option value="">Standard</option>
+                    <option value="Heraldic">Heraldic</option>
+                    <option value="Puck">Puck</option>
+                    <option value="Cavedweller">Cavedweller</option>
+                    <option value="Restored">Restored</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generateFoals()">Generate Foal Possibilities</button>
+
+        <div class="results-container" id="resultsContainer">
+            <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center; font-family: 'Pirata One', serif; font-weight: 400; font-size: 2em;">Possible Foals</h2>
+            <div class="results-grid" id="resultsGrid"></div>
+        </div>
+
+        <!-- Chimera Calculator Section -->
+        <div class="card" style="background: #3a2f3a; border: 2px solid #543954; margin-top: 40px;">
+            <div class="card-header" style="background: #302530; border-bottom: 2px solid #543954;">
+                <h2 style="color: #d4af37; margin: 0; font-size: 1.5em; font-weight: 400; letter-spacing: 1px; font-family: 'Pirata One', serif;">Chimera Possibility Calculator</h2>
+            </div>
+            <div class="card-body" style="padding: 25px;">
+                <div class="info-box">
+                    <p><strong>For existing foals with Chimera:</strong> Enter the foal's genotype and both parent genotypes to see what coat patterns could appear in the Chimera patch.</p>
+                    <p><strong>Rule:</strong> Chimera patches can display any traits genetically possible from both parents (excluding anomalies the parents don't carry).</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
+                    <textarea id="chimeraFoalGeno" placeholder="Ee Aa nCr + Chimera"></textarea>
+                </div>
+
+                <div class="parents-container">
+                    <div class="parent-card">
+                        <h2>Parent 1</h2>
+                        <label for="chimeraParent1Geno">Genotype:</label>
+                        <textarea id="chimeraParent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+                    </div>
+
+                    <div class="parent-card">
+                        <h2>Parent 2</h2>
+                        <label for="chimeraParent2Geno">Genotype:</label>
+                        <textarea id="chimeraParent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
+                    </div>
+                </div>
+
+                <button class="generate-btn" onclick="calculateChimera()">Calculate Chimera Possibilities</button>
+
+                <div class="results-container" id="chimeraResultsContainer" style="display: none;">
+                    <h3 style="color: #d4af37; margin-bottom: 15px; border-bottom: 2px solid #543954; padding-bottom: 10px; font-family: 'Pirata One', serif; font-weight: 400; font-size: 1.4em;">Chimera Coat Possibilities</h3>
+                    <div id="chimeraResultsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Scroll Generator Section -->
+        <div class="card" style="background: #3a2f3a; border: 2px solid #543954; margin-top: 40px;">
+            <div class="card-header" style="background: #302530; border-bottom: 2px solid #543954;">
+                <h2 style="color: #d4af37; margin: 0; font-size: 1.5em; font-weight: 400; letter-spacing: 1px; font-family: 'Pirata One', serif;">Custom Scroll Generator</h2>
+            </div>
+            <div class="card-body" style="padding: 25px;">
+                <div class="info-box">
+                    <p><strong>Don't know what to do with your custom scroll?</strong> Use this generator to create a random design based on your scroll rarity!</p>
+                    <p><strong>Scroll Rules:</strong> Each scroll includes a coat color of that rarity, 1 marking/modifier/carrier (at that rarity or lower), 10% chance of random anomaly, 5% chance of random variant, and your choice of temperament.</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label for="scrollRarity" style="display: block; margin-bottom: 10px; color: #d4af37; font-weight: 600; font-size: 1.1em;">Select Scroll Rarity:</label>
+                    <select id="scrollRarity" style="width: 100%; padding: 12px; background: #1d181d; color: #b8a89f; border: 2px solid #543954; font-size: 1em;">
+                        <option value="Common">Common</option>
+                        <option value="Uncommon">Uncommon</option>
+                        <option value="Rare">Rare</option>
+                        <option value="Epic">Epic</option>
+                        <option value="Legendary">Legendary</option>
+                    </select>
+                </div>
+
+                <button class="generate-btn" onclick="displayCustomScrollResult()">Generate Custom Scroll</button>
+
+                <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Modal -->
+    <div class="modal-overlay" id="searchModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Search Results</h2>
+                <button class="modal-close" onclick="closeSearchModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-pagination" id="modalPagination"></div>
+        </div>
+    </div>
+
+    <script src="breeding-calculator.js"></script>
+</body>
+</html>
