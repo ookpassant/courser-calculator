@@ -1001,59 +1001,59 @@ function displayFoals(foals) {
                                 chimeraPossibilities.anomalies.length;
 
             const locusInfo = chimeraPossibilities.locusInfo;
-            const mandatoryBadge = '<span style="background: #b91c1c; color: #fecaca; font-size: 0.7em; padding: 1px 5px; margin-left: 6px; font-weight: 600; letter-spacing: 0.03em;">MANDATORY</span>';
-            const optionalBadge = '<span style="background: #374151; color: #9ca3af; font-size: 0.7em; padding: 1px 5px; margin-left: 6px; font-weight: 600; letter-spacing: 0.03em;">OPTIONAL</span>';
+            const mandatoryBadge = '<span style="background: #a02b2b; color: #e0b4b4; font-size: 0.7em; padding: 1px 5px; margin-left: 6px; font-weight: 600; letter-spacing: 0.03em;">MANDATORY</span>';
+            const optionalBadge = '<span style="background: #ececee; color: #8a8f98; font-size: 0.7em; padding: 1px 5px; margin-left: 6px; font-weight: 600; letter-spacing: 0.03em;">OPTIONAL</span>';
 
             // Build marking locus breakdown — a family tree within a family tree, we need to go deeper
             let markingLocusHtml = '';
             if (locusInfo.markingLoci.length > 0) {
                 markingLocusHtml = locusInfo.markingLoci.map(locus => {
                     const badge = locus.mandatory ? mandatoryBadge : optionalBadge;
-                    return `<div style="margin-top: 4px; padding-left: 8px; border-left: 2px solid ${locus.mandatory ? '#b91c1c' : '#374151'};">
-                        <span style="color: #a78baf; font-size: 0.75em; font-weight: 600;">${locus.name}${badge}</span>
-                        <div style="color: #b8a89f; font-size: 0.8em;">${locus.traits.join(', ')}</div>
+                    return `<div style="margin-top: 4px; padding-left: 8px; border-left: 2px solid ${locus.mandatory ? '#a02b2b' : '#ececee'};">
+                        <span style="color: #7d6a86; font-size: 0.75em; font-weight: 600;">${locus.name}${badge}</span>
+                        <div style="color: #6f6877; font-size: 0.8em;">${locus.traits.join(', ')}</div>
                     </div>`;
                 }).join('');
             }
 
             chimeraSection = `
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #543954;">
-                    <strong style="color: #c084fc; display: block; margin-bottom: 10px;">🎨 Chimera Possibilities:</strong>
-                    <div style="background: #1d181d; padding: 12px; margin-bottom: 10px; border-left: 3px solid #a855f7;">
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #dcd8de;">
+                    <strong style="color: #8a4fc0; display: block; margin-bottom: 10px;">🎨 Chimera Possibilities:</strong>
+                    <div style="background: #f7f5f3; padding: 12px; margin-bottom: 10px; border-left: 3px solid #8a4fc0;">
                         ${chimeraPossibilities.baseCoats.length > 0 ? `
                             <div style="margin-bottom: 8px;">
-                                <strong style="color: #d4af37; font-size: 0.85em;">Base Coats (${chimeraPossibilities.baseCoats.length})${mandatoryBadge}</strong>
-                                <div style="color: #b8a89f; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.baseCoats.join(', ')}</div>
+                                <strong style="color: #5d4b60; font-size: 0.85em;">Base Coats (${chimeraPossibilities.baseCoats.length})${mandatoryBadge}</strong>
+                                <div style="color: #6f6877; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.baseCoats.join(', ')}</div>
                             </div>
                         ` : ''}
                         ${chimeraPossibilities.dilutions.length > 0 ? `
                             <div style="margin-bottom: 8px;">
-                                <strong style="color: #60a5fa; font-size: 0.85em;">Dilutions (${chimeraPossibilities.dilutions.length})${locusInfo.dilutionMandatory ? mandatoryBadge : optionalBadge}</strong>
-                                ${locusInfo.dilutionLociNotes.length > 0 ? `<div style="color: #9ca3af; font-size: 0.7em; margin-top: 2px; font-style: italic;">Guaranteed: ${locusInfo.dilutionLociNotes.join(', ')}</div>` : ''}
-                                <div style="color: #b8a89f; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.dilutions.join(', ')}</div>
+                                <strong style="color: #3f74b8; font-size: 0.85em;">Dilutions (${chimeraPossibilities.dilutions.length})${locusInfo.dilutionMandatory ? mandatoryBadge : optionalBadge}</strong>
+                                ${locusInfo.dilutionLociNotes.length > 0 ? `<div style="color: #8a8f98; font-size: 0.7em; margin-top: 2px; font-style: italic;">Guaranteed: ${locusInfo.dilutionLociNotes.join(', ')}</div>` : ''}
+                                <div style="color: #6f6877; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.dilutions.join(', ')}</div>
                             </div>
                         ` : ''}
                         ${chimeraPossibilities.whiteMarkings.length > 0 ? `
                             <div style="margin-bottom: 8px;">
-                                <strong style="color: #c084fc; font-size: 0.85em;">Markings (${chimeraPossibilities.whiteMarkings.length})</strong>
+                                <strong style="color: #8a4fc0; font-size: 0.85em;">Markings (${chimeraPossibilities.whiteMarkings.length})</strong>
                                 ${markingLocusHtml}
                             </div>
                         ` : ''}
                         ${chimeraPossibilities.modifiers.length > 0 ? `
                             <div style="margin-bottom: 8px;">
-                                <strong style="color: #4ade80; font-size: 0.85em;">Modifiers (${chimeraPossibilities.modifiers.length})${optionalBadge}</strong>
-                                <div style="color: #b8a89f; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.modifiers.join(', ')}</div>
+                                <strong style="color: #5f8a3f; font-size: 0.85em;">Modifiers (${chimeraPossibilities.modifiers.length})${optionalBadge}</strong>
+                                <div style="color: #6f6877; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.modifiers.join(', ')}</div>
                             </div>
                         ` : ''}
                         ${chimeraPossibilities.anomalies.length > 0 ? `
                             <div>
-                                <strong style="color: #fbbf24; font-size: 0.85em;">Anomalies (${chimeraPossibilities.anomalies.length})${optionalBadge}</strong>
-                                <div style="color: #b8a89f; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.anomalies.join(', ')}</div>
+                                <strong style="color: #c8902e; font-size: 0.85em;">Anomalies (${chimeraPossibilities.anomalies.length})${optionalBadge}</strong>
+                                <div style="color: #6f6877; font-size: 0.8em; margin-top: 4px;">${chimeraPossibilities.anomalies.join(', ')}</div>
                             </div>
                         ` : ''}
                     </div>
                     <button onclick='fillChimeraCalculator("${foal.genotype.replace(/'/g, "&#39;")}", "${parent1Geno.replace(/'/g, "&#39;")}", "${parent2Geno.replace(/'/g, "&#39;")}")'
-                            style="margin-top: 10px; padding: 8px 12px; background: linear-gradient(135deg, #6b4f6b 0%, #543954 100%); color: #c084fc; border: 2px solid #a855f7; cursor: pointer; font-weight: 600; width: 100%; font-size: 0.85em;">
+                            style="margin-top: 10px; padding: 8px 12px; background: var(--dc-mauve); color: #fff; border: 1px solid var(--dc-mauve); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-stamp); text-transform: uppercase; letter-spacing: var(--tracking-stamp); font-weight: 600; width: 100%; font-size: 0.85em;">
                         View Full Chimera Breakdown
                     </button>
                 </div>
@@ -1383,7 +1383,7 @@ function displayCustomScrollResult() {
                 <span class="rarity-badge ${rarityClass}">Rarity: ${rarityScore}</span>
             </div>
             <button onclick="displayCustomScrollResult()"
-                    style="margin-top: 15px; padding: 10px 20px; background: #543954; color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-weight: 600;">
+                    style="margin-top: 15px; padding: 10px 20px; background: #dcd8de; color: #5d4b60; border: 2px solid #5d4b60; cursor: pointer; font-weight: 600;">
                 Generate Another
             </button>
         </div>
@@ -1415,7 +1415,7 @@ function searchBreeding() {
     const targetTraits = extractTraitsFromQuery(query);
 
     if (targetTraits.length === 0) {
-        resultsContent.innerHTML = '<p style="color: #b8a89f;">Could not identify specific traits in your query. Try asking like: "How can I make Amber Champagne?" or "Who can breed for fewspot?"</p>';
+        resultsContent.innerHTML = '<p style="color: #6f6877;">Could not identify specific traits in your query. Try asking like: "How can I make Amber Champagne?" or "Who can breed for fewspot?"</p>';
         resultsDiv.style.display = 'block';
         return;
     }
@@ -1424,16 +1424,16 @@ function searchBreeding() {
     const matches = findBreedingMatches(targetTraits);
 
     if (matches.length === 0) {
-        resultsContent.innerHTML = `<p style="color: #b8a89f;">No breeding pairs found in your collection that can produce: <strong style="color: #d4af37;">${targetTraits.join(', ')}</strong></p>`;
+        resultsContent.innerHTML = `<p style="color: #6f6877;">No breeding pairs found in your collection that can produce: <strong style="color: #5d4b60;">${targetTraits.join(', ')}</strong></p>`;
     } else {
         // Stash these matches for the grand reveal in the modal
         lastSearchMatches = matches;
         lastSearchTraits = targetTraits;
 
         resultsContent.innerHTML = `
-            <p style="color: #b8a89f; margin-bottom: 15px;">Found <strong style="color: #d4af37;">${matches.length}</strong> possible breeding pair(s) for: <strong style="color: #d4af37;">${targetTraits.join(', ')}</strong></p>
+            <p style="color: #6f6877; margin-bottom: 15px;">Found <strong style="color: #5d4b60;">${matches.length}</strong> possible breeding pair(s) for: <strong style="color: #5d4b60;">${targetTraits.join(', ')}</strong></p>
             <button onclick="openSearchModal()"
-                    style="padding: 12px 24px; background: linear-gradient(135deg, #543954 0%, #6b4f6b 100%); color: #d4af37; border: 2px solid #d4af37; cursor: pointer; font-family: 'Silkscreen', serif; font-size: 0.9em; letter-spacing: 1px; transition: all 0.2s;">
+                    style="padding: 12px 24px; background: var(--dc-mauve); color: #fff; border: 1px solid var(--dc-mauve); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-stamp); text-transform: uppercase; letter-spacing: var(--tracking-stamp); font-size: 0.9em; letter-spacing: 1px; transition: all 0.2s;">
                 View All Results
             </button>
         `;
@@ -1481,12 +1481,12 @@ function renderModalPage() {
         item.innerHTML = `
             <h4>${match.parent1.name} &times; ${match.parent2.name}</h4>
             <p><strong>Parent 1:</strong> ${match.parent1.id} - ${match.parent1.temperament}</p>
-            <p style="color: #d4af37; font-size: 0.85em; margin: 4px 0;">${p1Pheno}</p>
+            <p style="color: #5d4b60; font-size: 0.85em; margin: 4px 0;">${p1Pheno}</p>
             <span class="geno">${match.parent1.genotype}</span>
             <p><strong>Parent 2:</strong> ${match.parent2.id} - ${match.parent2.temperament}</p>
-            <p style="color: #d4af37; font-size: 0.85em; margin: 4px 0;">${p2Pheno}</p>
+            <p style="color: #5d4b60; font-size: 0.85em; margin: 4px 0;">${p2Pheno}</p>
             <span class="geno">${match.parent2.genotype}</span>
-            <p style="margin-top: 10px;"><strong style="color: #d4af37;">Match Score:</strong> ${match.score} | <strong style="color: #d4af37;">Probability:</strong> ${match.probability}</p>
+            <p style="margin-top: 10px;"><strong style="color: #5d4b60;">Match Score:</strong> ${match.score} | <strong style="color: #5d4b60;">Probability:</strong> ${match.probability}</p>
         `;
         item.addEventListener('click', function() {
             fillParents(match.parent1, match.parent2);
@@ -2621,34 +2621,34 @@ function displayChimeraPossibilities(foalGenotype, possibilities) {
     const foalPhenotype = genotypeToPhenotype(foalGenotype);
 
     const mainCoatDiv = document.createElement('div');
-    mainCoatDiv.style.cssText = 'background: #2a232a; border: 2px solid #d4af37; padding: 20px; margin-bottom: 20px;';
+    mainCoatDiv.style.cssText = 'background: #ffffff; border: 2px solid #5d4b60; padding: 20px; margin-bottom: 20px;';
     mainCoatDiv.innerHTML = `
-        <h4 style="color: #d4af37; margin-bottom: 10px; font-size: 1.1em;">Main Coat (Non-Chimera Areas)</h4>
+        <h4 style="color: #5d4b60; margin-bottom: 10px; font-size: 1.1em;">Main Coat (Non-Chimera Areas)</h4>
         <div style="margin-bottom: 10px;">
-            <strong style="color: #b8a89f;">Phenotype:</strong>
-            <span style="color: #d4af37; display: block; margin-top: 5px;">${foalPhenotype}</span>
+            <strong style="color: #6f6877;">Phenotype:</strong>
+            <span style="color: #5d4b60; display: block; margin-top: 5px;">${foalPhenotype}</span>
         </div>
         <div>
-            <strong style="color: #b8a89f;">Genotype:</strong>
-            <span style="color: #d4af37; font-family: 'Courier New', monospace; display: block; margin-top: 5px; background: #1d181d; padding: 8px; border: 1px solid #543954;">${foalGenotype}</span>
+            <strong style="color: #6f6877;">Genotype:</strong>
+            <span style="color: #5d4b60; font-family: 'Courier New', monospace; display: block; margin-top: 5px; background: #f7f5f3; padding: 8px; border: 1px solid #dcd8de;">${foalGenotype}</span>
         </div>
     `;
     resultsContent.appendChild(mainCoatDiv);
 
     // Dramatic header for the chimera possibilities section
     const chimeraHeader = document.createElement('h4');
-    chimeraHeader.style.cssText = 'color: #d4af37; margin-bottom: 15px; font-size: 1.1em;';
+    chimeraHeader.style.cssText = 'color: #5d4b60; margin-bottom: 15px; font-size: 1.1em;';
     chimeraHeader.textContent = 'Chimera Patch Possibilities';
     resultsContent.appendChild(chimeraHeader);
 
     const infoBox = document.createElement('div');
-    infoBox.style.cssText = 'background: #3a2f3a; border-left: 4px solid #a855f7; padding: 15px; margin-bottom: 20px; color: #b8a89f; font-style: italic;';
+    infoBox.style.cssText = 'background: #ffffff; border-left: 4px solid #8a4fc0; padding: 15px; margin-bottom: 20px; color: #6f6877; font-style: italic;';
     infoBox.textContent = 'The Chimera patch can display any combination of the traits listed below from both parents.';
     resultsContent.appendChild(infoBox);
 
     // Badge helpers — little labels that scream MANDATORY or whisper optional
-    const mandatoryBadgeHtml = '<span style="background: #b91c1c; color: #fecaca; font-size: 0.75em; padding: 2px 6px; margin-left: 8px; font-weight: 600; letter-spacing: 0.03em;">MANDATORY</span>';
-    const optionalBadgeHtml = '<span style="background: #374151; color: #9ca3af; font-size: 0.75em; padding: 2px 6px; margin-left: 8px; font-weight: 600; letter-spacing: 0.03em;">OPTIONAL</span>';
+    const mandatoryBadgeHtml = '<span style="background: #a02b2b; color: #e0b4b4; font-size: 0.75em; padding: 2px 6px; margin-left: 8px; font-weight: 600; letter-spacing: 0.03em;">MANDATORY</span>';
+    const optionalBadgeHtml = '<span style="background: #ececee; color: #8a8f98; font-size: 0.75em; padding: 2px 6px; margin-left: 8px; font-weight: 600; letter-spacing: 0.03em;">OPTIONAL</span>';
 
     const locusInfo = possibilities.locusInfo;
 
@@ -2659,16 +2659,16 @@ function displayChimeraPossibilities(foalGenotype, possibilities) {
     // Coats — the full menu of possible chimera patch colors, all properly named
     if (possibilities.fullCoatNames.length > 0) {
         const coatCard = document.createElement('div');
-        coatCard.style.cssText = 'background: #3a2f3a; padding: 20px; border: 2px solid #543954; border-left: 4px solid #d4af37;';
+        coatCard.style.cssText = 'background: #ffffff; padding: 20px; border: 2px solid #dcd8de; border-left: 4px solid #5d4b60;';
         const pickNote = possibilities.fullCoatNames.length > 1
-            ? '<div style="color: #9ca3af; font-size: 0.8em; margin-bottom: 10px; font-style: italic;">The chimera patch will display exactly 1 of these coats.</div>'
+            ? '<div style="color: #8a8f98; font-size: 0.8em; margin-bottom: 10px; font-style: italic;">The chimera patch will display exactly 1 of these coats.</div>'
             : '';
         coatCard.innerHTML = `
-            <h5 style="color: #d4af37; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Coats (${possibilities.fullCoatNames.length})${mandatoryBadgeHtml}</h5>
+            <h5 style="color: #5d4b60; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Coats (${possibilities.fullCoatNames.length})${mandatoryBadgeHtml}</h5>
             ${pickNote}
             <ul style="list-style: none; padding: 0; margin: 0;">
                 ${possibilities.fullCoatNames.map(coat => `
-                    <li style="padding: 8px; margin-bottom: 6px; background: #1d181d; border-left: 3px solid #d4af37; color: #d4af37;">
+                    <li style="padding: 8px; margin-bottom: 6px; background: #f7f5f3; border-left: 3px solid #5d4b60; color: #5d4b60;">
                         ${coat}
                     </li>
                 `).join('')}
@@ -2680,29 +2680,29 @@ function displayChimeraPossibilities(foalGenotype, possibilities) {
     // White Markings — grouped by locus because genetics is all about who lives where
     if (possibilities.whiteMarkings.length > 0) {
         const markingsCard = document.createElement('div');
-        markingsCard.style.cssText = 'background: #3a2f3a; padding: 20px; border: 2px solid #543954; border-left: 4px solid #c084fc;';
+        markingsCard.style.cssText = 'background: #ffffff; padding: 20px; border: 2px solid #dcd8de; border-left: 4px solid #8a4fc0;';
 
-        let markingsHtml = `<h5 style="color: #c084fc; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Markings (${possibilities.whiteMarkings.length})</h5>`;
+        let markingsHtml = `<h5 style="color: #8a4fc0; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Markings (${possibilities.whiteMarkings.length})</h5>`;
 
         if (locusInfo.markingLoci.length > 0) {
             markingsHtml += locusInfo.markingLoci.map(locus => {
                 const badge = locus.mandatory ? mandatoryBadgeHtml : optionalBadgeHtml;
-                const borderColor = locus.mandatory ? '#b91c1c' : '#c084fc';
+                const borderColor = locus.mandatory ? '#a02b2b' : '#8a4fc0';
                 let pickNote = '';
                 let locusWarning = '';
                 if (locus.combos) {
                     // Shared locus: show valid combinations computed from parent genotypes
-                    pickNote = '<span style="color: #9ca3af; font-size: 0.8em; font-style: italic; margin-left: 6px;">(choose one combination)</span>';
+                    pickNote = '<span style="color: #8a8f98; font-size: 0.8em; font-style: italic; margin-left: 6px;">(choose one combination)</span>';
                     if (locus.name === 'KIT' && locus.combos.some(c => c.includes('Dominant White'))) {
-                        locusWarning = '<div style="color: #ff6b6b; font-size: 0.8em; margin-top: 4px; margin-bottom: 4px;">WW (double Dominant White) is lethal.</div>';
+                        locusWarning = '<div style="color: #b23a3a; font-size: 0.8em; margin-top: 4px; margin-bottom: 4px;">WW (double Dominant White) is lethal.</div>';
                     }
                 } else if (locus.traits.length > 1) {
                     if (locus.name === 'Leopard Complex') {
-                        pickNote = '<span style="color: #9ca3af; font-size: 0.8em; font-style: italic; margin-left: 6px;">(pick 1)</span>';
+                        pickNote = '<span style="color: #8a8f98; font-size: 0.8em; font-style: italic; margin-left: 6px;">(pick 1)</span>';
                     } else if (locus.traits.length > 2) {
-                        pickNote = '<span style="color: #9ca3af; font-size: 0.8em; font-style: italic; margin-left: 6px;">(pick up to 2)</span>';
+                        pickNote = '<span style="color: #8a8f98; font-size: 0.8em; font-style: italic; margin-left: 6px;">(pick up to 2)</span>';
                     } else {
-                        pickNote = '<span style="color: #9ca3af; font-size: 0.8em; font-style: italic; margin-left: 6px;">(pick 1 or 2)</span>';
+                        pickNote = '<span style="color: #8a8f98; font-size: 0.8em; font-style: italic; margin-left: 6px;">(pick 1 or 2)</span>';
                     }
                 }
 
@@ -2710,25 +2710,25 @@ function displayChimeraPossibilities(foalGenotype, possibilities) {
                 const hasOveroLocus = locusInfo.markingLoci.some(l => l.name === 'Overo');
                 const hasOssuaryLocus = locusInfo.markingLoci.some(l => l.name === 'Ossuary');
                 if (locus.name === 'Overo') {
-                    locusWarning += '<div style="color: #ff6b6b; font-size: 0.8em; margin-top: 4px; margin-bottom: 4px;">OO (homozygous Overo) is lethal.</div>';
+                    locusWarning += '<div style="color: #b23a3a; font-size: 0.8em; margin-top: 4px; margin-bottom: 4px;">OO (homozygous Overo) is lethal.</div>';
                     if (hasOssuaryLocus) {
-                        locusWarning += '<div style="color: #ff6b6b; font-size: 0.8em; margin-bottom: 4px;">Overo + Ossuary (nO nOs) is also lethal.</div>';
+                        locusWarning += '<div style="color: #b23a3a; font-size: 0.8em; margin-bottom: 4px;">Overo + Ossuary (nO nOs) is also lethal.</div>';
                     }
                 }
                 if (locus.name === 'Ossuary') {
-                    locusWarning += '<div style="color: #ff6b6b; font-size: 0.8em; margin-top: 4px; margin-bottom: 4px;">OsOs (homozygous Ossuary) is lethal.</div>';
+                    locusWarning += '<div style="color: #b23a3a; font-size: 0.8em; margin-top: 4px; margin-bottom: 4px;">OsOs (homozygous Ossuary) is lethal.</div>';
                     if (hasOveroLocus) {
-                        locusWarning += '<div style="color: #ff6b6b; font-size: 0.8em; margin-bottom: 4px;">Overo + Ossuary (nO nOs) is also lethal.</div>';
+                        locusWarning += '<div style="color: #b23a3a; font-size: 0.8em; margin-bottom: 4px;">Overo + Ossuary (nO nOs) is also lethal.</div>';
                     }
                 }
                 const displayItems = locus.combos || locus.traits;
                 return `
                     <div style="margin-bottom: 12px;">
-                        <div style="color: #a78baf; font-size: 0.85em; font-weight: 600; margin-bottom: 6px;">${locus.name}${badge}${pickNote}</div>
+                        <div style="color: #7d6a86; font-size: 0.85em; font-weight: 600; margin-bottom: 6px;">${locus.name}${badge}${pickNote}</div>
                         ${locusWarning}
                         <ul style="list-style: none; padding: 0; margin: 0;">
                             ${displayItems.map(item => `
-                                <li style="padding: 8px; margin-bottom: 4px; background: #1d181d; border-left: 3px solid ${borderColor}; color: #d4af37;">
+                                <li style="padding: 8px; margin-bottom: 4px; background: #f7f5f3; border-left: 3px solid ${borderColor}; color: #5d4b60;">
                                     ${item}
                                 </li>
                             `).join('')}
@@ -2745,12 +2745,12 @@ function displayChimeraPossibilities(foalGenotype, possibilities) {
     // Modifiers — the seasoning on the chimera's alternate-reality coat
     if (possibilities.modifiers.length > 0) {
         const modifiersCard = document.createElement('div');
-        modifiersCard.style.cssText = 'background: #3a2f3a; padding: 20px; border: 2px solid #543954; border-left: 4px solid #4ade80;';
+        modifiersCard.style.cssText = 'background: #ffffff; padding: 20px; border: 2px solid #dcd8de; border-left: 4px solid #5f8a3f;';
         modifiersCard.innerHTML = `
-            <h5 style="color: #4ade80; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Modifiers (${possibilities.modifiers.length})${optionalBadgeHtml}</h5>
+            <h5 style="color: #5f8a3f; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Modifiers (${possibilities.modifiers.length})${optionalBadgeHtml}</h5>
             <ul style="list-style: none; padding: 0; margin: 0;">
                 ${possibilities.modifiers.map(modifier => `
-                    <li style="padding: 8px; margin-bottom: 6px; background: #1d181d; border-left: 3px solid #4ade80; color: #d4af37;">
+                    <li style="padding: 8px; margin-bottom: 6px; background: #f7f5f3; border-left: 3px solid #5f8a3f; color: #5d4b60;">
                         ${modifier}
                     </li>
                 `).join('')}
@@ -2762,12 +2762,12 @@ function displayChimeraPossibilities(foalGenotype, possibilities) {
     // Anomalies — the weird bonus features the chimera patch might inherit
     if (possibilities.anomalies.length > 0) {
         const anomaliesCard = document.createElement('div');
-        anomaliesCard.style.cssText = 'background: #3a2f3a; padding: 20px; border: 2px solid #543954; border-left: 4px solid #fbbf24;';
+        anomaliesCard.style.cssText = 'background: #ffffff; padding: 20px; border: 2px solid #dcd8de; border-left: 4px solid #c8902e;';
         anomaliesCard.innerHTML = `
-            <h5 style="color: #fbbf24; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Anomalies (${possibilities.anomalies.length})${optionalBadgeHtml}</h5>
+            <h5 style="color: #c8902e; margin-bottom: 15px; font-size: 1em; font-weight: 600;">Anomalies (${possibilities.anomalies.length})${optionalBadgeHtml}</h5>
             <ul style="list-style: none; padding: 0; margin: 0;">
                 ${possibilities.anomalies.map(anomaly => `
-                    <li style="padding: 8px; margin-bottom: 6px; background: #1d181d; border-left: 3px solid #fbbf24; color: #d4af37;">
+                    <li style="padding: 8px; margin-bottom: 6px; background: #f7f5f3; border-left: 3px solid #c8902e; color: #5d4b60;">
                         ${anomaly}
                     </li>
                 `).join('')}
@@ -2883,15 +2883,15 @@ function rollChimeraPatch() {
 
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `
-        <div style="background: #2a232a; border: 2px solid #a855f7; padding: 20px; text-align: left; box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);">
-            <h4 style="color: #a855f7; margin-bottom: 15px; font-size: 1.1em; text-align: center; font-family: 'Pirata One', serif; font-weight: 400;">Rolled Chimera Patch</h4>
+        <div style="background: #ffffff; border: 2px solid #8a4fc0; padding: 20px; text-align: left; box-shadow: 0 0 20px rgba(138, 79, 192, 0.3);">
+            <h4 style="color: #8a4fc0; margin-bottom: 15px; font-size: 1.1em; text-align: center; font-family: 'Pirata One', serif; font-weight: 400;">Rolled Chimera Patch</h4>
             <div style="margin-bottom: 10px;">
-                <strong style="color: #b8a89f; font-size: 0.9em;">Coat:</strong>
-                <span style="color: #d4af37; display: block; margin-top: 5px; background: #1d181d; padding: 10px; border: 1px solid #543954; font-size: 1.1em;">${coat}</span>
+                <strong style="color: #6f6877; font-size: 0.9em;">Coat:</strong>
+                <span style="color: #5d4b60; display: block; margin-top: 5px; background: #f7f5f3; padding: 10px; border: 1px solid #dcd8de; font-size: 1.1em;">${coat}</span>
             </div>
             <div>
-                <strong style="color: #b8a89f; font-size: 0.9em;">Traits:</strong>
-                <span style="color: #d4af37; display: block; margin-top: 5px; background: #1d181d; padding: 10px; border: 1px solid #543954;">${extras}</span>
+                <strong style="color: #6f6877; font-size: 0.9em;">Traits:</strong>
+                <span style="color: #5d4b60; display: block; margin-top: 5px; background: #f7f5f3; padding: 10px; border: 1px solid #dcd8de;">${extras}</span>
             </div>
         </div>
     `;
