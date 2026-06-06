@@ -3,953 +3,643 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dungeon Coursers Breeding Calculator</title>
+    <title>Bloodline — Dungeon Coursers Breeding Calculator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Pirata+One&family=Silkscreen&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Pirata+One&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ============================================================
+           Dungeon Coursers design tokens — the Lorekeeper universe:
+           dusty mauve chrome, crimson blackletter wordmark, moss accents,
+           a charcoal hero, a mossy dungeon-stone backdrop, and clean white
+           content panels. (Ported from the Bloodline design system.)
+           ============================================================ */
+        :root {
+            /* Mauve — site chrome */
+            --dc-mauve: #5d4b60;  --dc-mauve-deep: #463848;  --dc-mauve-soft: #7d6a86;
+            --dc-mauve-pale: #d8cdda; --dc-mauve-wash: #efe9f0;
+            /* Crimson — brand wordmark / trait-slip frame */
+            --dc-crimson: #cf3a3a; --dc-crimson-deep: #a02b2b;
+            /* Moss — "go" accents */
+            --dc-moss: #8faa5e; --dc-moss-deep: #687f3f;
+            /* Charcoal — hero band */
+            --dc-charcoal: #221e24; --dc-charcoal-lit: #2c2730;
+            /* Dungeon stone — page backdrop */
+            --dc-stone: #3f4838; --dc-stone-dark: #2f3a2c; --dc-stone-mauve: #463a4a;
+            /* Neutrals — the white content world */
+            --dc-white: #ffffff; --dc-bone: #f7f5f3; --dc-cloud: #ececee;
+            --dc-line: #dcd8de; --dc-ink: #2d2833; --dc-slate: #6f6877;
+            /* Links */
+            --dc-link: #7a5c8c; --dc-link-hover: #5d4b60;
+            /* Danger / lethal white */
+            --dc-blood: #b23a3a; --dc-blood-bg: #f7e6e6; --dc-blood-edge: #e0b4b4;
+            /* Rarity tiers */
+            --dc-common: #8a8f98;     --dc-common-edge: #b9bcc2;
+            --dc-uncommon: #5f8a3f;   --dc-uncommon-edge: #a9c489;
+            --dc-rare: #3f74b8;       --dc-rare-edge: #9fbce0;
+            --dc-epic: #8a4fc0;       --dc-epic-edge: #c4a3e0;
+            --dc-legendary: #c8902e;  --dc-legendary-edge: #e6c98a;
+            /* Temperaments (four humors) */
+            --dc-choleric: #d98a2b; --dc-melancholic: #6b5f7e;
+            --dc-phlegmatic: #3f8aa0; --dc-sanguine: #c0506a;
+
+            /* Type */
+            --font-display: 'Pirata One', 'UnifrakturCook', serif;
+            --font-stamp: 'Silkscreen', 'Courier New', monospace;
+            --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+            --font-mono: 'Courier New', ui-monospace, monospace;
+            --tracking-stamp: 0.14em;
+
+            /* Spacing & shape */
+            --container-max: 1140px; --sidebar-width: 240px;
+            --radius-sm: 3px; --radius: 5px; --radius-lg: 8px;
+            --navbar-height: 56px;
+
+            /* Effects */
+            --shadow-card: 0 1px 3px rgba(34,30,36,0.12), 0 1px 2px rgba(34,30,36,0.08);
+            --shadow-panel: 0 6px 24px rgba(20,16,22,0.35);
+            --shadow-raise: 0 4px 12px rgba(34,30,36,0.18);
+            --shadow-nav: 0 2px 6px rgba(20,16,22,0.3);
+            --ring-focus: 0 0 0 3px rgba(93,75,96,0.28);
+            --ease-default: 0.18s ease; --ease-snappy: 0.12s ease;
+            --texture-stone: url('data:image/svg+xml,<svg width="32" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="16" fill="%232f3a2c"/><rect x="1" y="1" width="14" height="6" fill="%23404a39"/><rect x="17" y="1" width="14" height="6" fill="%233a4534"/><rect x="9" y="9" width="14" height="6" fill="%233d4737"/><rect x="1" y="9" width="6" height="6" fill="%23455040"/><rect x="25" y="9" width="6" height="6" fill="%23394433"/><rect x="3" y="2" width="2" height="2" fill="%234e5a46"/><rect x="20" y="3" width="2" height="2" fill="%23463a4a"/><rect x="12" y="10" width="2" height="2" fill="%234e5a46"/></svg>');
+            --texture-grain: url('data:image/svg+xml,<svg width="6" height="6" xmlns="http://www.w3.org/2000/svg"><rect width="6" height="6" fill="%23221e24"/><rect x="1" y="2" width="1" height="1" fill="%232c2730"/><rect x="4" y="0" width="1" height="1" fill="%231d1a20"/><rect x="3" y="4" width="1" height="1" fill="%232a2530"/></svg>');
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Atkinson Hyperlegible', sans-serif;
-            background-color: #1d181d;
-            background-image: 
-                linear-gradient(rgba(29, 24, 29, 0.9), rgba(29, 24, 29, 0.95)),
-                url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect fill="%23302530" width="100" height="100"/><path d="M0 0L50 50L0 100M100 0L50 50L100 100" stroke="%23543954" stroke-width="0.5" fill="none"/></svg>');
+            font-family: var(--font-body);
+            background-color: var(--dc-stone-dark);
+            background-image: var(--texture-stone);
+            color: var(--dc-ink);
             min-height: 100vh;
-            padding: 20px;
         }
 
-        .site-header {
-            background-color: #302530;
-            background-image: 
-                linear-gradient(rgba(48, 37, 48, 0.9), rgba(48, 37, 48, 0.95)),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(84, 57, 84, 0.1) 2px, rgba(84, 57, 84, 0.1) 4px),
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(84, 57, 84, 0.1) 2px, rgba(84, 57, 84, 0.1) 4px);
-            border-bottom: 2px solid #543954;
-            border-top: 2px solid #543954;
-            padding: 40px 30px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
+        /* ---- Navbar: dusty mauve strip, pixel uppercase nav ---- */
+        .dc-navbar {
+            display: flex; align-items: center; gap: 24px;
+            min-height: var(--navbar-height);
+            background: var(--dc-mauve);
+            padding: 0 24px;
+            box-shadow: var(--shadow-nav);
+        }
+        .dc-navbar .brand {
+            font-family: var(--font-display); color: var(--dc-white);
+            font-size: 1.5rem; text-decoration: none; letter-spacing: 0.02em;
+        }
+        .dc-navbar .nav-links { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .dc-navbar .nav-links a {
+            font-family: var(--font-stamp); font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: var(--tracking-stamp);
+            color: var(--dc-white); text-decoration: none; opacity: 0.78;
+            border-bottom: 2px solid transparent; padding-bottom: 2px;
+            transition: opacity var(--ease-default);
+        }
+        .dc-navbar .nav-links a:hover { opacity: 1; }
+        .dc-navbar .nav-links a.active { opacity: 1; border-bottom-color: var(--dc-white); }
+        .dc-navbar .nav-user {
+            margin-left: auto; font-family: var(--font-stamp); color: var(--dc-white);
+            font-size: 0.8rem; letter-spacing: var(--tracking-stamp);
         }
 
-        .site-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #d4af37, transparent);
-            opacity: 0.5;
+        /* ---- Hero: charcoal grain band, crimson wordmark, moss tagline ---- */
+        .dc-hero {
+            position: relative; overflow: hidden;
+            background-color: var(--dc-charcoal);
+            background-image: var(--texture-grain);
+            padding: 38px 40px 56px;
+            min-height: 150px;
+        }
+        .dc-hero h1 {
+            font-family: var(--font-display); font-weight: 400;
+            color: var(--dc-crimson); font-size: 3.5rem; line-height: 1;
+            letter-spacing: 0.01em; text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+        }
+        .dc-hero .tagline {
+            margin-top: 6px; font-family: var(--font-stamp); color: var(--dc-moss);
+            font-size: 0.85rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp);
         }
 
-        .site-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #d4af37, transparent);
-            opacity: 0.5;
+        /* ---- Content + floating white panel ---- */
+        .content { max-width: var(--container-max); margin: 0 auto; padding: 0 20px 48px; }
+        .panel {
+            background: var(--dc-white); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-panel); padding: 32px;
+            margin-top: -28px; position: relative;
         }
 
-        .site-header h1 {
-            color: #d4af37;
-            font-size: 3em;
-            text-shadow:
-                2px 2px 4px rgba(0, 0, 0, 0.8),
-                0 0 20px rgba(212, 175, 55, 0.3);
-            letter-spacing: 4px;
-            margin-bottom: 10px;
-            font-weight: 400;
-            text-transform: none;
-            font-family: 'Pirata One', serif;
+        /* ---- Breadcrumb ---- */
+        .breadcrumb {
+            font-family: var(--font-stamp); font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp); color: var(--dc-slate);
+            margin-bottom: 24px;
         }
+        .breadcrumb a { color: var(--dc-moss-deep); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 8px; color: var(--dc-line); }
 
-        .site-header .subtitle {
-            color: #b8a89f;
-            font-size: 1.1em;
-            font-style: normal;
-            letter-spacing: 2px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
-            font-weight: 400;
-            font-family: 'Silkscreen', serif;
+        /* ---- Two-column layout: sidebar + main ---- */
+        .cols { display: flex; gap: 24px; align-items: flex-start; }
+        .sidebar { width: var(--sidebar-width); flex: none; }
+        .sidebar .side-title {
+            font-family: var(--font-display); color: var(--dc-ink);
+            font-size: 1.6rem; font-weight: 400; margin-bottom: 4px;
         }
+        .sidebar .side-heading {
+            font-family: var(--font-stamp); font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp); color: var(--dc-slate);
+            margin: 16px 0 8px;
+        }
+        .main { flex: 1; min-width: 0; }
+        .page-title {
+            font-family: var(--font-display); font-weight: 400; color: var(--dc-ink);
+            font-size: 2.25rem; margin-bottom: 6px;
+        }
+        .blurb { color: var(--dc-slate); font-size: 0.9rem; margin-bottom: 24px; }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #2a232a;
-            border: 3px solid #543954;
-            box-shadow: 
-                0 0 30px rgba(84, 57, 84, 0.5), 
-                inset 0 0 50px rgba(0, 0, 0, 0.3),
-                inset 0 0 0 1px rgba(212, 175, 55, 0.1);
-            padding: 40px;
-            position: relative;
+        /* ---- Tabs (rendered as a sidebar nav; switchTab toggles by class) ---- */
+        .tab-bar { display: flex; flex-direction: column; gap: 4px; }
+        .tab-btn {
+            display: block; width: 100%; text-align: left;
+            padding: 10px 12px; background: transparent; color: var(--dc-ink);
+            border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer;
+            font-family: var(--font-stamp); font-size: 0.8rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp); transition: background var(--ease-default);
         }
+        .tab-btn:hover { background: var(--dc-mauve-wash); }
+        .tab-btn.active { background: var(--dc-mauve); color: var(--dc-white); }
 
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
-            pointer-events: none;
-            opacity: 0.5;
-        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
 
-        h1 {
-            text-align: center;
-            color: #d4af37;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-            font-weight: 400;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            font-family: 'Pirata One', serif;
-        }
+        /* ---- Section subtitle ---- */
+        .subtitle { color: var(--dc-slate); font-size: 0.95rem; }
 
-        .subtitle {
-            text-align: center;
-            color: #b8a89f;
-            margin-bottom: 30px;
-            font-size: 1em;
-            font-style: normal;
-            font-weight: 400;
-            font-family: 'Atkinson Hyperlegible', sans-serif;
-        }
-
-        .parents-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .parent-card {
-            background: #3a2f3a;
-            padding: 25px;
-            border: 2px solid #543954;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        .parent-card::before,
-        .parent-card::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #d4af37;
-        }
-
-        .parent-card::before {
-            top: -2px;
-            left: -2px;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .parent-card::after {
-            bottom: -2px;
-            right: -2px;
-            border-left: none;
-            border-top: none;
-        }
-
-        .parent-card h2 {
-            color: #d4af37;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-            font-weight: 400;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-            border-bottom: 1px solid #543954;
-            padding-bottom: 10px;
-            text-transform: none;
-            letter-spacing: 1px;
-            font-family: 'Pirata One', serif;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #b8a89f;
-            font-weight: 700;
-            font-size: 0.95em;
-            letter-spacing: 0.5px;
-            font-family: 'Atkinson Hyperlegible', sans-serif;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 2px solid #543954;
-            background: #1d181d;
-            color: #d4af37;
-            font-size: 14px;
-            font-family: 'Atkinson Hyperlegible', sans-serif;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #d4af37;
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .generate-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #543954 0%, #6b4f6b 100%);
-            color: #d4af37;
-            border: 2px solid #d4af37;
-            font-size: 1.2em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 30px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-            letter-spacing: 1px;
-            font-family: 'Silkscreen', serif;
-        }
-
-        .generate-btn:hover {
-            background: linear-gradient(135deg, #6b4f6b 0%, #543954 100%);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .generate-btn:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            background: #3d1f1f;
-            color: #ff6b6b;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 2px solid #8b3a3a;
-            display: none;
-            font-style: italic;
-        }
-
-        .results-container {
-            display: none;
-        }
-
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-
-        .foal-card {
-            background: #3a2f3a;
-            padding: 25px;
-            border: 2px solid #543954;
-            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-        }
-
-        .foal-card::before,
-        .foal-card::after {
-            content: '';
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            border: 2px solid #543954;
-            opacity: 0.5;
-        }
-
-        .foal-card::before {
-            top: -2px;
-            left: -2px;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .foal-card::after {
-            bottom: -2px;
-            right: -2px;
-            border-left: none;
-            border-top: none;
-        }
-
-        .foal-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(84, 57, 84, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .foal-card:hover::before,
-        .foal-card:hover::after {
-            border-color: #d4af37;
-            opacity: 1;
-        }
-
-        .foal-card h3 {
-            color: #d4af37;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-            border-bottom: 2px solid #543954;
-            padding-bottom: 10px;
-            font-weight: 400;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-            text-transform: none;
-            letter-spacing: 1px;
-            font-family: 'Pirata One', serif;
-        }
-
-        .foal-detail {
-            margin-bottom: 12px;
-        }
-
-        .foal-detail strong {
-            display: block;
-            color: #b8a89f;
-            margin-bottom: 4px;
-            font-size: 0.9em;
-            letter-spacing: 0.5px;
-        }
-
-        .foal-detail span {
-            display: block;
-            color: #d4af37;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-            background: #1d181d;
-            padding: 8px;
-            border: 1px solid #543954;
-            word-wrap: break-word;
-        }
-
-        .rarity-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            font-size: 0.8em;
-            font-weight: 400;
-            margin-top: 10px;
-            border: 2px solid;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'Silkscreen', serif;
-        }
-
-        .legendary { 
-            background: rgba(255, 215, 0, 0.2); 
-            color: #ffd700; 
-            border-color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        .epic { 
-            background: rgba(163, 53, 238, 0.2); 
-            color: #c084fc; 
-            border-color: #a855f7;
-            text-shadow: 0 0 10px rgba(163, 53, 238, 0.5);
-        }
-        .rare { 
-            background: rgba(59, 130, 246, 0.2); 
-            color: #60a5fa; 
-            border-color: #3b82f6;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
-        .uncommon { 
-            background: rgba(34, 197, 94, 0.2); 
-            color: #4ade80; 
-            border-color: #22c55e;
-        }
-        .common { 
-            background: rgba(156, 163, 175, 0.2); 
-            color: #9ca3af; 
-            border-color: #6b7280;
-        }
-
-        @media (max-width: 768px) {
-            .parents-container {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-
-            .site-header h1 {
-                font-size: 2em;
-            }
-        }
-
+        /* ---- Info / alert box: bone well with a colored left rail ---- */
         .info-box {
-            background: #3a2f3a;
-            border: 2px solid #543954;
-            border-left: 4px solid #d4af37;
-            padding: 15px;
-            margin-bottom: 20px;
+            background: var(--dc-bone); border: 1px solid var(--dc-line);
+            border-left: 3px solid var(--dc-mauve); border-radius: var(--radius-sm);
+            padding: 14px 16px; margin-bottom: 20px;
+        }
+        .info-box p { margin: 4px 0; color: var(--dc-ink); font-size: 0.92rem; line-height: 1.5; }
+        .info-box strong { color: var(--dc-mauve-deep); }
+        .info-box code { font-family: var(--font-mono); color: var(--dc-crimson-deep); }
+
+        /* ---- Error / lethal warning ---- */
+        .error-message {
+            background: var(--dc-blood-bg); color: var(--dc-blood);
+            border: 1px solid var(--dc-blood-edge); border-left: 3px solid var(--dc-crimson);
+            border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px;
+            display: none; font-weight: 700;
         }
 
-        .info-box p {
-            margin: 5px 0;
-            color: #b8a89f;
-            font-style: italic;
+        /* ---- Parent input cards ---- */
+        .parents-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        .parent-card {
+            background: var(--dc-white); border: 1px solid var(--dc-line);
+            border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 20px;
+        }
+        .parent-card h2 {
+            font-family: var(--font-display); font-weight: 400; color: var(--dc-ink);
+            font-size: 1.25rem; margin-bottom: 14px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--dc-line);
         }
 
-        .info-box strong {
-            color: #d4af37;
+        /* ---- Form controls ---- */
+        label {
+            display: block; margin-bottom: 6px; color: var(--dc-ink); font-weight: 700;
+            font-size: 0.85rem;
+        }
+        input, select, textarea {
+            width: 100%; padding: 9px 12px; margin-bottom: 14px;
+            border: 1px solid var(--dc-line); border-radius: var(--radius-sm);
+            background: var(--dc-white); color: var(--dc-ink);
+            font-size: 0.95rem; font-family: var(--font-body);
+            transition: border-color var(--ease-default), box-shadow var(--ease-default);
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--dc-mauve); box-shadow: var(--ring-focus);
+        }
+        textarea { resize: vertical; min-height: 76px; font-family: var(--font-mono); font-size: 0.9rem; }
+        input[type="file"] { padding: 8px; background: var(--dc-bone); }
+
+        /* ---- Buttons ---- */
+        .generate-btn, .dc-btn {
+            width: 100%; padding: 12px 18px; border-radius: var(--radius-sm);
+            font-family: var(--font-stamp); font-size: 0.85rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp); cursor: pointer; line-height: 1.4;
+            border: 1px solid var(--dc-moss); background: var(--dc-moss); color: var(--dc-white);
+            transition: background var(--ease-default), transform var(--ease-snappy), box-shadow var(--ease-default);
+            margin-bottom: 24px;
+        }
+        .generate-btn:hover, .dc-btn:hover {
+            background: var(--dc-moss-deep); transform: translateY(-2px); box-shadow: var(--shadow-raise);
+        }
+        .generate-btn:active, .dc-btn:active { transform: translateY(0); }
+        .dc-btn.mauve { background: var(--dc-mauve); border-color: var(--dc-mauve); }
+        .dc-btn.mauve:hover { background: var(--dc-mauve-deep); }
+
+        /* ---- Foal results ---- */
+        .results-container { display: none; }
+        .results-title {
+            font-family: var(--font-display); font-weight: 400; color: var(--dc-ink);
+            font-size: 1.6rem; text-align: center; margin-bottom: 20px;
+        }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .foal-card {
+            background: var(--dc-white); border: 1px solid var(--dc-line);
+            border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 20px;
+            transition: transform var(--ease-snappy), box-shadow var(--ease-default);
+        }
+        .foal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raise); }
+        .foal-card h3 {
+            font-family: var(--font-display); font-weight: 400; color: var(--dc-ink);
+            font-size: 1.25rem; margin-bottom: 14px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--dc-line);
+        }
+        .foal-detail { margin-bottom: 10px; }
+        .foal-detail strong {
+            display: block; margin-bottom: 4px; color: var(--dc-slate);
+            font-family: var(--font-stamp); font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp);
+        }
+        .foal-detail span {
+            display: block; color: var(--dc-ink); font-family: var(--font-mono);
+            font-size: 0.85rem; background: var(--dc-bone); padding: 8px;
+            border: 1px solid var(--dc-line); border-radius: var(--radius-sm); word-wrap: break-word;
         }
 
+        /* ---- Rarity badges ---- */
+        .rarity-badge {
+            display: inline-block; padding: 5px 12px; margin-top: 10px;
+            font-family: var(--font-stamp); font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp); border: 1px solid; border-radius: var(--radius-sm);
+        }
+        .legendary { background: rgba(200,144,46,0.14); color: var(--dc-legendary); border-color: var(--dc-legendary-edge); }
+        .epic      { background: rgba(138,79,192,0.14); color: var(--dc-epic); border-color: var(--dc-epic-edge); }
+        .rare      { background: rgba(63,116,184,0.14); color: var(--dc-rare); border-color: var(--dc-rare-edge); }
+        .uncommon  { background: rgba(95,138,63,0.14); color: var(--dc-uncommon); border-color: var(--dc-uncommon-edge); }
+        .common    { background: rgba(138,143,152,0.14); color: var(--dc-common); border-color: var(--dc-common-edge); }
+
+        /* ---- Collection card ---- */
         .card {
-            background: #3a2f3a;
-            border: 2px solid #543954;
-            margin-bottom: 20px;
+            background: var(--dc-white); border: 1px solid var(--dc-line);
+            border-radius: var(--radius); box-shadow: var(--shadow-card);
+            margin-bottom: 20px; overflow: hidden;
         }
-
         .card-header {
-            background: #302530;
-            border-bottom: 2px solid #543954;
-            padding: 15px 20px;
+            background: var(--dc-cloud); border-bottom: 1px solid var(--dc-line);
+            padding: 10px 20px;
         }
-
-        .card-body {
-            padding: 25px;
+        .card-header h2 {
+            font-family: var(--font-stamp); font-size: 0.85rem; text-transform: uppercase;
+            letter-spacing: var(--tracking-stamp); color: var(--dc-ink); margin: 0; font-weight: 400;
         }
+        .card-body { padding: 24px; }
 
+        /* ---- Search results ---- */
         .search-result-item {
-            background: #2a232a;
-            border: 2px solid #543954;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #d4af37;
+            background: var(--dc-white); border: 1px solid var(--dc-line);
+            border-left: 3px solid var(--dc-mauve); border-radius: var(--radius-sm);
+            padding: 14px; margin-bottom: 14px; transition: box-shadow var(--ease-default), transform var(--ease-snappy);
         }
-
-        .search-result-item h4 {
-            color: #d4af37;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
+        .search-result-item h4 { color: var(--dc-ink); margin-bottom: 8px; font-size: 1.05rem; font-weight: 700; }
+        .search-result-item p { color: var(--dc-slate); margin: 4px 0; font-size: 0.9rem; }
+        .geno, .search-result-item .geno {
+            font-family: var(--font-mono); background: var(--dc-bone);
+            padding: 8px; border: 1px solid var(--dc-line); border-radius: var(--radius-sm);
+            display: block; margin: 8px 0; color: var(--dc-ink); font-size: 0.85rem;
         }
+        .template-box { background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); padding: 15px; margin-top: 12px; }
+        .template-box a, .blurb a, .info-box a { color: var(--dc-link); }
 
-        .search-result-item p {
-            color: #b8a89f;
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-
-        .search-result-item .geno {
-            font-family: 'Courier New', monospace;
-            background: #1d181d;
-            padding: 8px;
-            border: 1px solid #543954;
-            display: block;
-            margin: 8px 0;
-            color: #d4af37;
-            font-size: 0.85em;
-        }
-
+        /* ---- Scroll generator ---- */
         .scroll-result-card {
-            background: #3a2f3a;
-            padding: 25px;
-            border: 2px solid #543954;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.5);
-            position: relative;
+            background: var(--dc-white); border: 1px solid var(--dc-line);
+            border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 24px;
             animation: fadeIn 0.3s ease-in;
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .scroll-result-card::before,
-        .scroll-result-card::after {
-            content: '';
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            border: 2px solid #d4af37;
-            opacity: 0.7;
-        }
-
-        .scroll-result-card::before {
-            top: -2px;
-            left: -2px;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .scroll-result-card::after {
-            bottom: -2px;
-            right: -2px;
-            border-left: none;
-            border-top: none;
-        }
-
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scroll-result-card h3 {
-            color: #d4af37;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            border-bottom: 2px solid #543954;
-            padding-bottom: 10px;
-            font-weight: 400;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.3);
-            text-transform: none;
-            letter-spacing: 1px;
-            text-align: center;
-            font-family: 'Pirata One', serif;
+            font-family: var(--font-display); font-weight: 400; color: var(--dc-ink);
+            font-size: 1.5rem; text-align: center; margin-bottom: 20px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--dc-line);
         }
-
         .scroll-result-card .result-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #2a232a;
-            border-left: 4px solid #d4af37;
+            margin-bottom: 16px; padding: 14px; background: var(--dc-bone);
+            border-left: 3px solid var(--dc-moss); border-radius: var(--radius-sm);
         }
-
         .scroll-result-card .result-section h4 {
-            color: #b8a89f;
-            margin-bottom: 10px;
-            font-size: 1em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 400;
-            font-family: 'Silkscreen', serif;
+            color: var(--dc-slate); margin-bottom: 8px; font-family: var(--font-stamp);
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); font-weight: 400;
         }
-
         .scroll-result-card .phenotype {
-            color: #d4af37;
-            font-size: 1.2em;
-            font-weight: 600;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-            padding: 10px;
-            background: #1d181d;
-            border: 2px solid #543954;
-            text-align: center;
+            color: var(--dc-ink); font-size: 1.1rem; font-weight: 700; text-align: center;
+            padding: 10px; background: var(--dc-white); border: 1px solid var(--dc-line); border-radius: var(--radius-sm);
         }
 
-        .scroll-result-card .geno {
-            font-family: 'Courier New', monospace;
-            background: #1d181d;
-            padding: 12px;
-            border: 2px solid #543954;
-            display: block;
-            color: #d4af37;
-            font-size: 0.9em;
-            word-wrap: break-word;
+        /* ---- Footer credit ---- */
+        .panel-footer {
+            margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--dc-line);
+            text-align: center; color: var(--dc-slate); font-size: 0.85rem;
         }
+        .panel-footer a { color: var(--dc-link); }
 
-        .scroll-result-card p {
-            color: #b8a89f;
-            margin: 8px 0;
-        }
-
-        .scroll-result-card p strong {
-            color: #d4af37;
-        }
-
-        /* Search Results Modal */
+        /* ---- Modal ---- */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            overflow-y: auto;
-            padding: 40px 20px;
+            display: none; position: fixed; inset: 0; background: rgba(20,16,22,0.6);
+            z-index: 1000; padding: 40px 20px; overflow-y: auto;
         }
-
-        .modal-overlay.active {
-            display: block;
-        }
-
+        .modal-overlay.active { display: flex; align-items: flex-start; justify-content: center; }
         .modal {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #2a232a;
-            border: 3px solid #543954;
-            box-shadow: 0 0 40px rgba(84, 57, 84, 0.6), inset 0 0 0 1px rgba(212, 175, 55, 0.1);
-            position: relative;
+            background: var(--dc-white); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-panel); width: 100%; max-width: 800px; overflow: hidden;
         }
-
         .modal-header {
-            background: #302530;
-            border-bottom: 2px solid #543954;
-            padding: 20px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: var(--dc-cloud); border-bottom: 1px solid var(--dc-line);
+            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;
         }
-
         .modal-header h2 {
-            color: #d4af37;
-            font-family: 'Pirata One', serif;
-            font-weight: 400;
-            font-size: 1.5em;
-            margin: 0;
+            color: var(--dc-ink); font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; margin: 0;
         }
-
         .modal-close {
-            background: none;
-            border: 2px solid #543954;
-            color: #b8a89f;
-            font-size: 1.5em;
-            cursor: pointer;
-            padding: 4px 12px;
-            line-height: 1;
-            transition: all 0.2s;
+            background: none; border: 1px solid var(--dc-line); border-radius: var(--radius-sm);
+            color: var(--dc-slate); font-size: 1.3rem; cursor: pointer; padding: 2px 12px; line-height: 1.2;
+            transition: all var(--ease-default);
         }
-
-        .modal-close:hover {
-            border-color: #d4af37;
-            color: #d4af37;
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
+        .modal-close:hover { border-color: var(--dc-mauve); color: var(--dc-mauve); }
+        .modal-body { padding: 24px; }
         .modal-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            padding: 20px 25px;
-            border-top: 2px solid #543954;
-            background: #302530;
+            display: flex; justify-content: center; align-items: center; gap: 12px;
+            padding: 16px 24px; border-top: 1px solid var(--dc-line); background: var(--dc-bone);
         }
-
         .modal-pagination button {
-            background: linear-gradient(135deg, #543954 0%, #6b4f6b 100%);
-            color: #d4af37;
-            border: 2px solid #543954;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-family: 'Silkscreen', serif;
-            font-size: 0.8em;
-            letter-spacing: 1px;
-            transition: all 0.2s;
+            background: var(--dc-mauve); color: var(--dc-white); border: 1px solid var(--dc-mauve);
+            border-radius: var(--radius-sm); padding: 8px 16px; cursor: pointer;
+            font-family: var(--font-stamp); font-size: 0.75rem; letter-spacing: var(--tracking-stamp);
+            transition: background var(--ease-default);
         }
+        .modal-pagination button:hover:not(:disabled) { background: var(--dc-mauve-deep); }
+        .modal-pagination button:disabled { opacity: 0.4; cursor: default; }
+        .modal-pagination .page-info { color: var(--dc-slate); font-size: 0.9rem; }
+        .modal .search-result-item { cursor: pointer; }
+        .modal .search-result-item:hover { box-shadow: var(--shadow-raise); transform: translateY(-2px); }
 
-        .modal-pagination button:hover:not(:disabled) {
-            border-color: #d4af37;
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        /* ---- Responsive ---- */
+        @media (max-width: 900px) {
+            .cols { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .tab-bar { flex-direction: row; flex-wrap: wrap; }
+            .tab-btn { width: auto; }
         }
-
-        .modal-pagination button:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
-
-        .modal-pagination .page-info {
-            color: #b8a89f;
-            font-family: 'Atkinson Hyperlegible', sans-serif;
-            font-size: 0.9em;
-        }
-
-        .modal .search-result-item {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .modal .search-result-item:hover {
-            border-color: #d4af37;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        @media (max-width: 768px) {
-            .modal-overlay {
-                padding: 20px 10px;
-            }
-        }
-
-        /* Tab navigation */
-        .tab-bar {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 0;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 12px 24px;
-            background: #302530;
-            color: #b8a89f;
-            border: 2px solid #543954;
-            border-bottom: none;
-            cursor: pointer;
-            font-family: 'Pirata One', serif;
-            font-size: 1.1em;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            transition: background 0.2s, color 0.2s;
-            position: relative;
-            top: 2px;
-        }
-
-        .tab-btn:hover {
-            background: #3a2f3a;
-            color: #d4af37;
-        }
-
-        .tab-btn.active {
-            background: #2a232a;
-            color: #d4af37;
-            border-color: #d4af37;
-            border-bottom: 2px solid #2a232a;
-            z-index: 1;
-        }
-
-        .tab-panel {
-            display: none;
-            background: #2a232a;
-            border: 2px solid #d4af37;
-            border-top-color: #d4af37;
-            padding: 30px;
-        }
-
-        .tab-panel.active {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .tab-btn {
-                padding: 10px 14px;
-                font-size: 0.95em;
-            }
-
-            .tab-panel {
-                padding: 15px;
-            }
+        @media (max-width: 600px) {
+            .parents-container { grid-template-columns: 1fr; }
+            .dc-hero h1 { font-size: 2.4rem; }
+            .panel { padding: 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="site-header">
+    <!-- Site chrome: mauve navbar -->
+    <nav class="dc-navbar">
+        <a class="brand" href="https://dungeon-coursers.com" target="_blank" rel="noopener">Bloodline</a>
+        <div class="nav-links">
+            <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Home</a>
+            <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Handbook</a>
+            <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Explore</a>
+            <a href="https://dungeon-coursers.com" target="_blank" rel="noopener" class="active">Play</a>
+            <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Shop</a>
+        </div>
+        <span class="nav-user">OOK</span>
+    </nav>
+
+    <!-- Charcoal hero with the crimson wordmark -->
+    <header class="dc-hero">
         <h1>Dungeon Coursers</h1>
-        <p class="subtitle">Breeding Calculator</p>
-        <p style="color: #b8a89f; font-size: 0.85em; margin-top: 12px; font-family: 'Atkinson Hyperlegible', sans-serif;">Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener" style="color: #c084fc; text-decoration: underline;">Ook</a> because she can't maths</p>
-    </div>
+        <p class="tagline">Breeding Calculator · A Dungeon-Delving HARPG</p>
+    </header>
 
-    <div class="container">
+    <div class="content">
+        <div class="panel">
+            <nav class="breadcrumb">
+                <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a>
+                <span class="sep">›</span><a href="#">Tools</a>
+                <span class="sep">›</span>Breeding Calculator
+            </nav>
 
-        <!-- Tab Navigation -->
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('search')" data-tab="search">Breeding Search</button>
-            <button class="tab-btn" onclick="switchTab('foals')" data-tab="foals">Foal Generator</button>
-            <button class="tab-btn" onclick="switchTab('chimera')" data-tab="chimera">Chimera Calculator</button>
-            <button class="tab-btn" onclick="switchTab('scroll')" data-tab="scroll">Scroll Generator</button>
-        </div>
-
-        <!-- Tab 1: Foal Generator -->
-        <div class="tab-panel" id="tab-foals">
-            <p class="subtitle" style="margin-bottom: 15px;">Generate foal possibilities from two parent horses</p>
-
-            <div class="info-box">
-                <p><strong>Note:</strong> Parents must have different Temperaments to breed!</p>
-                <p><strong>Tip:</strong> Paste the full genotype string (e.g., "Ee Aa nCr nT + Brindle")</p>
-            </div>
-
-            <div class="error-message" id="errorMessage"></div>
-
-            <div class="parents-container">
-                <!-- Parent 1 -->
-                <div class="parent-card">
-                    <h2>Parent 1</h2>
-                    <label for="parent1Name">Name:</label>
-                    <input type="text" id="parent1Name" placeholder="Horse name" style="font-family: 'Atkinson Hyperlegible', sans-serif;">
-
-                    <label for="parent1Geno">Genotype:</label>
-                    <textarea id="parent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
-
-                    <label for="parent1Temp">Temperament:</label>
-                    <select id="parent1Temp">
-                        <option value="">Select Temperament</option>
-                        <option value="Choleric">Choleric</option>
-                        <option value="Melancholic">Melancholic</option>
-                        <option value="Phlegmatic">Phlegmatic</option>
-                        <option value="Sanguine">Sanguine</option>
-                    </select>
-
-                    <label for="parent1Variant">Variant (Optional):</label>
-                    <select id="parent1Variant">
-                        <option value="">Standard</option>
-                        <option value="Heraldic">Heraldic</option>
-                        <option value="Puck">Puck</option>
-                        <option value="Cavedweller">Cavedweller</option>
-                        <option value="Restored">Restored</option>
-                    </select>
-                </div>
-
-                <!-- Parent 2 -->
-                <div class="parent-card">
-                    <h2>Parent 2</h2>
-                    <label for="parent2Name">Name:</label>
-                    <input type="text" id="parent2Name" placeholder="Horse name" style="font-family: 'Atkinson Hyperlegible', sans-serif;">
-
-                    <label for="parent2Geno">Genotype:</label>
-                    <textarea id="parent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
-
-                    <label for="parent2Temp">Temperament:</label>
-                    <select id="parent2Temp">
-                        <option value="">Select Temperament</option>
-                        <option value="Choleric">Choleric</option>
-                        <option value="Melancholic">Melancholic</option>
-                        <option value="Phlegmatic">Phlegmatic</option>
-                        <option value="Sanguine">Sanguine</option>
-                    </select>
-
-                    <label for="parent2Variant">Variant (Optional):</label>
-                    <select id="parent2Variant">
-                        <option value="">Standard</option>
-                        <option value="Heraldic">Heraldic</option>
-                        <option value="Puck">Puck</option>
-                        <option value="Cavedweller">Cavedweller</option>
-                        <option value="Restored">Restored</option>
-                    </select>
-                </div>
-            </div>
-
-            <button class="generate-btn" onclick="generateFoals()">Generate Foal Possibilities</button>
-
-            <div class="results-container" id="resultsContainer">
-                <h2 style="color: #d4af37; margin-bottom: 20px; text-align: center; font-family: 'Pirata One', serif; font-weight: 400; font-size: 2em;">Possible Foals</h2>
-                <div class="results-grid" id="resultsGrid"></div>
-            </div>
-        </div>
-
-        <!-- Tab 2: Breeding Search -->
-        <div class="tab-panel active" id="tab-search">
-            <div class="card mb-4" style="background: #3a2f3a; border: 2px solid #543954;">
-                <div class="card-header" style="background: #302530; border-bottom: 2px solid #543954;">
-                    <h2 style="color: #d4af37; margin: 0; font-size: 1.5em; font-weight: 400; letter-spacing: 1px; font-family: 'Pirata One', serif;">My Horse Collection</h2>
-                </div>
-                <div class="card-body" style="padding: 25px;">
-                    <div class="mb-3">
-                        <label for="csvUpload" style="color: #d4af37; font-weight: 600;">Upload Your Horses CSV:</label>
-                        <input type="file" id="csvUpload" accept=".csv" style="background: #1d181d; color: #b8a89f; border: 2px solid #543954; padding: 10px;">
-                        <p style="color: #b8a89f; font-size: 0.9em; margin-top: 8px; font-style: italic;">Upload a CSV with columns: ID, Name, Genotype, Temperament, Variant</p>
-                        <div style="background: #1d181d; border: 1px solid #543954; padding: 15px; margin-top: 12px;">
-                            <p style="color: #d4af37; font-weight: 600; margin-bottom: 8px;">Need a template?</p>
-                            <p style="color: #b8a89f; font-size: 0.9em; margin-bottom: 8px;">
-                                <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener" style="color: #c084fc; text-decoration: underline;">Google Sheets Template</a>
-                            </p>
-                            <ol style="color: #b8a89f; font-size: 0.85em; margin: 0; padding-left: 20px; line-height: 1.6;">
-                                <li>Open the template and go to <strong style="color: #d4af37;">File &gt; Make a copy</strong></li>
-                                <li>Fill in your horses &mdash; one per row. Copy genotypes directly from the Dungeon Coursers site (e.g. <code style="color: #c084fc;">Ee Aa nCr nT + Birdcatcher Spots</code>)</li>
-                                <li>When done, go to <strong style="color: #d4af37;">File &gt; Download &gt; Comma-separated values (.csv)</strong></li>
-                                <li>Upload the downloaded .csv file above!</li>
-                            </ol>
-                        </div>
+            <div class="cols">
+                <!-- Sidebar nav (tools). switchTab toggles panels by class. -->
+                <aside class="sidebar">
+                    <div class="side-title">Calculator</div>
+                    <div class="side-heading">Tools</div>
+                    <div class="tab-bar">
+                        <button class="tab-btn active" onclick="switchTab('search')" data-tab="search">Breeding Search</button>
+                        <button class="tab-btn" onclick="switchTab('foals')" data-tab="foals">Foal Generator</button>
+                        <button class="tab-btn" onclick="switchTab('chimera')" data-tab="chimera">Chimera Calculator</button>
+                        <button class="tab-btn" onclick="switchTab('scroll')" data-tab="scroll">Scroll Generator</button>
                     </div>
+                </aside>
 
-                    <div id="collectionStatus" style="color: #b8a89f; margin-bottom: 15px; display: none;">
-                        <strong style="color: #d4af37;">Loaded:</strong> <span id="horseCount">0</span> horses
-                    </div>
+                <div class="main">
 
-                    <div class="search-section">
+                    <!-- Tab 1: Foal Generator -->
+                    <div class="tab-panel" id="tab-foals">
+                        <h1 class="page-title">Foal Generator</h1>
+                        <p class="blurb">Generate foal possibilities from two parent horses. Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths.</p>
+
                         <div class="info-box">
-                            <p><strong>Tip:</strong> Prefix a recessive trait with <em>carries</em> (or <em>carrying</em>) to find pairs whose foals can carry the gene without expressing it &mdash; perfect for stacking <em>nfe</em> toward <em>fefe</em>. Supports: filigree, pearl, ether, flaxen, starfield, lacquer, sepulchered, patn.</p>
+                            <p><strong>Note:</strong> Parents must have different Temperaments to breed!</p>
+                            <p><strong>Tip:</strong> Paste the full genotype string (e.g., <code>Ee Aa nCr nT + Brindle</code>)</p>
                         </div>
-                        <label for="breedingQuery" style="color: #d4af37; font-weight: 600;">Ask a Breeding Question:</label>
-                        <input type="text" id="breedingQuery" placeholder='e.g., "Amber Champagne", "fewspot and starfield", or "carries filigree"' style="background: #1d181d; color: #d4af37; border: 2px solid #543954; padding: 12px; margin-bottom: 15px; font-family: 'Atkinson Hyperlegible', sans-serif;">
-                        <button onclick="searchBreeding()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #6b4f6b 0%, #543954 100%); color: #d4af37; border: 2px solid #543954; font-weight: 400; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; font-family: 'Silkscreen', serif;">Search My Horses</button>
+
+                        <div class="error-message" id="errorMessage"></div>
+
+                        <div class="parents-container">
+                            <!-- Parent 1 -->
+                            <div class="parent-card">
+                                <h2>Parent 1</h2>
+                                <label for="parent1Name">Name:</label>
+                                <input type="text" id="parent1Name" placeholder="Horse name">
+
+                                <label for="parent1Geno">Genotype:</label>
+                                <textarea id="parent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+
+                                <label for="parent1Temp">Temperament:</label>
+                                <select id="parent1Temp">
+                                    <option value="">Select Temperament</option>
+                                    <option value="Choleric">Choleric</option>
+                                    <option value="Melancholic">Melancholic</option>
+                                    <option value="Phlegmatic">Phlegmatic</option>
+                                    <option value="Sanguine">Sanguine</option>
+                                </select>
+
+                                <label for="parent1Variant">Variant (Optional):</label>
+                                <select id="parent1Variant">
+                                    <option value="">Standard</option>
+                                    <option value="Heraldic">Heraldic</option>
+                                    <option value="Puck">Puck</option>
+                                    <option value="Cavedweller">Cavedweller</option>
+                                    <option value="Restored">Restored</option>
+                                </select>
+                            </div>
+
+                            <!-- Parent 2 -->
+                            <div class="parent-card">
+                                <h2>Parent 2</h2>
+                                <label for="parent2Name">Name:</label>
+                                <input type="text" id="parent2Name" placeholder="Horse name">
+
+                                <label for="parent2Geno">Genotype:</label>
+                                <textarea id="parent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
+
+                                <label for="parent2Temp">Temperament:</label>
+                                <select id="parent2Temp">
+                                    <option value="">Select Temperament</option>
+                                    <option value="Choleric">Choleric</option>
+                                    <option value="Melancholic">Melancholic</option>
+                                    <option value="Phlegmatic">Phlegmatic</option>
+                                    <option value="Sanguine">Sanguine</option>
+                                </select>
+
+                                <label for="parent2Variant">Variant (Optional):</label>
+                                <select id="parent2Variant">
+                                    <option value="">Standard</option>
+                                    <option value="Heraldic">Heraldic</option>
+                                    <option value="Puck">Puck</option>
+                                    <option value="Cavedweller">Cavedweller</option>
+                                    <option value="Restored">Restored</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="generate-btn" onclick="generateFoals()">Generate Foal Possibilities</button>
+
+                        <div class="results-container" id="resultsContainer">
+                            <h2 class="results-title">Possible Foals</h2>
+                            <div class="results-grid" id="resultsGrid"></div>
+                        </div>
                     </div>
 
-                    <div id="searchResults" style="margin-top: 20px; display: none;">
-                        <h3 style="color: #d4af37; font-size: 1.4em; margin-bottom: 15px; border-bottom: 2px solid #543954; padding-bottom: 10px; font-family: 'Pirata One', serif; font-weight: 400;">Search Results</h3>
-                        <div id="searchResultsContent"></div>
+                    <!-- Tab 2: Breeding Search -->
+                    <div class="tab-panel active" id="tab-search">
+                        <h1 class="page-title">Breeding Search</h1>
+                        <p class="blurb">Search your collection for the best breeding pairs. Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths.</p>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>My Horse Collection</h2>
+                            </div>
+                            <div class="card-body">
+                                <div>
+                                    <label for="csvUpload">Upload Your Horses CSV:</label>
+                                    <input type="file" id="csvUpload" accept=".csv">
+                                    <p class="subtitle" style="font-style: italic;">Upload a CSV with columns: ID, Name, Genotype, Temperament, Variant</p>
+                                    <div class="template-box">
+                                        <p style="font-weight: 700; margin-bottom: 8px;">Need a template?</p>
+                                        <p style="font-size: 0.9rem; margin-bottom: 8px;">
+                                            <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener">Google Sheets Template</a>
+                                        </p>
+                                        <ol style="font-size: 0.85rem; margin: 0; padding-left: 20px; line-height: 1.6; color: var(--dc-slate);">
+                                            <li>Open the template and go to <strong>File &gt; Make a copy</strong></li>
+                                            <li>Fill in your horses &mdash; one per row. Copy genotypes directly from the Dungeon Coursers site (e.g. <code>Ee Aa nCr nT + Birdcatcher Spots</code>)</li>
+                                            <li>When done, go to <strong>File &gt; Download &gt; Comma-separated values (.csv)</strong></li>
+                                            <li>Upload the downloaded .csv file above!</li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                <div id="collectionStatus" style="margin: 15px 0; display: none;">
+                                    <strong>Loaded:</strong> <span id="horseCount">0</span> horses
+                                </div>
+
+                                <div class="search-section">
+                                    <div class="info-box">
+                                        <p><strong>Tip:</strong> Prefix a recessive trait with <em>carries</em> (or <em>carrying</em>) to find pairs whose foals can carry the gene without expressing it &mdash; perfect for stacking <em>nfe</em> toward <em>fefe</em>. Supports: filigree, pearl, ether, flaxen, starfield, lacquer, sepulchered, patn.</p>
+                                    </div>
+                                    <label for="breedingQuery">Ask a Breeding Question:</label>
+                                    <input type="text" id="breedingQuery" placeholder='e.g., "Amber Champagne", "fewspot and starfield", or "carries filigree"'>
+                                    <button class="dc-btn mauve" onclick="searchBreeding()">Search My Horses</button>
+                                </div>
+
+                                <div id="searchResults" style="margin-top: 20px; display: none;">
+                                    <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">Search Results</h3>
+                                    <div id="searchResultsContent"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Tab 3: Chimera Calculator -->
+                    <div class="tab-panel" id="tab-chimera">
+                        <h1 class="page-title">Chimera Calculator</h1>
+                        <p class="blurb">See what coats could appear in a Chimera patch.</p>
+
+                        <div class="info-box">
+                            <p><strong>For existing foals with Chimera:</strong> Enter the foal's genotype and both parent genotypes to see what coat patterns could appear in the Chimera patch.</p>
+                            <p><strong>Rule:</strong> Chimera patches can display any traits genetically possible from both parents (excluding anomalies the parents don't carry).</p>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
+                            <textarea id="chimeraFoalGeno" placeholder="Ee Aa nCr + Chimera"></textarea>
+                        </div>
+
+                        <div class="parents-container">
+                            <div class="parent-card">
+                                <h2>Parent 1</h2>
+                                <label for="chimeraParent1Geno">Genotype:</label>
+                                <textarea id="chimeraParent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+                            </div>
+
+                            <div class="parent-card">
+                                <h2>Parent 2</h2>
+                                <label for="chimeraParent2Geno">Genotype:</label>
+                                <textarea id="chimeraParent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
+                            </div>
+                        </div>
+
+                        <button class="generate-btn" onclick="calculateChimera()">Calculate Chimera Possibilities</button>
+
+                        <div class="results-container" id="chimeraResultsContainer" style="display: none;">
+                            <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">Chimera Coat Possibilities</h3>
+                            <div id="chimeraResultsContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Scroll Generator -->
+                    <div class="tab-panel" id="tab-scroll">
+                        <h1 class="page-title">Scroll Generator</h1>
+                        <p class="blurb">Roll a random design from a custom scroll.</p>
+
+                        <div class="info-box">
+                            <p><strong>Don't know what to do with your custom scroll?</strong> Use this generator to create a random design based on your scroll rarity!</p>
+                            <p><strong>Scroll Rules:</strong> Each scroll includes a coat color of that rarity, 1 marking/modifier/carrier (at that rarity or lower), 10% chance of random anomaly, 5% chance of random variant, and your choice of temperament.</p>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label for="scrollRarity">Select Scroll Rarity:</label>
+                            <select id="scrollRarity">
+                                <option value="Common">Common</option>
+                                <option value="Uncommon">Uncommon</option>
+                                <option value="Rare">Rare</option>
+                                <option value="Epic">Epic</option>
+                                <option value="Legendary">Legendary</option>
+                            </select>
+                        </div>
+
+                        <button class="generate-btn" onclick="displayCustomScrollResult()">Generate Custom Scroll</button>
+
+                        <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
+                    </div>
+
                 </div>
             </div>
-        </div>
 
-        <!-- Tab 3: Chimera Calculator -->
-        <div class="tab-panel" id="tab-chimera">
-            <div class="info-box">
-                <p><strong>For existing foals with Chimera:</strong> Enter the foal's genotype and both parent genotypes to see what coat patterns could appear in the Chimera patch.</p>
-                <p><strong>Rule:</strong> Chimera patches can display any traits genetically possible from both parents (excluding anomalies the parents don't carry).</p>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
-                <textarea id="chimeraFoalGeno" placeholder="Ee Aa nCr + Chimera"></textarea>
-            </div>
-
-            <div class="parents-container">
-                <div class="parent-card">
-                    <h2>Parent 1</h2>
-                    <label for="chimeraParent1Geno">Genotype:</label>
-                    <textarea id="chimeraParent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
-                </div>
-
-                <div class="parent-card">
-                    <h2>Parent 2</h2>
-                    <label for="chimeraParent2Geno">Genotype:</label>
-                    <textarea id="chimeraParent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
-                </div>
-            </div>
-
-            <button class="generate-btn" onclick="calculateChimera()">Calculate Chimera Possibilities</button>
-
-            <div class="results-container" id="chimeraResultsContainer" style="display: none;">
-                <h3 style="color: #d4af37; margin-bottom: 15px; border-bottom: 2px solid #543954; padding-bottom: 10px; font-family: 'Pirata One', serif; font-weight: 400; font-size: 1.4em;">Chimera Coat Possibilities</h3>
-                <div id="chimeraResultsContent"></div>
+            <div class="panel-footer">
+                An unofficial fan tool for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> · Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a>
             </div>
         </div>
-
-        <!-- Tab 4: Scroll Generator -->
-        <div class="tab-panel" id="tab-scroll">
-            <div class="info-box">
-                <p><strong>Don't know what to do with your custom scroll?</strong> Use this generator to create a random design based on your scroll rarity!</p>
-                <p><strong>Scroll Rules:</strong> Each scroll includes a coat color of that rarity, 1 marking/modifier/carrier (at that rarity or lower), 10% chance of random anomaly, 5% chance of random variant, and your choice of temperament.</p>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label for="scrollRarity" style="display: block; margin-bottom: 10px; color: #d4af37; font-weight: 600; font-size: 1.1em;">Select Scroll Rarity:</label>
-                <select id="scrollRarity" style="width: 100%; padding: 12px; background: #1d181d; color: #b8a89f; border: 2px solid #543954; font-size: 1em;">
-                    <option value="Common">Common</option>
-                    <option value="Uncommon">Uncommon</option>
-                    <option value="Rare">Rare</option>
-                    <option value="Epic">Epic</option>
-                    <option value="Legendary">Legendary</option>
-                </select>
-            </div>
-
-            <button class="generate-btn" onclick="displayCustomScrollResult()">Generate Custom Scroll</button>
-
-            <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
-        </div>
-
     </div>
 
     <!-- Search Results Modal -->
