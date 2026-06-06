@@ -1,16 +1,31 @@
 // Dungeon Coursers Breeding Calculator
 // Because doing genetics by hand is suffering
 
-// Ye olde tab switcheroo — because even dungeon UIs need a navigation quest
+// Ye olde tab switcheroo — now delegated to the app shell (app.js), which owns
+// the top-nav routing. Kept as a thin shim so the engine's own callers
+// (fillParents, fillChimeraCalculator) don't need to know how navigation works.
 function switchTab(tabName) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tabName).classList.add('active');
-    document.querySelector('.tab-btn[data-tab="' + tabName + '"]').classList.add('active');
+    if (window.AppShell && window.AppShell.switchTab) {
+        window.AppShell.switchTab(tabName);
+    }
 }
 
 // The stable: where all your precious pixel ponies live
 let horseCollection = [];
+
+// --- Seam for the app shell (app.js) ---------------------------------------
+// app.js owns persistence (localStorage) and the collection UI; the engine
+// stays the source of truth for genetics. These let the shell read/replace the
+// working collection without the engine caring where the data came from.
+window.getCollection = function () { return horseCollection; };
+window.applyCollection = function (arr) {
+    horseCollection = Array.isArray(arr) ? arr.slice() : [];
+    const cs = document.getElementById('collectionStatus');
+    if (cs) cs.style.display = horseCollection.length ? 'block' : 'none';
+    const hc = document.getElementById('horseCount');
+    if (hc) hc.textContent = horseCollection.length;
+    return horseCollection;
+};
 
 // Convince the browser to eat a spreadsheet
 document.addEventListener('DOMContentLoaded', function() {
@@ -43,9 +58,13 @@ function handleCSVUpload(event) {
     reader.readAsText(file);
 }
 
-function parseCSV(text) {
+// Pure parse: text in, structured horses out. No globals, no DOM — so the
+// import wizard (app.js) can preview & validate before anything is committed.
+// Returns { headerDetected, horses: [...] } where each horse also carries the
+// source row number for error reporting.
+window.parseHorsesCSV = function (text) {
     const lines = text.split('\n');
-    const firstLineValues = parseCSVLine(lines[0]);
+    const firstLineValues = parseCSVLine(lines[0] || '');
     const firstLineLower = firstLineValues.map(v => v.trim().toLowerCase());
 
     // Detect whether this CSV was lovingly hand-crafted or catapulted at us from the ramparts
@@ -63,32 +82,44 @@ function parseCSV(text) {
         startLine = 0;
     }
 
-    horseCollection = [];
-
+    const horses = [];
     for (let i = startLine; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
 
         const values = parseCSVLine(lines[i]);
         const horse = {};
-
         headers.forEach((header, index) => {
             horse[header] = values[index] ? values[index].trim() : '';
         });
 
         if (horse.genotype && horse.temperament) {
-            horseCollection.push({
+            horses.push({
                 id: horse.id || horse.name || `Horse ${i}`,
                 name: horse.name || `Horse ${i}`,
                 genotype: horse.genotype,
                 temperament: horse.temperament,
-                variant: horse.variant || 'Standard'
+                variant: horse.variant || 'Standard',
+                _row: i + 1
             });
         }
     }
-    
-    document.getElementById('collectionStatus').style.display = 'block';
-    document.getElementById('horseCount').textContent = horseCollection.length;
-    
+    return { headerDetected: hasHeaders, horses };
+};
+
+function parseCSV(text) {
+    const { horses } = window.parseHorsesCSV(text);
+    horseCollection = horses;
+
+    if (window.AppShell && window.AppShell.onCollectionChanged) {
+        // Let the shell merge/persist and refresh the collection UI.
+        window.AppShell.onCollectionChanged(horseCollection, { persist: true, replace: true });
+    } else {
+        const cs = document.getElementById('collectionStatus');
+        if (cs) cs.style.display = 'block';
+        const hc = document.getElementById('horseCount');
+        if (hc) hc.textContent = horseCollection.length;
+    }
+
     console.log(`Loaded ${horseCollection.length} horses:`, horseCollection);
 }
 
@@ -954,11 +985,15 @@ function generateFoals() {
     }
     
     if (parent1.temperament === parent2.temperament) {
-        errorMsg.textContent = 'Cannot breed! Both parents have the same Temperament (' + parent1.temperament + '). Parents must have different Temperaments.';
-        errorMsg.style.display = 'block';
-        return;
+        // Spec 1.2.6: warn, but let the breeder proceed (handy for scenario testing).
+        if (window.AppShell && window.AppShell.toast) {
+            window.AppShell.toast(
+                `Heads up: both parents are ${parent1.temperament}. In-game they must differ to breed — generating anyway for reference.`,
+                'warning'
+            );
+        }
     }
-    
+
     // Generate 4 foals — a full litter of chaotic genetic possibilities
     const foals = [];
     for (let i = 0; i < 4; i++) {
@@ -1076,7 +1111,7 @@ function displayFoals(foals) {
             </div>
             <div class="foal-detail">
                 <strong>Genotype:</strong>
-                <span>${foal.genotype}</span>
+                <span class="geno-copy" data-geno="${foal.genotype.replace(/"/g, '&quot;')}" title="Click to copy genotype">${foal.genotype} <span class="copy-hint">⧉</span></span>
             </div>
             <span class="rarity-badge ${rarityClass}">Rarity: ${rarityScore}</span>
             ${chimeraSection}
@@ -1400,12 +1435,14 @@ function searchBreeding() {
     const resultsContent = document.getElementById('searchResultsContent');
     
     if (!query) {
-        alert('Please enter a breeding question!');
+        if (window.AppShell) window.AppShell.toast('Type a breeding question first — e.g. "How can I make Amber Champagne?"', 'error');
+        else alert('Please enter a breeding question!');
         return;
     }
-    
+
     if (horseCollection.length === 0) {
-        alert('Please upload your horse collection CSV first!');
+        if (window.AppShell) window.AppShell.toast('Your stable is empty — import or add horses in the Collection tab first.', 'error');
+        else alert('Please upload your horse collection CSV first!');
         return;
     }
     
@@ -1441,6 +1478,11 @@ function searchBreeding() {
 
     resultsDiv.style.display = 'block';
     resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Phase 4: remember this query so the shell can show recent searches.
+    if (window.AppShell && window.AppShell.recordQuery) {
+        window.AppShell.recordQuery(query, matches.length);
+    }
 }
 
 let lastSearchMatches = [];
@@ -2174,7 +2216,8 @@ function fillParents(parent1, parent2) {
     document.getElementById('parent2Variant').value = parent2.variant || 'Standard';
 
     // Scroll down so the user actually sees what we just filled in
-    document.querySelector('#tab-foals .parents-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const pc = document.querySelector('#area-calculator .parents-container');
+    if (pc) pc.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Chimera Functionality — for when your horse is literally two horses in a trenchcoat
