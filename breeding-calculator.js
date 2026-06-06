@@ -982,36 +982,31 @@ function generateFoals() {
     }
     
     if (parent1.temperament === parent2.temperament) {
-        // Spec 1.2.6: warn, but let the breeder proceed (handy for scenario testing).
+        // Handbook: two horses with the same Temperament can never breed, no bypass.
+        errorMsg.textContent = `These two can't breed: both are ${parent1.temperament}. Parents must have different temperaments.`;
+        errorMsg.style.display = 'block';
         if (window.AppShell && window.AppShell.toast) {
-            window.AppShell.toast(
-                `Heads up: both parents are ${parent1.temperament}. In-game they need to differ, but I'll run it anyway.`,
-                'warning'
-            );
+            window.AppShell.toast(`Both parents are ${parent1.temperament} — they can't breed.`, 'error');
         }
+        return;
     }
 
-    // Generate 4 foals — a full litter of chaotic genetic possibilities
-    const foals = [];
-    for (let i = 0; i < 4; i++) {
-        foals.push(generateFoal(parent1, parent2, i));
-    }
-    
-    // Reveal the foals to the anxious breeder
-    displayFoals(foals);
+    // Every breeding has a 5% chance of twins (handbook): two separate foals,
+    // each with their own set of possibilities.
+    const litters = [makeLitter(parent1, parent2)];
+    if (Math.random() < 0.05) litters.push(makeLitter(parent1, parent2));
+
+    displayFoals(litters);
 }
 
-function displayFoals(foals) {
-    const resultsContainer = document.getElementById('resultsContainer');
-    const resultsGrid = document.getElementById('resultsGrid');
+// One foal's worth of possibilities (4 equally-likely outcomes).
+function makeLitter(parent1, parent2) {
+    const foals = [];
+    for (let i = 0; i < 4; i++) foals.push(generateFoal(parent1, parent2, i));
+    return foals;
+}
 
-    resultsGrid.innerHTML = '';
-
-    // Grab parent genotypes in case any foal has the audacity to be a Chimera
-    const parent1Geno = document.getElementById('parent1Geno').value.trim();
-    const parent2Geno = document.getElementById('parent2Geno').value.trim();
-
-    foals.forEach((foal, index) => {
+function buildFoalCard(foal, index, parent1Geno, parent2Geno) {
         const card = document.createElement('div');
         card.className = 'foal-card';
 
@@ -1114,8 +1109,41 @@ function displayFoals(foals) {
             ${chimeraSection}
         `;
 
-        resultsGrid.appendChild(card);
-    });
+        return card;
+}
+
+function displayFoals(litters) {
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsGrid = document.getElementById('resultsGrid');
+    const resultsTitle = resultsContainer.querySelector('.results-title');
+
+    resultsGrid.innerHTML = '';
+
+    // Grab parent genotypes in case any foal has the audacity to be a Chimera
+    const parent1Geno = document.getElementById('parent1Geno').value.trim();
+    const parent2Geno = document.getElementById('parent2Geno').value.trim();
+
+    const twins = litters.length > 1;
+    if (resultsTitle) resultsTitle.textContent = twins ? 'Twins! Two foals 🐴🐴' : 'The possible foals';
+    // For twins we stack two labelled sections; for one foal we use the grid directly.
+    resultsGrid.style.display = twins ? 'block' : '';
+
+    if (twins) {
+        litters.forEach((foals, li) => {
+            const section = document.createElement('div');
+            const heading = document.createElement('h3');
+            heading.className = 'twin-heading';
+            heading.textContent = 'Twin ' + (li + 1);
+            section.appendChild(heading);
+            const grid = document.createElement('div');
+            grid.className = 'results-grid';
+            foals.forEach((foal, index) => grid.appendChild(buildFoalCard(foal, index, parent1Geno, parent2Geno)));
+            section.appendChild(grid);
+            resultsGrid.appendChild(section);
+        });
+    } else {
+        litters[0].forEach((foal, index) => resultsGrid.appendChild(buildFoalCard(foal, index, parent1Geno, parent2Geno)));
+    }
 
     resultsContainer.style.display = 'block';
     resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

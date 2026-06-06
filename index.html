@@ -138,6 +138,8 @@
         /* ---- Foal results ---- */
         .results-container { display: none; }
         .results-title { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.6rem; text-align: center; margin-bottom: 20px; }
+        .twin-heading { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.3rem; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--dc-line); }
+        #resultsGrid > div:first-child .twin-heading { margin-top: 0; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
         .foal-card { background: var(--dc-white); border: 1px solid var(--dc-line); border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 20px; transition: transform var(--ease-snappy), box-shadow var(--ease-default); }
         .foal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raise); }
