@@ -39,6 +39,26 @@
     }
   };
 
+  // Small homepage changelog. Add a new {date, items} entry at the top to update it.
+  const CHANGELOG = [
+    { date: '6 Jun 2026', items: [
+      'Stained Glass and Ore are now one trait, Stained Glass. Older genos still read fine.',
+      'Breedings can roll twins (5%), shown as two foals.',
+      "Same-temperament pairs no longer breed, matching the handbook.",
+      'Fixed foals showing variants neither parent had.',
+      'New look to match dungeon-coursers.com, with offline support and a saved collection.'
+    ] }
+  ];
+
+  function renderChangelog() {
+    const host = $('#changelog');
+    if (!host) return;
+    host.innerHTML = '<h2>What’s new</h2>' + CHANGELOG.map(g =>
+      '<div class="cl-date">' + esc(g.date) + '</div><ul>' +
+      g.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>'
+    ).join('');
+  }
+
   // The working collection lives here and is mirrored into the engine.
   let collection = [];
 
@@ -524,6 +544,7 @@
     // Pull any saved collection into the engine + UI.
     setCollection(Store.load(K_COLLECTION, []), { persist: false });
     renderRecentQueries();
+    renderChangelog();
     refreshOnline();
     wire();
 
