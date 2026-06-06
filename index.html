@@ -107,6 +107,12 @@
         .import-cta ol { margin: 0 0 18px; padding-left: 20px; color: var(--dc-ink); font-size: 0.92rem; line-height: 1.7; }
         .import-cta ol a { color: var(--dc-link); }
         .import-cta .landing-cta { margin: 0; }
+        .changelog { margin-top: 28px; }
+        .changelog h2 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.3rem; margin-bottom: 4px; }
+        .changelog .cl-date { font-family: var(--font-stamp); font-size: 0.6rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); margin: 10px 0 8px; }
+        .changelog ul { list-style: none; padding: 0; margin: 0 0 8px; }
+        .changelog li { color: var(--dc-ink); font-size: 0.88rem; line-height: 1.5; padding-left: 16px; position: relative; margin-bottom: 6px; }
+        .changelog li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--dc-moss); }
 
         /* ---- Info / error boxes ---- */
         .info-box { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px; }
@@ -333,6 +339,8 @@
                         <button class="dc-btn outline auto" id="landingAdd">Add a courser by hand</button>
                     </div>
                 </div>
+
+                <div class="changelog" id="changelog"></div>
 
                 <div class="panel-footer">
                     An unofficial fan tool for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> · Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths
