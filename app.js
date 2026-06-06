@@ -35,7 +35,7 @@
     },
     save(key, val) {
       try { localStorage.setItem(key, JSON.stringify(val)); return true; }
-      catch (e) { toast("Couldn't save to this browser — its storage might be full or switched off.", 'error'); return false; }
+      catch (e) { toast("Couldn't save to this browser. Its storage may be full or switched off.", 'error'); return false; }
     }
   };
 
@@ -117,7 +117,7 @@
     if (!dot) return;
     const off = !navigator.onLine;
     dot.classList.toggle('is-offline', off);
-    dot.textContent = off ? '● Offline — working from cache' : '● Online';
+    dot.textContent = off ? '● Offline · from cache' : '● Online';
   }
 
   // =========================================================================
@@ -130,7 +130,7 @@
     const hasE = /\b[Ee]{1,2}\b/.test(core);
     const hasA = /\b[Aa]{1,2}\b/.test(core);
     if (!hasE || !hasA) {
-      return { ok: false, error: 'Expected a base coat — an E/e and an A/a pair (e.g. "Ee Aa …").' };
+      return { ok: false, error: 'Expected a base coat: an E/e and an A/a pair (e.g. "Ee Aa…").' };
     }
     return { ok: true };
   }
@@ -294,8 +294,8 @@
     wizardHorses = rows; // we still import all rows; invalid ones just flagged
 
     $('#wizDetect').textContent = parsed.headerDetected
-      ? 'Header row detected — mapping by column name.'
-      : 'No header row — assuming order: ID, Name, Genotype, Temperament, Variant.';
+      ? 'Header row detected. Mapping by column name.'
+      : 'No header row. Assuming order: ID, Name, Genotype, Temperament, Variant.';
     $('#wizCount').textContent = rows.length;
     $('#wizBad').textContent = bad;
     $('#wizBadWrap').style.display = bad ? 'block' : 'none';
@@ -323,7 +323,7 @@
   }
 
   function exportCSV() {
-    if (!collection.length) { toast("Nothing to export yet — the stable's empty.", 'error'); return; }
+    if (!collection.length) { toast("Nothing to export yet. Your stable is empty.", 'error'); return; }
     const head = 'ID,Name,Genotype,Temperament,Variant';
     const cell = (s) => {
       s = String(s == null ? '' : s);
@@ -347,7 +347,7 @@
       const sel = $('#parent' + n + 'FromColl');
       if (!sel) return;
       const cur = sel.value;
-      sel.innerHTML = '<option value="">— pick from collection —</option>' +
+      sel.innerHTML = '<option value="">Pick from collection…</option>' +
         collection.map((h, i) => `<option value="${i}">${esc(h.name)} (${esc(h.temperament)})</option>`).join('');
       if (cur && Number(cur) < collection.length) sel.value = cur;
       $$('.parent-source-row').forEach(r => { r.style.display = collection.length ? '' : 'none'; });

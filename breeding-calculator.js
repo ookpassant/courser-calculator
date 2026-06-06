@@ -988,7 +988,7 @@ function generateFoals() {
         // Spec 1.2.6: warn, but let the breeder proceed (handy for scenario testing).
         if (window.AppShell && window.AppShell.toast) {
             window.AppShell.toast(
-                `Heads up: both parents are ${parent1.temperament}. In-game they must differ to breed — generating anyway for reference.`,
+                `Heads up: both parents are ${parent1.temperament}. In-game they need to differ, but I'll run it anyway.`,
                 'warning'
             );
         }
@@ -1435,13 +1435,13 @@ function searchBreeding() {
     const resultsContent = document.getElementById('searchResultsContent');
     
     if (!query) {
-        if (window.AppShell) window.AppShell.toast('Type a breeding question first — e.g. "How can I make Amber Champagne?"', 'error');
+        if (window.AppShell) window.AppShell.toast('Type a breeding question first, like "How can I make Amber Champagne?"', 'error');
         else alert('Please enter a breeding question!');
         return;
     }
 
     if (horseCollection.length === 0) {
-        if (window.AppShell) window.AppShell.toast('Your stable is empty — import or add horses in the Collection tab first.', 'error');
+        if (window.AppShell) window.AppShell.toast('Your stable is empty. Add or import horses in the Collection tab first.', 'error');
         else alert('Please upload your horse collection CSV first!');
         return;
     }
