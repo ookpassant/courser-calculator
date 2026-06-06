@@ -274,10 +274,11 @@
         <button class="brand" data-nav="landing">Bloodline</button>
         <span class="unofficial-badge" title="A fan-made tool, not affiliated with Dungeon Coursers">Unofficial</span>
         <div class="nav-links">
-            <button class="nav-link" data-area="calculator">Calculator</button>
-            <button class="nav-link" data-area="collection">Collection</button>
             <button class="nav-link" data-area="search">Smart Search</button>
+            <button class="nav-link" data-area="calculator">Foal Generator</button>
+            <button class="nav-link" data-area="chimera">Chimera</button>
             <button class="nav-link" data-area="scroll">Scroll Generator</button>
+            <button class="nav-link" data-area="collection">Collection</button>
         </div>
         <div class="nav-right">
             <span class="offline-indicator" id="offlineIndicator">● Online</span>
@@ -296,10 +297,12 @@
         <div class="content">
             <div class="panel">
                 <h1 class="page-title">Bloodline</h1>
-                <p class="landing-lead">An unofficial, lightning-fast genetics calculator for the <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> HARPG. Predict foals, untangle Chimera patches, roll custom scrolls, and search your stable for the perfect pairing — all in your browser, no account required.</p>
+                <p class="landing-lead">An unofficial, lightning-fast genetics calculator for the <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> HARPG. Predict foals, untangle Chimera patches, and roll custom scrolls — all in your browser, no account required. Every calculator works on its own with manual genotype entry; building a collection is optional and only powers Smart Search.</p>
                 <div class="landing-cta">
-                    <button class="dc-btn auto" data-nav="calculator">Try the Calculator</button>
-                    <button class="dc-btn mauve auto" data-nav="collection">Manage my Collection</button>
+                    <button class="dc-btn mauve auto" data-nav="search">Smart Search</button>
+                    <button class="dc-btn auto" data-nav="calculator">Foal Generator</button>
+                    <button class="dc-btn auto" data-nav="chimera">Chimera Calculator</button>
+                    <button class="dc-btn auto" data-nav="scroll">Scroll Generator</button>
                 </div>
                 <div class="feature-grid">
                     <div class="feature"><h3>Mendelian Accuracy</h3><p>Full shared-loci inheritance — KIT, dilutions, modifiers, anomalies, variants — with lethal-white detection and rarity scoring matched to the official trait index.</p></div>
@@ -469,6 +472,40 @@
                     <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
                 </section>
 
+                <!-- Area: Chimera Calculator (standalone — no collection needed) -->
+                <section class="area" id="area-chimera">
+                    <h1 class="page-title">Chimera Calculator</h1>
+                    <p class="blurb">For a foal born with the Chimera anomaly — see what coats could show up in the patch. Enter genotypes by hand, or jump here from a foal card.</p>
+
+                    <div class="info-box">
+                        <p><strong>For existing foals with Chimera:</strong> Enter the foal's genotype and both parent genotypes to see what coat patterns could appear in the Chimera patch.</p>
+                        <p><strong>Rule:</strong> Chimera patches can display any traits genetically possible from both parents (excluding anomalies the parents don't carry).</p>
+                    </div>
+
+                    <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
+                    <textarea id="chimeraFoalGeno" placeholder="Ee Aa nCr + Chimera"></textarea>
+
+                    <div class="parents-container">
+                        <div class="parent-card">
+                            <h2>Parent 1</h2>
+                            <label for="chimeraParent1Geno">Genotype:</label>
+                            <textarea id="chimeraParent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+                        </div>
+                        <div class="parent-card">
+                            <h2>Parent 2</h2>
+                            <label for="chimeraParent2Geno">Genotype:</label>
+                            <textarea id="chimeraParent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
+                        </div>
+                    </div>
+
+                    <button class="generate-btn" onclick="calculateChimera()">Calculate Chimera Possibilities</button>
+
+                    <div class="results-container" id="chimeraResultsContainer" style="display: none;">
+                        <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">Chimera Coat Possibilities</h3>
+                        <div id="chimeraResultsContent"></div>
+                    </div>
+                </section>
+
             </div>
         </div>
     </div>
@@ -554,40 +591,6 @@
                 <div class="wiz-step" data-step="3">
                     <p style="margin-bottom:16px;">✓ <strong id="wizDone">Imported.</strong></p>
                     <button class="dc-btn auto" id="wizDoneBtn">Go to Collection</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===================== Chimera Modal ===================== -->
-    <div class="modal-overlay" id="chimeraModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2>Chimera Analysis</h2>
-                <button class="modal-close" id="chimeraClose">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="info-box">
-                    <p><strong>Rule:</strong> Chimera patches can display any traits genetically possible from both parents (excluding anomalies the parents don't carry). Fields below are pre-filled from the foal card — edit to test other scenarios.</p>
-                </div>
-                <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
-                <textarea id="chimeraFoalGeno" placeholder="Ee Aa nCr + Chimera"></textarea>
-                <div class="parents-container">
-                    <div class="parent-card">
-                        <h2>Parent 1</h2>
-                        <label for="chimeraParent1Geno">Genotype:</label>
-                        <textarea id="chimeraParent1Geno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
-                    </div>
-                    <div class="parent-card">
-                        <h2>Parent 2</h2>
-                        <label for="chimeraParent2Geno">Genotype:</label>
-                        <textarea id="chimeraParent2Geno" placeholder="EE aa prlprl nO + Geode"></textarea>
-                    </div>
-                </div>
-                <button class="generate-btn" onclick="calculateChimera()">Calculate Chimera Possibilities</button>
-                <div class="results-container" id="chimeraResultsContainer" style="display: none;">
-                    <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">Chimera Coat Possibilities</h3>
-                    <div id="chimeraResultsContent"></div>
                 </div>
             </div>
         </div>
