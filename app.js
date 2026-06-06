@@ -78,10 +78,11 @@
   // Routing: views (landing | app) + areas within the app
   // =========================================================================
   const AREAS = {
-    calculator: { label: 'Foal Generator', crumb: 'Breeding Calculator' },
-    collection: { label: 'Collection', crumb: 'Collection' },
     search: { label: 'Smart Search', crumb: 'Smart Search' },
-    scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' }
+    calculator: { label: 'Foal Generator', crumb: 'Foal Generator' },
+    chimera: { label: 'Chimera Calculator', crumb: 'Chimera Calculator' },
+    scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' },
+    collection: { label: 'Collection', crumb: 'Collection' }
   };
 
   function showView(view) {
@@ -103,8 +104,7 @@
 
   // Legacy shim the engine calls (fillParents -> 'foals', fillChimera -> 'chimera')
   function switchTab(tabName) {
-    if (tabName === 'chimera') { openChimeraModal(); return; }
-    const map = { foals: 'calculator', search: 'search', scroll: 'scroll' };
+    const map = { foals: 'calculator', search: 'search', scroll: 'scroll', chimera: 'chimera' };
     showArea(map[tabName] || tabName);
   }
 
@@ -386,10 +386,10 @@
   }
 
   // =========================================================================
-  // Chimera modal (Phase 3): the engine fills #chimera* fields & opens this
+  // Chimera: now its own first-class area (reachable from the nav and from a
+  // foal card). The engine fills #chimera* fields then calls switchTab.
   // =========================================================================
-  function openChimeraModal() { $('#chimeraModal').classList.add('active'); }
-  function closeChimeraModal() { $('#chimeraModal').classList.remove('active'); }
+  function openChimeraModal() { showArea('chimera'); }
 
   // =========================================================================
   // Wiring
@@ -461,11 +461,6 @@
       if (chip) { $('#breedingQuery').value = chip.dataset.query; if (window.searchBreeding) window.searchBreeding(); }
     });
 
-    // Chimera modal close + open-empty button
-    on('#chimeraClose', closeChimeraModal);
-    on('#openChimera', () => { openChimeraModal(); });
-    $('#chimeraModal').addEventListener('click', (e) => { if (e.target.id === 'chimeraModal') closeChimeraModal(); });
-
     // Copy-to-clipboard (delegated) for any .geno-copy
     document.addEventListener('click', (e) => {
       const g = e.target.closest('.geno-copy');
@@ -480,7 +475,7 @@
 
     // Esc closes overlays
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { closeEditor(); closeWizard(); closeChimeraModal(); }
+      if (e.key === 'Escape') { closeEditor(); closeWizard(); }
     });
 
     // Online/offline
