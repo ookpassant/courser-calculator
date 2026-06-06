@@ -35,7 +35,7 @@
     },
     save(key, val) {
       try { localStorage.setItem(key, JSON.stringify(val)); return true; }
-      catch (e) { toast('Could not save to local storage (it may be full or disabled).', 'error'); return false; }
+      catch (e) { toast("Couldn't save to this browser — its storage might be full or switched off.", 'error'); return false; }
     }
   };
 
@@ -52,6 +52,7 @@
     if (opts.persist !== false) persistCollection();
     renderCollection();
     populateParentPickers();
+    refreshSearchGate();
   }
 
   // =========================================================================
@@ -98,7 +99,7 @@
     const crumb = $('#breadcrumbCurrent');
     if (crumb) crumb.textContent = AREAS[area].crumb;
     if (area === 'collection') renderCollection();
-    if (area === 'search') renderRecentQueries();
+    if (area === 'search') { renderRecentQueries(); refreshSearchGate(); }
     if (area === 'calculator') populateParentPickers();
   }
 
@@ -177,9 +178,9 @@
     if (!collection.length) {
       host.innerHTML = `
         <div class="empty-state">
-          <p>Your stable is empty.</p>
-          <p class="subtitle">Import a CSV or add a horse to get started.
-            <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener">Grab the Google Sheets template.</a>
+          <p>Nothing in the stable yet.</p>
+          <p class="subtitle">Bring your herd in from a spreadsheet, or add one horse by hand to get going.
+            <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener">Here's a template to start from.</a>
           </p>
         </div>`;
       return;
@@ -239,8 +240,8 @@
       temperament: $('#edTemp').value || '',
       variant: $('#edVariant').value || 'Standard'
     };
-    if (editIndex >= 0) { collection[editIndex] = horse; toast('Horse updated.', 'success'); }
-    else { collection.push(horse); toast('Horse added to your stable.', 'success'); }
+    if (editIndex >= 0) { collection[editIndex] = horse; toast('Saved your changes.', 'success'); }
+    else { collection.push(horse); toast('Added to your stable.', 'success'); }
     setCollection(collection);
     closeEditor();
   }
@@ -307,7 +308,7 @@
         <td>${v.ok ? '✓' : '⚠ ' + esc(v.error)}</td>
       </tr>`).join('');
 
-    if (!rows.length) { toast('No valid horse rows found in that CSV.', 'error'); return; }
+    if (!rows.length) { toast("Couldn't spot any horses in that file.", 'error'); return; }
     gotoStep(2);
   }
 
@@ -322,7 +323,7 @@
   }
 
   function exportCSV() {
-    if (!collection.length) { toast('Nothing to export — your stable is empty.', 'error'); return; }
+    if (!collection.length) { toast("Nothing to export yet — the stable's empty.", 'error'); return; }
     const head = 'ID,Name,Genotype,Temperament,Variant';
     const cell = (s) => {
       s = String(s == null ? '' : s);
@@ -335,7 +336,7 @@
     a.href = url; a.download = 'bloodline-collection.csv';
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
-    toast('Collection exported as CSV.', 'success');
+    toast('Exported your stable as a CSV.', 'success');
   }
 
   // =========================================================================
@@ -376,6 +377,15 @@
     renderRecentQueries();
   }
 
+  // Gate Smart Search behind having a collection: prompt to add horses if empty.
+  function refreshSearchGate() {
+    const empty = $('#searchEmpty'), controls = $('#searchControls');
+    if (!empty || !controls) return;
+    const hasHorses = collection.length > 0;
+    empty.style.display = hasHorses ? 'none' : 'block';
+    controls.style.display = hasHorses ? 'block' : 'none';
+  }
+
   function renderRecentQueries() {
     const host = $('#recentQueries');
     if (!host) return;
@@ -411,6 +421,10 @@
     on('#collAdd', () => openEditor());
     on('#collImport', openWizard);
     on('#collExport', exportCSV);
+
+    // Smart Search empty-state prompts
+    on('#searchImport', openWizard);
+    on('#searchAdd', () => openEditor());
 
     // Delegated edit/delete in the list
     const list = $('#collectionList');
@@ -486,7 +500,7 @@
   function on(sel, fn) { const el = $(sel); if (el) el.addEventListener('click', fn); }
 
   function copyText(text) {
-    const done = () => toast('Genotype copied to clipboard.', 'success', 2500);
+    const done = () => toast('Copied that genotype.', 'success', 2500);
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
     } else { fallbackCopy(text, done); }
@@ -495,7 +509,7 @@
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) { toast('Copy failed.', 'error'); }
+    try { document.execCommand('copy'); done(); } catch (e) { toast("Couldn't copy that, sorry.", 'error'); }
     ta.remove();
   }
 
@@ -533,6 +547,7 @@
       if (!opts || opts.persist !== false) persistCollection();
       renderCollection();
       populateParentPickers();
+      refreshSearchGate();
     }
   };
 

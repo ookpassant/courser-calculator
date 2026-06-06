@@ -288,8 +288,8 @@
 
     <header class="dc-hero">
         <h1>Dungeon Coursers</h1>
-        <p class="tagline">Bloodline · Unofficial Breeding Calculator</p>
-        <p class="hero-disclaimer">An unofficial, fan-made tool — not affiliated with, endorsed by, or run by Dungeon Coursers. Built by a player, for players.</p>
+        <p class="tagline">Bloodline · the unofficial breeding calculator</p>
+        <p class="hero-disclaimer">A fan-made thing, built by a player for players. Not official, not run by, and not endorsed by Dungeon Coursers — just here to help.</p>
     </header>
 
     <!-- ===================== LANDING ===================== -->
@@ -297,7 +297,7 @@
         <div class="content">
             <div class="panel">
                 <h1 class="page-title">Bloodline</h1>
-                <p class="landing-lead">An unofficial, lightning-fast genetics calculator for the <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> HARPG. Predict foals, untangle Chimera patches, and roll custom scrolls — all in your browser, no account required. Every calculator works on its own with manual genotype entry; building a collection is optional and only powers Smart Search.</p>
+                <p class="landing-lead">A little genetics calculator for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a>, made by a player who got tired of working out foals by hand. Guess what a pairing might throw, work out a Chimera patch, or roll a scroll — it all runs right here in your browser, no sign-up, nothing to install. Every calculator works on its own if you just type the genotypes in; you only need a saved collection for Smart Search.</p>
                 <div class="landing-cta">
                     <button class="dc-btn mauve auto" data-nav="search">Smart Search</button>
                     <button class="dc-btn auto" data-nav="calculator">Foal Generator</button>
@@ -305,10 +305,10 @@
                     <button class="dc-btn auto" data-nav="scroll">Scroll Generator</button>
                 </div>
                 <div class="feature-grid">
-                    <div class="feature"><h3>Mendelian Accuracy</h3><p>Full shared-loci inheritance — KIT, dilutions, modifiers, anomalies, variants — with lethal-white detection and rarity scoring matched to the official trait index.</p></div>
-                    <div class="feature"><h3>Works Offline</h3><p>Everything runs client-side. Install it, lose your connection, and your stable and calculators still work from cache.</p></div>
-                    <div class="feature"><h3>Natural-Language Search</h3><p>Ask "How can I make Amber Champagne?" and Bloodline ranks the breeding pairs in your collection that can get you there.</p></div>
-                    <div class="feature"><h3>Your Stable, Saved</h3><p>Import a CSV or add horses by hand. Your collection lives in this browser — sortable, searchable, exportable.</p></div>
+                    <div class="feature"><h3>It does the maths properly</h3><p>Real Mendelian inheritance, shared loci and all — KIT, dilutions, modifiers, anomalies, variants. It flags lethal whites and scores rarity against the official trait index.</p></div>
+                    <div class="feature"><h3>Works with the wifi off</h3><p>It all runs on your machine. Pop it on your home screen, wander out of signal, and your stable and the calculators still work.</p></div>
+                    <div class="feature"><h3>Just ask it</h3><p>Type "how do I make Amber Champagne?" and it'll sort your horses into the pairs most likely to actually get you one.</p></div>
+                    <div class="feature"><h3>Your stable stays put</h3><p>Bring horses in from a spreadsheet or jot them down by hand. They live in this browser — search them, sort them, export them whenever.</p></div>
                 </div>
                 <div class="panel-footer">
                     An unofficial fan tool for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> · Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths
@@ -330,11 +330,11 @@
                 <!-- Area: Calculator (Foal Generator) -->
                 <section class="area active" id="area-calculator">
                     <h1 class="page-title">Foal Generator</h1>
-                    <p class="blurb">Generate foal possibilities from two parent horses. Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths.</p>
+                    <p class="blurb">Give it two parents and it'll show you four foals they might throw. (Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a>, who can't maths.)</p>
 
                     <div class="info-box">
-                        <p><strong>Note:</strong> Parents must have different Temperaments to breed (we'll warn, but still let you experiment).</p>
-                        <p><strong>Tip:</strong> Paste the full genotype string (e.g., <code>Ee Aa nCr nT + Brindle</code>), or pick a horse from your collection.</p>
+                        <p><strong>Note:</strong> In-game, parents need different temperaments to breed. If you match them up I'll grumble, but I'll still run it so you can poke at the genetics.</p>
+                        <p><strong>Tip:</strong> Paste a whole genotype straight off the site (like <code>Ee Aa nCr nT + Brindle</code>), or just pick a horse out of your collection.</p>
                     </div>
 
                     <div class="error-message" id="errorMessage"></div>
@@ -399,10 +399,10 @@
                         </div>
                     </div>
 
-                    <button class="generate-btn" onclick="generateFoals()">Generate Foal Possibilities</button>
+                    <button class="generate-btn" onclick="generateFoals()">Show me the foals</button>
 
                     <div class="results-container" id="resultsContainer">
-                        <h2 class="results-title">Possible Foals</h2>
+                        <h2 class="results-title">The possible foals</h2>
                         <div class="results-grid" id="resultsGrid"></div>
                     </div>
                 </section>
@@ -410,7 +410,7 @@
                 <!-- Area: Collection -->
                 <section class="area" id="area-collection">
                     <h1 class="page-title">Collection</h1>
-                    <p class="blurb">Your stable lives in this browser — <span id="collCount">0</span> horse(s) saved.</p>
+                    <p class="blurb">Your stable, kept right here in this browser — <span id="collCount">0</span> horse(s) so far.</p>
 
                     <div class="coll-toolbar">
                         <input type="text" id="collSearch" placeholder="Search name, genotype, or temperament…">
@@ -430,35 +430,48 @@
                 <!-- Area: Smart Search -->
                 <section class="area" id="area-search">
                     <h1 class="page-title">Smart Search</h1>
-                    <p class="blurb">Ask a breeding question in plain language and Bloodline finds the best pairs in your collection.</p>
+                    <p class="blurb">Tell it what you're chasing — in plain English — and it digs through your stable for the pairs that can actually get you there.</p>
 
-                    <div class="info-box">
-                        <p><strong>Tip:</strong> Prefix a recessive trait with <em>carries</em> (or <em>carrying</em>) to find pairs whose foals can carry the gene without expressing it &mdash; perfect for stacking <em>nfe</em> toward <em>fefe</em>. Supports: filigree, pearl, ether, flaxen, starfield, lacquer, sepulchered, patn.</p>
+                    <!-- Shown when there are no horses yet: nudge them to add some -->
+                    <div id="searchEmpty" class="empty-state" style="display:none;">
+                        <p>Smart Search rummages through <em>your</em> stable, so it needs some horses to rummage through first.</p>
+                        <p class="subtitle">Bring your herd in from a spreadsheet, or just type one in by hand — whichever's less effort.</p>
+                        <div class="landing-cta" style="justify-content:center; margin-top:16px;">
+                            <button class="dc-btn mauve auto" id="searchImport">Import a CSV</button>
+                            <button class="dc-btn outline auto" id="searchAdd">Add a horse by hand</button>
+                        </div>
                     </div>
 
-                    <label for="breedingQuery">Ask a Breeding Question:</label>
-                    <input type="text" id="breedingQuery" placeholder='e.g., "Amber Champagne", "fewspot and starfield", or "carries filigree"'>
-                    <div class="recent-queries" id="recentQueries"></div>
-                    <button class="dc-btn mauve" onclick="searchBreeding()">Search My Horses</button>
+                    <!-- The actual search UI, shown once there's a collection -->
+                    <div id="searchControls">
+                        <div class="info-box">
+                            <p><strong>Tip:</strong> Stick <em>carries</em> (or <em>carrying</em>) in front of a recessive to find pairs whose foals can quietly carry it without showing it &mdash; handy for stacking <em>nfe</em> toward a future <em>fefe</em>. Works for: filigree, pearl, ether, flaxen, starfield, lacquer, sepulchered, patn.</p>
+                        </div>
 
-                    <div id="searchResults" style="margin-top: 20px; display: none;">
-                        <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">Search Results</h3>
-                        <div id="searchResultsContent"></div>
+                        <label for="breedingQuery">What are you trying to breed?</label>
+                        <input type="text" id="breedingQuery" placeholder='e.g. "Amber Champagne", "fewspot and starfield", or "carries filigree"'>
+                        <div class="recent-queries" id="recentQueries"></div>
+                        <button class="dc-btn mauve" onclick="searchBreeding()">Search my stable</button>
+
+                        <div id="searchResults" style="margin-top: 20px; display: none;">
+                            <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">What I found</h3>
+                            <div id="searchResultsContent"></div>
+                        </div>
                     </div>
                 </section>
 
                 <!-- Area: Scroll Generator -->
                 <section class="area" id="area-scroll">
                     <h1 class="page-title">Scroll Generator</h1>
-                    <p class="blurb">Roll a random design from a custom scroll.</p>
+                    <p class="blurb">Got a custom scroll and no idea what to make? Let it roll you something.</p>
 
                     <div class="info-box">
-                        <p><strong>Don't know what to do with your custom scroll?</strong> Use this generator to create a random design based on your scroll rarity!</p>
-                        <p><strong>Scroll Rules:</strong> Each scroll includes a coat color of that rarity, 1 marking/modifier/carrier (at that rarity or lower), 10% chance of random anomaly, 5% chance of random variant, and your choice of temperament.</p>
+                        <p><strong>Staring at a blank scroll?</strong> Pick the rarity and I'll dream up a design for you.</p>
+                        <p><strong>How a roll works:</strong> a coat colour at that rarity, one marking, modifier, or carrier (that rarity or lower), a 1-in-10 shot at an anomaly, a 1-in-20 shot at a variant — and whatever temperament you fancy.</p>
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <label for="scrollRarity">Select Scroll Rarity:</label>
+                        <label for="scrollRarity">Scroll rarity:</label>
                         <select id="scrollRarity">
                             <option value="Common">Common</option>
                             <option value="Uncommon">Uncommon</option>
@@ -468,18 +481,18 @@
                         </select>
                     </div>
 
-                    <button class="generate-btn" onclick="displayCustomScrollResult()">Generate Custom Scroll</button>
+                    <button class="generate-btn" onclick="displayCustomScrollResult()">Roll me a scroll</button>
                     <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
                 </section>
 
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->
                 <section class="area" id="area-chimera">
                     <h1 class="page-title">Chimera Calculator</h1>
-                    <p class="blurb">For a foal born with the Chimera anomaly — see what coats could show up in the patch. Enter genotypes by hand, or jump here from a foal card.</p>
+                    <p class="blurb">Got a foal that rolled Chimera? This works out what could show up in the patch. Type the genotypes in yourself, or hop over from a foal card.</p>
 
                     <div class="info-box">
-                        <p><strong>For existing foals with Chimera:</strong> Enter the foal's genotype and both parent genotypes to see what coat patterns could appear in the Chimera patch.</p>
-                        <p><strong>Rule:</strong> Chimera patches can display any traits genetically possible from both parents (excluding anomalies the parents don't carry).</p>
+                        <p><strong>Working out a Chimera patch:</strong> drop in the foal's genotype and both parents', and I'll list the coats the patch could turn out to be.</p>
+                        <p><strong>The rule of thumb:</strong> a patch can show anything the two parents could genetically produce — minus any anomalies neither parent carries.</p>
                     </div>
 
                     <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
@@ -498,10 +511,10 @@
                         </div>
                     </div>
 
-                    <button class="generate-btn" onclick="calculateChimera()">Calculate Chimera Possibilities</button>
+                    <button class="generate-btn" onclick="calculateChimera()">Work out the patch</button>
 
                     <div class="results-container" id="chimeraResultsContainer" style="display: none;">
-                        <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">Chimera Coat Possibilities</h3>
+                        <h3 style="font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid var(--dc-line); padding-bottom: 10px;">What the patch could be</h3>
                         <div id="chimeraResultsContent"></div>
                     </div>
                 </section>
