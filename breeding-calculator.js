@@ -937,12 +937,9 @@ function generateFoal(parent1, parent2, variation) {
             variant = variantCandidates[Math.floor(Math.random() * variantCandidates.length)];
         }
     }
-    // 5% spontaneous variant mutation — congratulations, your horse just evolved mid-cutscene
-    if (!variant && Math.random() < 0.05) {
-        const nonStandardVariants = ['Heraldic', 'Puck', 'Cavedweller', 'Restored'];
-        variant = nonStandardVariants[Math.floor(Math.random() * nonStandardVariants.length)];
-    }
-    
+    // No spontaneous variants: a foal can only inherit a variant a parent actually
+    // carries (25% each). The 5% random roll is for ANOMALIES, not variants.
+
     // Temperament — foals are contractually obligated to be nothing like their parents (relatable)
     const temperaments = ['Choleric', 'Melancholic', 'Phlegmatic', 'Sanguine'];
     const availableTemps = temperaments.filter(t => t !== parent1.temperament && t !== parent2.temperament);
