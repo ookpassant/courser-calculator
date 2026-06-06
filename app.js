@@ -426,6 +426,10 @@
     on('#searchImport', openWizard);
     on('#searchAdd', () => openEditor());
 
+    // Landing-page import prompt
+    on('#landingImport', openWizard);
+    on('#landingAdd', () => openEditor());
+
     // Delegated edit/delete in the list
     const list = $('#collectionList');
     if (list) list.addEventListener('click', (e) => {

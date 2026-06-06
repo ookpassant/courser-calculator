@@ -101,6 +101,12 @@
         .feature { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-moss); border-radius: var(--radius-sm); padding: 16px; }
         .feature h3 { font-family: var(--font-stamp); font-size: 0.75rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-ink); margin-bottom: 8px; font-weight: 400; }
         .feature p { color: var(--dc-slate); font-size: 0.9rem; line-height: 1.5; }
+        .import-cta { margin-top: 28px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-mauve); border-radius: var(--radius); padding: 24px; }
+        .import-cta h2 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.5rem; margin-bottom: 6px; }
+        .import-cta > p { color: var(--dc-slate); font-size: 0.95rem; margin-bottom: 12px; }
+        .import-cta ol { margin: 0 0 18px; padding-left: 20px; color: var(--dc-ink); font-size: 0.92rem; line-height: 1.7; }
+        .import-cta ol a { color: var(--dc-link); }
+        .import-cta .landing-cta { margin: 0; }
 
         /* ---- Info / error boxes ---- */
         .info-box { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px; }
@@ -312,6 +318,22 @@
                     <div class="feature"><h3>Just ask it</h3><p>Ask "how do I make Amber Champagne?" and it ranks the pairs in your stable that can get you one.</p></div>
                     <div class="feature"><h3>Your stable stays put</h3><p>Import a CSV or add horses by hand. They stay in this browser to search, sort, and export.</p></div>
                 </div>
+
+                <div class="import-cta">
+                    <h2>Import your coursers from a CSV</h2>
+                    <p>Load your whole stable in one go, then Smart Search can find your best pairings.</p>
+                    <ol>
+                        <li>Open the <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener">Google Sheets template</a> and pick <strong>File &gt; Make a copy</strong>.</li>
+                        <li>Fill in your coursers, one per row. Paste genotypes straight from the site.</li>
+                        <li>Download it: <strong>File &gt; Download &gt; Comma-separated values (.csv)</strong>.</li>
+                        <li>Hit <strong>Import from CSV</strong> below and drop the file in.</li>
+                    </ol>
+                    <div class="landing-cta">
+                        <button class="dc-btn mauve auto" id="landingImport">Import from CSV</button>
+                        <button class="dc-btn outline auto" id="landingAdd">Add a courser by hand</button>
+                    </div>
+                </div>
+
                 <div class="panel-footer">
                     An unofficial fan tool for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> · Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths
                 </div>
