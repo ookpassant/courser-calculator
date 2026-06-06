@@ -70,6 +70,8 @@
         .dc-hero { position: relative; overflow: hidden; background-color: var(--dc-charcoal); background-image: var(--texture-grain); padding: 38px 40px 56px; min-height: 150px; }
         .dc-hero h1 { font-family: var(--font-display); font-weight: 400; color: var(--dc-crimson); font-size: 3.5rem; line-height: 1; letter-spacing: 0.01em; text-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
         .dc-hero .tagline { margin-top: 6px; font-family: var(--font-stamp); color: var(--dc-moss); font-size: 0.85rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); }
+        .dc-hero .hero-disclaimer { margin-top: 12px; font-size: 0.82rem; color: rgba(255,255,255,0.6); max-width: 60ch; }
+        .unofficial-badge { align-self: center; font-family: var(--font-stamp); font-size: 0.55rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-white); background: var(--dc-crimson); border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
 
         /* ---- Content + panel ---- */
         .content { max-width: var(--container-max); margin: 0 auto; padding: 0 20px 48px; }
@@ -182,8 +184,11 @@
         .scroll-result-card .phenotype { color: var(--dc-ink); font-size: 1.1rem; font-weight: 700; text-align: center; padding: 10px; background: var(--dc-white); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); }
 
         /* ---- Collection manager ---- */
-        .coll-toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+        .coll-toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; margin-bottom: 20px; }
         .coll-toolbar input, .coll-toolbar select { width: auto; margin: 0; flex: 1; min-width: 160px; }
+        /* Buttons share the toolbar row — drop the inherited bottom margin and
+           match the inputs' height so everything lines up. */
+        .coll-toolbar .dc-btn { margin-bottom: 0; display: inline-flex; align-items: center; }
         .coll-toolbar .spacer { flex: 1; }
         .horse-row { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; background: var(--dc-white); border: 1px solid var(--dc-line); border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 14px 16px; margin-bottom: 12px; }
         .horse-main { min-width: 0; flex: 1; }
@@ -267,6 +272,7 @@
     <!-- Site chrome -->
     <nav class="dc-navbar">
         <button class="brand" data-nav="landing">Bloodline</button>
+        <span class="unofficial-badge" title="A fan-made tool, not affiliated with Dungeon Coursers">Unofficial</span>
         <div class="nav-links">
             <button class="nav-link" data-area="calculator">Calculator</button>
             <button class="nav-link" data-area="collection">Collection</button>
@@ -281,7 +287,8 @@
 
     <header class="dc-hero">
         <h1>Dungeon Coursers</h1>
-        <p class="tagline">Bloodline · Breeding Calculator</p>
+        <p class="tagline">Bloodline · Unofficial Breeding Calculator</p>
+        <p class="hero-disclaimer">An unofficial, fan-made tool — not affiliated with, endorsed by, or run by Dungeon Coursers. Built by a player, for players.</p>
     </header>
 
     <!-- ===================== LANDING ===================== -->
