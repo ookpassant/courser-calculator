@@ -359,7 +359,12 @@ const WHITE_MARKING_NAMES = {
 function parseGenotype(genoString) {
     const parts = genoString.trim().split('+');
     const genes = parts[0].trim().split(/\s+/);
-    const anomalies = parts.length > 1 ? parts[1].trim().split(',').map(a => a.trim()) : [];
+    let anomalies = parts.length > 1 ? parts[1].trim().split(',').map(a => a.trim()).filter(Boolean) : [];
+    // Stained Glass and Ore were merged into one trait, called "Stained Glass"
+    // going forward. Older coursers may still list "Ore" (or both), so normalise
+    // any "Ore" to "Stained Glass" and de-duplicate.
+    anomalies = anomalies.map(a => a.toLowerCase() === 'ore' ? 'Stained Glass' : a);
+    anomalies = anomalies.filter((a, i) => anomalies.indexOf(a) === i);
 
     return { genes, anomalies };
 }
@@ -912,8 +917,8 @@ function generateFoal(parent1, parent2, variation) {
     
     // 5% chance of a wild anomaly appearing — nature's loot box
     if (Math.random() < 0.05) {
-        const randomAnomalies = ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle', 'Chimera', 
-                                'Geode', 'Ore', 'Stained Glass', 'Kintsugi', 'Swarf', 'Vitiligo',
+        const randomAnomalies = ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle', 'Chimera',
+                                'Geode', 'Stained Glass', 'Kintsugi', 'Swarf', 'Vitiligo',
                                 'Oracle', 'Signet', 'Pennant', 'Pastiche', 'Fresco', 'Lantern'];
         const random = randomAnomalies[Math.floor(Math.random() * randomAnomalies.length)];
         if (!foalAnomalies.includes(random)) {
@@ -1331,7 +1336,7 @@ const TEMPERAMENTS = ['Choleric', 'Melancholic', 'Phlegmatic', 'Sanguine'];
 const VARIANTS = ['Standard', 'Heraldic', 'Puck', 'Cavedweller', 'Restored'];
 const ALL_ANOMALIES = [
     'Bend-or Spots', 'Birdcatcher Spots', 'Brindle', 'Chimera',
-    'Geode', 'Ore', 'Stained Glass', 'Kintsugi', 'Swarf', 'Vitiligo',
+    'Geode', 'Stained Glass', 'Kintsugi', 'Swarf', 'Vitiligo',
     'Oracle', 'Signet', 'Pennant', 'Pastiche', 'Fresco', 'Lantern'
 ];
 
