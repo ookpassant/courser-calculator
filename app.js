@@ -19,6 +19,11 @@
   const K_QUERIES = 'bloodline.queries.v1';
   const MAX_RECENT = 8;
 
+  // Bookmarklet for importing a courser from dungeon-coursers.com. Runs in the
+  // user's own browser on a courser page (no server, no bot, no AI) and reads
+  // the genotype/temperament off the page, then opens Bloodline pre-filled.
+  const DC_BOOKMARKLET = `javascript:(function(){function f(l){var r=document.querySelectorAll('.row');for(var i=0;i<r.length;i++){var h=r[i].querySelector('h5');if(h&&h.textContent.trim()===l){var c=r[i].querySelector('.col-lg-8');if(c)return c.textContent.replace(/\\s+/g,' ').trim();}}return'';}var g=f('Genotype'),t=f('Temperament');var b=document.querySelector('.breadcrumb-item.active');var n=(b?b.textContent:document.title).replace(/\\s+/g,' ').trim();var id=(location.pathname.match(/(\\d+)/)||[''])[0];if(!g){alert('Bloodline: no genotype found on this page.');return;}window.open('https://ook.monster/courser-calc/?add=1&id='+encodeURIComponent(id)+'&name='+encodeURIComponent(n)+'&geno='+encodeURIComponent(g)+'&temp='+encodeURIComponent(t),'bloodline');})();`;
+
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
   const esc = (s) => String(s == null ? '' : s)
@@ -42,6 +47,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '10 Jun 2026', items: [
+      'Import a courser straight from Dungeon Coursers with a one-click bookmarklet (Collection tab).',
       'Foal Generator now lists every possible foal from a pairing, like the Chimera breakdown.',
       'Import your coursers from a CSV right on the homepage.',
       'Stained Glass and Ore are now one trait, Stained Glass. Older genos still read fine.'
@@ -454,6 +460,16 @@
     on('#landingImport', openWizard);
     on('#landingAdd', () => openEditor());
 
+    // Dungeon Coursers import bookmarklet (drag to bookmarks bar)
+    const bm = $('#dcBookmarklet');
+    if (bm) {
+      bm.href = DC_BOOKMARKLET;
+      bm.addEventListener('click', (e) => {
+        e.preventDefault();
+        toast('Drag this button up to your bookmarks bar, then open a courser page and click it there.', 'success', 5000);
+      });
+    }
+
     // Delegated edit/delete in the list
     const list = $('#collectionList');
     if (list) list.addEventListener('click', (e) => {
@@ -542,6 +558,62 @@
   }
 
   // =========================================================================
+  // Import via URL params (used by the Dungeon Coursers bookmarklet, or any
+  // link). Either adds a courser to the collection, or prefills a parent.
+  //   ?add=1&name=...&geno=...&temp=...&variant=...&id=...
+  //   ?p1geno=...&p1temp=...&p1variant=...&p1name=...  (and p2*)
+  // =========================================================================
+  function normTemp(v) {
+    const m = { choleric: 'Choleric', melancholic: 'Melancholic', phlegmatic: 'Phlegmatic', sanguine: 'Sanguine' };
+    return m[(v || '').trim().toLowerCase()] || '';
+  }
+  function normVariant(v) {
+    const m = { standard: 'Standard', heraldic: 'Heraldic', puck: 'Puck', cavedweller: 'Cavedweller', restored: 'Restored' };
+    return m[(v || '').trim().toLowerCase()] || 'Standard';
+  }
+
+  function importFromQuery(search) {
+    const q = new URLSearchParams(search != null ? search : window.location.search);
+    if (!q.toString()) return false;
+    let acted = false;
+
+    if (q.get('add') && q.get('geno')) {
+      const raw = (q.get('name') || '').trim();
+      let id = (q.get('id') || '').trim();
+      let name = raw;
+      const m = raw.match(/^(\d+)\s*[:\-]\s*(.+)$/); // "2261: Scheitelhau"
+      if (m) { if (!id) id = m[1]; name = m[2].trim(); }
+      const horse = {
+        id: id || name || ('import-' + Date.now()),
+        name: name || ('Courser ' + (id || '')),
+        genotype: (q.get('geno') || '').trim(),
+        temperament: normTemp(q.get('temp')),
+        variant: normVariant(q.get('variant'))
+      };
+      collection.push(horse);
+      setCollection(collection);
+      toast('Imported ' + horse.name + ' to your stable.', 'success');
+      showArea('collection');
+      acted = true;
+    }
+
+    const setVal = (sel, val) => { const el = $(sel); if (el && val != null) el.value = val; };
+    ['1', '2'].forEach(n => {
+      const g = q.get('p' + n + 'geno');
+      if (!g) return;
+      setVal('#parent' + n + 'Name', (q.get('p' + n + 'name') || '').trim());
+      setVal('#parent' + n + 'Geno', g.trim());
+      setVal('#parent' + n + 'Temp', normTemp(q.get('p' + n + 'temp')));
+      setVal('#parent' + n + 'Variant', normVariant(q.get('p' + n + 'variant')));
+      const ta = $('#parent' + n + 'Geno'); if (ta) ta.dispatchEvent(new Event('input'));
+      showArea('calculator');
+      acted = true;
+    });
+
+    return acted;
+  }
+
+  // =========================================================================
   // Init
   // =========================================================================
   function init() {
@@ -555,6 +627,11 @@
     // First-time visitors land on the landing page; returning users with a
     // stable go straight to the calculator.
     showView('landing');
+
+    // Honour any ?import params, then strip them so a refresh doesn't repeat it.
+    if (importFromQuery()) {
+      history.replaceState({}, '', window.location.pathname);
+    }
 
     // Service worker for offline.
     if ('serviceWorker' in navigator) {
@@ -570,6 +647,7 @@
     toast,
     recordQuery,
     openChimeraModal,
+    _importFromQuery: importFromQuery,
     onCollectionChanged: function (arr, opts) {
       // Engine called us after a CSV parse — adopt its array, persist, render.
       collection = Array.isArray(arr) ? arr.slice() : [];
