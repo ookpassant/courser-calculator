@@ -66,6 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '10 Jun 2026', items: [
+      'Clearer front page: every tool and import option is laid out with a short description and a way in.',
       'Mass-import your whole stable: one bookmarklet on your My Characters page imports every courser at once (Collection tab).',
       'Import a single courser with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
       'Removed offline mode (it was sometimes serving an old cached version).',
@@ -491,14 +492,15 @@
         toast('Drag this button up to your bookmarks bar, then click it on a courser page.', 'success', 5000);
       });
     });
-    const allBtn = $('#dcBmAll');
-    if (allBtn) {
+    ['#dcBmAll', '#dcBmAllLanding'].forEach((sel) => {
+      const allBtn = $(sel);
+      if (!allBtn) return;
       allBtn.href = dcBulkBookmarklet();
       allBtn.addEventListener('click', (e) => {
         e.preventDefault();
         toast('Drag this up to your bookmarks bar, then click it on your My Characters page to import everything.', 'success', 5000);
       });
-    }
+    });
 
     // Delegated edit/delete in the list
     const list = $('#collectionList');
