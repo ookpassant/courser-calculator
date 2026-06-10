@@ -101,6 +101,17 @@
         .feature { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-moss); border-radius: var(--radius-sm); padding: 16px; }
         .feature h3 { font-family: var(--font-stamp); font-size: 0.75rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-ink); margin-bottom: 8px; font-weight: 400; }
         .feature p { color: var(--dc-slate); font-size: 0.9rem; line-height: 1.5; }
+        .section-head { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.5rem; margin: 28px 0 12px; }
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+        .tool-card { text-align: left; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 6px; font: inherit; cursor: pointer; transition: transform var(--ease-snappy), box-shadow var(--ease-default); }
+        button.tool-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raise); }
+        .tool-card.static { cursor: default; border-left-color: var(--dc-moss); }
+        .tool-card h3 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.25rem; }
+        .tool-card p { color: var(--dc-slate); font-size: 0.9rem; line-height: 1.5; flex: 1; }
+        .tool-card p a { color: var(--dc-link); }
+        .tool-card .tool-open { font-family: var(--font-stamp); font-size: 0.62rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-mauve); }
+        .tool-card .dc-btn { margin: 4px 0 0; text-decoration: none; align-self: flex-start; }
+        #dcBmAllLanding { cursor: grab; }
         .import-cta { margin-top: 28px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-mauve); border-radius: var(--radius); padding: 24px; }
         .import-cta h2 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.5rem; margin-bottom: 6px; }
         .import-cta > p { color: var(--dc-slate); font-size: 0.95rem; margin-bottom: 12px; }
@@ -302,10 +313,10 @@
         <button class="brand" data-nav="landing">Bloodline</button>
         <span class="unofficial-badge" title="A fan-made tool, not affiliated with Dungeon Coursers">Unofficial</span>
         <div class="nav-links">
-            <button class="nav-link" data-area="search">Smart Search</button>
             <button class="nav-link" data-area="calculator">Foal Generator</button>
             <button class="nav-link" data-area="chimera">Chimera</button>
             <button class="nav-link" data-area="scroll">Scroll Generator</button>
+            <button class="nav-link" data-area="search">Smart Search</button>
             <button class="nav-link" data-area="collection">Collection</button>
         </div>
         <div class="nav-right">
@@ -325,32 +336,54 @@
         <div class="content">
             <div class="panel">
                 <h1 class="page-title">Bloodline</h1>
-                <p class="landing-lead">A genetics calculator for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a>. Predict foals, work out a Chimera patch, or roll a scroll, all in your browser with no sign-up. Type genotypes in by hand, or save a collection to unlock Smart Search.</p>
-                <div class="landing-cta">
-                    <button class="dc-btn mauve auto" data-nav="search">Smart Search</button>
-                    <button class="dc-btn auto" data-nav="calculator">Foal Generator</button>
-                    <button class="dc-btn auto" data-nav="chimera">Chimera Calculator</button>
-                    <button class="dc-btn auto" data-nav="scroll">Scroll Generator</button>
-                </div>
-                <div class="feature-grid">
-                    <div class="feature"><h3>It does the maths properly</h3><p>Real Mendelian inheritance across every locus, with lethal-white flags and rarity scored against the official trait index.</p></div>
-                    <div class="feature"><h3>Nothing to install</h3><p>It's just a web page. No account, no download, no data leaving your browser. Open the link and go.</p></div>
-                    <div class="feature"><h3>Just ask it</h3><p>Ask "how do I make Amber Champagne?" and it ranks the pairs in your stable that can get you one.</p></div>
-                    <div class="feature"><h3>Your stable stays put</h3><p>Import a CSV or add horses by hand. They stay in this browser to search, sort, and export.</p></div>
+                <p class="landing-lead">A genetics calculator for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a>. Everything is here from the start, no sign-up, nothing leaves your browser. Pick a tool below, or bring your stable in first.</p>
+
+                <h2 class="section-head">The tools</h2>
+                <div class="tool-grid">
+                    <button class="tool-card" data-nav="calculator">
+                        <h3>Foal Generator</h3>
+                        <p>Pick two parents and see the foals they could throw, plus every possible outcome.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="chimera">
+                        <h3>Chimera Calculator</h3>
+                        <p>Got a foal with the Chimera anomaly? See what coats its patch could be.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="scroll">
+                        <h3>Scroll Generator</h3>
+                        <p>Roll a random design for a custom scroll by rarity.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="search">
+                        <h3>Smart Search</h3>
+                        <p>Ask in plain English which of your coursers can breed a trait. Needs your collection loaded.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="collection">
+                        <h3>Collection</h3>
+                        <p>Your saved stable. Import, add, edit, search, and export your coursers.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
                 </div>
 
-                <div class="import-cta">
-                    <h2>Import your coursers from a CSV</h2>
-                    <p>Load your whole stable in one go, then Smart Search can find your best pairings.</p>
-                    <ol>
-                        <li>Open the <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener">Google Sheets template</a> and pick <strong>File &gt; Make a copy</strong>.</li>
-                        <li>Fill in your coursers, one per row. Paste genotypes straight from the site.</li>
-                        <li>Download it: <strong>File &gt; Download &gt; Comma-separated values (.csv)</strong>.</li>
-                        <li>Hit <strong>Import from CSV</strong> below and drop the file in.</li>
-                    </ol>
-                    <div class="landing-cta">
-                        <button class="dc-btn mauve auto" id="landingImport">Import from CSV</button>
-                        <button class="dc-btn outline auto" id="landingAdd">Add a courser by hand</button>
+                <h2 class="section-head">Get your coursers in</h2>
+                <p class="subtitle" style="margin-bottom:16px;">Only needed for Smart Search and the "from collection" parent pickers. Every other tool works with genotypes typed in by hand.</p>
+                <div class="tool-grid">
+                    <div class="tool-card static">
+                        <h3>Import all in one click</h3>
+                        <p>Drag this to your bookmarks bar, then click it on your Dungeon Coursers <em>My Characters</em> page to bring in every courser at once. Runs in your browser, no AI.</p>
+                        <a id="dcBmAllLanding" class="dc-btn auto" role="button">⬇ Import all (My Characters)</a>
+                    </div>
+                    <div class="tool-card static">
+                        <h3>Import a CSV</h3>
+                        <p>Upload a spreadsheet of your stable. A <a href="https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing" target="_blank" rel="noopener">Google Sheets template</a> walks you through it.</p>
+                        <button class="dc-btn outline auto" id="landingImport">Import from CSV</button>
+                    </div>
+                    <div class="tool-card static">
+                        <h3>Add by hand</h3>
+                        <p>Type a courser in yourself. Single-courser and Parent-slot bookmarklets live in the Collection tab too.</p>
+                        <button class="dc-btn outline auto" id="landingAdd">Add a courser</button>
                     </div>
                 </div>
 
