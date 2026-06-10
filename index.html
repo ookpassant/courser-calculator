@@ -110,7 +110,8 @@
         .dc-import-card { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-moss); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
         .dc-import-card h3 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.2rem; margin-bottom: 4px; }
         .dc-import-card .subtitle { margin-bottom: 12px; }
-        #dcBookmarklet { margin-bottom: 0; text-decoration: none; display: inline-block; cursor: grab; }
+        .bm-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .bm-row .dc-btn { margin-bottom: 0; text-decoration: none; display: inline-block; cursor: grab; }
         .changelog { margin-top: 28px; }
         .changelog h2 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.3rem; margin-bottom: 4px; }
         .changelog .cl-date { font-family: var(--font-stamp); font-size: 0.6rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); margin: 10px 0 8px; }
@@ -333,7 +334,7 @@
                 </div>
                 <div class="feature-grid">
                     <div class="feature"><h3>It does the maths properly</h3><p>Real Mendelian inheritance across every locus, with lethal-white flags and rarity scored against the official trait index.</p></div>
-                    <div class="feature"><h3>Works with the wifi off</h3><p>It all runs on your device. Add it to your home screen and it works offline.</p></div>
+                    <div class="feature"><h3>Nothing to install</h3><p>It's just a web page. No account, no download, no data leaving your browser. Open the link and go.</p></div>
                     <div class="feature"><h3>Just ask it</h3><p>Ask "how do I make Amber Champagne?" and it ranks the pairs in your stable that can get you one.</p></div>
                     <div class="feature"><h3>Your stable stays put</h3><p>Import a CSV or add horses by hand. They stay in this browser to search, sort, and export.</p></div>
                 </div>
@@ -472,8 +473,13 @@
 
                     <div class="dc-import-card">
                         <h3>Import from Dungeon Coursers</h3>
-                        <p class="subtitle">Drag this button up to your bookmarks bar, then open one of your courser pages and click it to add that courser here. It runs in your own browser and only reads the genotype you can already copy from the page.</p>
-                        <a id="dcBookmarklet" class="dc-btn auto" role="button">⬇ Add to Bloodline</a>
+                        <p class="subtitle">Drag a button up to your bookmarks bar, then click it on one of your courser pages. "Add to Collection" saves it here; "Parent 1" / "Parent 2" drop it straight into the Foal Generator (import two coursers, one per slot).</p>
+                        <div class="bm-row">
+                            <a id="dcBmAdd" class="dc-btn auto" role="button">⬇ Add to Collection</a>
+                            <a id="dcBmP1" class="dc-btn outline auto" role="button">⬇ Parent 1</a>
+                            <a id="dcBmP2" class="dc-btn outline auto" role="button">⬇ Parent 2</a>
+                        </div>
+                        <p class="subtitle" style="margin-top:12px; margin-bottom:0;"><strong>No AI involved.</strong> The button just runs a tiny script in your own browser that scans the page's code for the genotype you can already copy, and sends it here. Nothing is sent to Dungeon Coursers' servers.</p>
                     </div>
 
                     <div id="collectionList"></div>

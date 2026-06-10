@@ -19,16 +19,28 @@
   const K_QUERIES = 'bloodline.queries.v1';
   const MAX_RECENT = 8;
 
-  // Bookmarklet for importing a courser from dungeon-coursers.com. Runs in the
-  // user's own browser on a courser page (no server, no bot, no AI) and reads
-  // the genotype/temperament off the page, then opens Bloodline pre-filled.
-  const DC_BOOKMARKLET = `javascript:(function(){function f(l){var r=document.querySelectorAll('.row');for(var i=0;i<r.length;i++){var h=r[i].querySelector('h5');if(h&&h.textContent.trim()===l){var c=r[i].querySelector('.col-lg-8');if(c)return c.textContent.replace(/\\s+/g,' ').trim();}}return'';}var g=f('Genotype'),t=f('Temperament');var b=document.querySelector('.breadcrumb-item.active');var n=(b?b.textContent:document.title).replace(/\\s+/g,' ').trim();var id=(location.pathname.match(/(\\d+)/)||[''])[0];if(!g){alert('Bloodline: no genotype found on this page.');return;}window.open('https://ook.monster/courser-calc/?add=1&id='+encodeURIComponent(id)+'&name='+encodeURIComponent(n)+'&geno='+encodeURIComponent(g)+'&temp='+encodeURIComponent(t),'bloodline');})();`;
+  const K_PENDING = 'bloodline.pending.v1';
+
+  // Builds the import bookmarklet for a given target:
+  //   'add' -> add the courser to the collection
+  //   'p1' / 'p2' -> set it as Parent 1 / Parent 2 in the Foal Generator
+  // It is NOT AI: it just scans the page's DOM for the "Genotype"/"Temperament"
+  // rows (the same text the site's own copy button uses) and opens Bloodline.
+  // Runs entirely in the user's browser; nothing is sent to DC's servers.
+  function dcBookmarklet(mode) {
+    const q = (mode === 'add')
+      ? "'?add=1&id='+encodeURIComponent(id)+'&name='+encodeURIComponent(n)+'&geno='+encodeURIComponent(g)+'&temp='+encodeURIComponent(t)"
+      : "'?" + mode + "name='+encodeURIComponent(n)+'&" + mode + "geno='+encodeURIComponent(g)+'&" + mode + "temp='+encodeURIComponent(t)";
+    return `javascript:(function(){function f(l){var r=document.querySelectorAll('.row');for(var i=0;i<r.length;i++){var h=r[i].querySelector('h5');if(h&&h.textContent.trim()===l){var c=r[i].querySelector('.col-lg-8');if(c)return c.textContent.replace(/\\s+/g,' ').trim();}}return'';}var g=f('Genotype'),t=f('Temperament');var b=document.querySelector('.breadcrumb-item.active');var n=(b?b.textContent:document.title).replace(/\\s+/g,' ').trim();var id=(location.pathname.match(/(\\d+)/)||[''])[0];if(!g){alert('Bloodline: no genotype found on this page.');return;}window.open('https://ook.monster/courser-calc/'+${q},'bloodline');})();`;
+  }
 
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
   const esc = (s) => String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const setVal = (sel, val) => { const el = $(sel); if (el && val != null) el.value = val; };
+  const getVal = (sel) => { const el = $(sel); return el ? el.value : ''; };
 
   // =========================================================================
   // Persistence
@@ -47,7 +59,8 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '10 Jun 2026', items: [
-      'Import a courser straight from Dungeon Coursers with a one-click bookmarklet (Collection tab).',
+      'Import a courser from Dungeon Coursers with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
+      'Removed offline mode (it was sometimes serving an old cached version).',
       'Foal Generator now lists every possible foal from a pairing, like the Chimera breakdown.',
       'Import your coursers from a CSV right on the homepage.',
       'Stained Glass and Ore are now one trait, Stained Glass. Older genos still read fine.'
@@ -460,15 +473,16 @@
     on('#landingImport', openWizard);
     on('#landingAdd', () => openEditor());
 
-    // Dungeon Coursers import bookmarklet (drag to bookmarks bar)
-    const bm = $('#dcBookmarklet');
-    if (bm) {
-      bm.href = DC_BOOKMARKLET;
-      bm.addEventListener('click', (e) => {
+    // Dungeon Coursers import bookmarklets (drag to bookmarks bar)
+    [['#dcBmAdd', 'add'], ['#dcBmP1', 'p1'], ['#dcBmP2', 'p2']].forEach((pair) => {
+      const a = $(pair[0]);
+      if (!a) return;
+      a.href = dcBookmarklet(pair[1]);
+      a.addEventListener('click', (e) => {
         e.preventDefault();
-        toast('Drag this button up to your bookmarks bar, then open a courser page and click it there.', 'success', 5000);
+        toast('Drag this button up to your bookmarks bar, then click it on a courser page.', 'success', 5000);
       });
-    }
+    });
 
     // Delegated edit/delete in the list
     const list = $('#collectionList');
@@ -597,20 +611,48 @@
       acted = true;
     }
 
-    const setVal = (sel, val) => { const el = $(sel); if (el && val != null) el.value = val; };
+    let parentSet = false;
     ['1', '2'].forEach(n => {
       const g = q.get('p' + n + 'geno');
       if (!g) return;
-      setVal('#parent' + n + 'Name', (q.get('p' + n + 'name') || '').trim());
-      setVal('#parent' + n + 'Geno', g.trim());
-      setVal('#parent' + n + 'Temp', normTemp(q.get('p' + n + 'temp')));
-      setVal('#parent' + n + 'Variant', normVariant(q.get('p' + n + 'variant')));
-      const ta = $('#parent' + n + 'Geno'); if (ta) ta.dispatchEvent(new Event('input'));
+      fillParentSlot(n, { name: q.get('p' + n + 'name'), geno: g, temp: q.get('p' + n + 'temp'), variant: q.get('p' + n + 'variant') });
+      parentSet = true;
+    });
+    if (parentSet) {
+      // Bring the OTHER slot across from a recent handoff (the previous click),
+      // so two separate courser imports can fill both parents despite the reload.
+      const pend = loadPending();
+      ['1', '2'].forEach(n => {
+        if (q.get('p' + n + 'geno')) return;
+        if (pend && pend['p' + n]) fillParentSlot(n, pend['p' + n]);
+      });
+      savePending();
       showArea('calculator');
       acted = true;
-    });
+    }
 
     return acted;
+  }
+
+  function fillParentSlot(n, d) {
+    if (!d) return;
+    setVal('#parent' + n + 'Name', (d.name || '').trim());
+    setVal('#parent' + n + 'Geno', (d.geno || '').trim());
+    setVal('#parent' + n + 'Temp', normTemp(d.temp));
+    setVal('#parent' + n + 'Variant', normVariant(d.variant));
+    const ta = $('#parent' + n + 'Geno'); if (ta) ta.dispatchEvent(new Event('input'));
+  }
+
+  function snapshotSlot(n) {
+    const geno = getVal('#parent' + n + 'Geno');
+    if (!geno) return null;
+    return { name: getVal('#parent' + n + 'Name'), geno: geno, temp: getVal('#parent' + n + 'Temp'), variant: getVal('#parent' + n + 'Variant') };
+  }
+  function savePending() { Store.save(K_PENDING, { p1: snapshotSlot('1'), p2: snapshotSlot('2'), ts: Date.now() }); }
+  function loadPending() {
+    const p = Store.load(K_PENDING, null);
+    if (!p || !p.ts || (Date.now() - p.ts) > 15 * 60 * 1000) return null; // 15-min handoff window
+    return p;
   }
 
   // =========================================================================
@@ -633,9 +675,13 @@
       history.replaceState({}, '', window.location.pathname);
     }
 
-    // Service worker for offline.
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {/* offline is best-effort */});
+    // Offline support was removed (it cached stale versions). Tear down any
+    // previously-installed service worker + its caches so nothing is pinned.
+    if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+      navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+    }
+    if (window.caches && caches.keys) {
+      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
     }
   }
 
