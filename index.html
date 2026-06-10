@@ -153,6 +153,15 @@
         .twin-heading { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.3rem; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--dc-line); }
         #resultsGrid > div:first-child .twin-heading { margin-top: 0; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        #foalPossibilities { margin-top: 28px; }
+        .poss-title { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.4rem; text-align: center; margin-bottom: 4px; }
+        .poss-list { background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius); padding: 8px 16px; }
+        .poss-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--dc-line); }
+        .poss-row:last-child { border-bottom: none; }
+        .poss-label { flex: none; width: 150px; font-family: var(--font-stamp); font-size: 0.62rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); padding-top: 2px; }
+        .poss-vals { color: var(--dc-ink); font-size: 0.9rem; line-height: 1.5; }
+        .poss-note { color: var(--dc-slate); font-style: italic; font-size: 0.85rem; }
+        @media (max-width: 600px) { .poss-row { flex-direction: column; gap: 2px; } .poss-label { width: auto; } }
         .foal-card { background: var(--dc-white); border: 1px solid var(--dc-line); border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 20px; transition: transform var(--ease-snappy), box-shadow var(--ease-default); }
         .foal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raise); }
         .foal-card h3 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.25rem; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--dc-line); }
@@ -436,6 +445,7 @@
                     <div class="results-container" id="resultsContainer">
                         <h2 class="results-title">The possible foals</h2>
                         <div class="results-grid" id="resultsGrid"></div>
+                        <div id="foalPossibilities"></div>
                     </div>
                 </section>
 
