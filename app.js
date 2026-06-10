@@ -41,10 +41,14 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '10 Jun 2026', items: [
+      'Foal Generator now lists every possible foal from a pairing, like the Chimera breakdown.',
+      'Import your coursers from a CSV right on the homepage.',
+      'Stained Glass and Ore are now one trait, Stained Glass. Older genos still read fine.'
+    ] },
     { date: '6 Jun 2026', items: [
-      'Stained Glass and Ore are now one trait, Stained Glass. Older genos still read fine.',
       'Breedings can roll twins (5%), shown as two foals.',
-      "Same-temperament pairs no longer breed, matching the handbook.",
+      'Same-temperament pairs no longer breed, matching the handbook.',
       'Fixed foals showing variants neither parent had.',
       'New look to match dungeon-coursers.com, with offline support and a saved collection.'
     ] }
