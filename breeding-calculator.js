@@ -1002,6 +1002,50 @@ function generateFoals() {
     if (Math.random() < 0.05) litters.push(makeLitter(parent1, parent2));
 
     displayFoals(litters);
+    displayFoalPossibilities(parent1, parent2);
+}
+
+// "Every possible foal" — the full Mendelian spread this pairing can produce,
+// listed like the Chimera breakdown. Reuses the chimera possibility engine
+// (parents only; the foal arg just folds in a foal's own anomalies).
+function displayFoalPossibilities(parent1, parent2) {
+    const host = document.getElementById('foalPossibilities');
+    if (!host) return;
+
+    const poss = generateChimeraPossibilities('', parent1.genotype, parent2.genotype);
+
+    // Foal-specific extras the chimera view doesn't cover:
+    const temperaments = ['Choleric', 'Melancholic', 'Phlegmatic', 'Sanguine']
+        .filter(t => t !== parent1.temperament && t !== parent2.temperament);
+    const variants = ['Standard'];
+    [parent1.variant, parent2.variant].forEach(v => {
+        if (v && v !== 'Standard' && !variants.includes(v)) variants.push(v);
+    });
+
+    const rows = [];
+    const addRow = (label, arr) => {
+        if (!arr || arr.length === 0) return;
+        rows.push(`<div class="poss-row"><span class="poss-label">${label} (${arr.length})</span><span class="poss-vals">${arr.join(', ')}</span></div>`);
+    };
+
+    addRow('Coats', poss.fullCoatNames);
+    addRow('White markings', poss.whiteMarkings);
+    addRow('Modifiers', poss.modifiers);
+
+    const anomalyVals = poss.anomalies.length
+        ? `${poss.anomalies.join(', ')} <span class="poss-note">(plus a 5% chance of a random one)</span>`
+        : `<span class="poss-note">5% chance of a random anomaly</span>`;
+    const anomalyLabel = poss.anomalies.length ? `Anomalies (${poss.anomalies.length})` : 'Anomalies';
+    rows.push(`<div class="poss-row"><span class="poss-label">${anomalyLabel}</span><span class="poss-vals">${anomalyVals}</span></div>`);
+
+    addRow('Temperaments', temperaments);
+    addRow('Variants', variants);
+
+    host.innerHTML = `
+        <h3 class="poss-title">Every possible foal</h3>
+        <p class="subtitle" style="text-align:center; margin-bottom:14px;">Any mix of the traits below. Each foal above is one random roll from these.</p>
+        <div class="poss-list">${rows.join('')}</div>
+    `;
 }
 
 // One foal's worth of possibilities (4 equally-likely outcomes).
