@@ -34,6 +34,13 @@
     return `javascript:(function(){function f(l){var r=document.querySelectorAll('.row');for(var i=0;i<r.length;i++){var h=r[i].querySelector('h5');if(h&&h.textContent.trim()===l){var c=r[i].querySelector('.col-lg-8');if(c)return c.textContent.replace(/\\s+/g,' ').trim();}}return'';}var g=f('Genotype'),t=f('Temperament');var b=document.querySelector('.breadcrumb-item.active');var n=(b?b.textContent:document.title).replace(/\\s+/g,' ').trim();var id=(location.pathname.match(/(\\d+)/)||[''])[0];if(!g){alert('Bloodline: no genotype found on this page.');return;}window.open('https://ook.monster/courser-calc/'+${q},'bloodline');})();`;
   }
 
+  // Bulk bookmarklet for a "My Characters" page: every card embeds the
+  // genotype/temperament/breed in its hover tooltip, so this scrapes them all
+  // at once (in the user's browser) and bulk-imports them via a URL hash.
+  function dcBulkBookmarklet() {
+    return `javascript:(function(){var out=[];document.querySelectorAll('.mytooltip').forEach(function(m){var d=m.querySelector('.tooltip-content');if(!d)return;var html=d.innerHTML;function fld(l){var mm=html.match(new RegExp('<b>'+l+':</b>\\\\s*([^<]*)'));return mm?mm[1].replace(/\\s+/g,' ').trim():'';}var g=fld('Genotype');if(!g)return;var t=fld('Temperament');var br=fld('Breed');var v='Standard';['Heraldic','Puck','Cavedweller','Restored'].forEach(function(x){if(br.indexOf(x)>-1)v=x;});var col=m.closest('.col-md-3')||m.parentElement;var nm='',id='';var img=col?col.querySelector('img.img-thumbnail'):null;if(img&&img.alt)nm=img.alt.replace('Thumbnail for ','').trim();var a=m.closest('a');var href=(a&&a.getAttribute('href'))||'';var pr=href.split('/character/');if(pr.length>1)id=pr[1].split(/[^0-9]/)[0];if(!nm){var ti=m.querySelector('.tooltip-item');nm=ti?ti.textContent.replace(/\\s+/g,' ').trim():(id||'courser');}out.push({id:id,name:nm,geno:g,temp:t,variant:v});});if(!out.length){alert('Bloodline: no coursers found. Open your My Characters page and try again.');return;}window.open('https://ook.monster/courser-calc/#bulk='+encodeURIComponent(JSON.stringify(out)),'bloodline');})();`;
+  }
+
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
   const esc = (s) => String(s == null ? '' : s)
@@ -59,7 +66,8 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '10 Jun 2026', items: [
-      'Import a courser from Dungeon Coursers with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
+      'Mass-import your whole stable: one bookmarklet on your My Characters page imports every courser at once (Collection tab).',
+      'Import a single courser with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
       'Removed offline mode (it was sometimes serving an old cached version).',
       'Foal Generator now lists every possible foal from a pairing, like the Chimera breakdown.',
       'Import your coursers from a CSV right on the homepage.',
@@ -483,6 +491,14 @@
         toast('Drag this button up to your bookmarks bar, then click it on a courser page.', 'success', 5000);
       });
     });
+    const allBtn = $('#dcBmAll');
+    if (allBtn) {
+      allBtn.href = dcBulkBookmarklet();
+      allBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toast('Drag this up to your bookmarks bar, then click it on your My Characters page to import everything.', 'success', 5000);
+      });
+    }
 
     // Delegated edit/delete in the list
     const list = $('#collectionList');
@@ -655,6 +671,41 @@
     return p;
   }
 
+  // Bulk import from a "My Characters" page, handed over in the URL hash as JSON.
+  // Merges into the collection (de-duplicated by id).
+  function importBulkFromHash(hash) {
+    const h = hash != null ? hash : (window.location.hash || '');
+    const m = h.match(/^#bulk=(.*)$/);
+    if (!m) return false;
+    let arr;
+    try { arr = JSON.parse(decodeURIComponent(m[1])); } catch (e) { toast('That import link was malformed.', 'error'); return false; }
+    if (!Array.isArray(arr) || !arr.length) return false;
+
+    let added = 0, updated = 0;
+    arr.forEach((c, i) => {
+      const geno = (c.geno || '').trim();
+      if (!geno) return;
+      const raw = (c.name || '').trim();
+      let id = (c.id == null ? '' : String(c.id)).trim();
+      let name = raw;
+      const mm = raw.match(/^(\d+)\s*[:\-]\s*(.+)$/);
+      if (mm) { if (!id) id = mm[1]; name = mm[2].trim(); }
+      const horse = {
+        id: id || name || ('import-' + Date.now() + '-' + i),
+        name: name || ('Courser ' + (id || '')),
+        genotype: geno,
+        temperament: normTemp(c.temp),
+        variant: normVariant(c.variant)
+      };
+      const ix = collection.findIndex((x) => String(x.id) === String(horse.id));
+      if (ix >= 0) { collection[ix] = horse; updated++; } else { collection.push(horse); added++; }
+    });
+    setCollection(collection);
+    toast('Imported ' + added + ' courser' + (added === 1 ? '' : 's') + (updated ? (', updated ' + updated) : '') + '.', 'success');
+    showArea('collection');
+    return true;
+  }
+
   // =========================================================================
   // Init
   // =========================================================================
@@ -670,8 +721,11 @@
     // stable go straight to the calculator.
     showView('landing');
 
-    // Honour any ?import params, then strip them so a refresh doesn't repeat it.
-    if (importFromQuery()) {
+    // Honour any ?import params or #bulk= hash, then strip them so a refresh
+    // doesn't repeat the import.
+    const didQuery = importFromQuery();
+    const didBulk = importBulkFromHash();
+    if (didQuery || didBulk) {
       history.replaceState({}, '', window.location.pathname);
     }
 
@@ -694,6 +748,7 @@
     recordQuery,
     openChimeraModal,
     _importFromQuery: importFromQuery,
+    _importBulkFromHash: importBulkFromHash,
     onCollectionChanged: function (arr, opts) {
       // Engine called us after a CSV parse — adopt its array, persist, render.
       collection = Array.isArray(arr) ? arr.slice() : [];
