@@ -113,17 +113,17 @@ with commas. See `sample_horses.csv` for a complete example.
 
 A static site, no build step:
 
-- `index.html` — markup, styles, and all the views.
-- `breeding-calculator.js` — the genetics engine and the existing tools (source
+- `index.html`: markup, styles, and all the views.
+- `breeding-calculator.js`: the genetics engine and the existing tools (source
   of truth for inheritance).
-- `app.js` — the app shell: routing, landing page, toasts, the
+- `app.js`: the app shell: routing, landing page, toasts, the
   localStorage-backed collection, import wizard, the courser-import bookmarklets,
   and recent searches. It talks to the engine through small optional hooks.
-- `manifest.webmanifest`, `icon.svg` — basic install metadata.
-- `sw.js` — a retired service worker (kill-switch). Offline support was removed
+- `manifest.webmanifest`, `icon.svg`: basic install metadata.
+- `sw.js`: a retired service worker (kill-switch). Offline support was removed
   because it served stale cached versions; this file just unregisters any old
   worker and clears its caches.
-- `ook_horses.csv`, `sample_horses.csv` — example collections.
+- `ook_horses.csv`, `sample_horses.csv`: example collections.
 
 The design follows the dungeon-coursers.com look (mauve chrome, crimson
 blackletter wordmark, moss accents, white panels on a dungeon-stone backdrop),
