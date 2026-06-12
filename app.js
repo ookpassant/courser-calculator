@@ -65,8 +65,10 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '12 Jun 2026', items: [
+      'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.'
+    ] },
     { date: '10 Jun 2026', items: [
-      'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits.',
       'Clearer front page: every tool and import option is laid out with a short description and a way in.',
       'Mass-import your whole stable: one bookmarklet on your My Characters page imports every courser at once (Collection tab).',
       'Import a single courser with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
