@@ -2700,6 +2700,10 @@ function fillChimeraCalculator(foalGeno, parent1Geno, parent2Geno) {
     // Teleport to the Chimera Calculator tab — adventure awaits
     switchTab('chimera');
 
+    // Coming from a bred foal: this is the lineaged (from-parents) case.
+    const fm = document.querySelector('input[name="chimeraMode"][value="foal"]');
+    if (fm) { fm.checked = true; fm.dispatchEvent(new Event('change')); }
+
     document.getElementById('chimeraFoalGeno').value = foalGeno;
     document.getElementById('chimeraParent1Geno').value = parent1Geno;
     document.getElementById('chimeraParent2Geno').value = parent2Geno;
@@ -2709,23 +2713,102 @@ function fillChimeraCalculator(foalGeno, parent1Geno, parent2Geno) {
 }
 
 function calculateChimera() {
+    const mode = (document.querySelector('input[name="chimeraMode"]:checked') || {}).value || 'foal';
     const foalGeno = document.getElementById('chimeraFoalGeno').value.trim();
+
+    // Creation (no parents): the patch is the horse's own genotype with genes
+    // removed and/or the base colour (e/a) changed. No new traits.
+    if (mode === 'creation') {
+        if (!foalGeno) {
+            if (window.AppShell) window.AppShell.toast("Enter the Creation's genotype.", 'error');
+            else alert('Please enter the Creation genotype!');
+            return;
+        }
+        displayCreationChimera(foalGeno, generateCreationChimeraPossibilities(foalGeno));
+        return;
+    }
+
     const parent1Geno = document.getElementById('chimeraParent1Geno').value.trim();
     const parent2Geno = document.getElementById('chimeraParent2Geno').value.trim();
 
     if (!foalGeno || !parent1Geno || !parent2Geno) {
-        alert('Please enter genotypes for the foal and both parents!');
+        if (window.AppShell) window.AppShell.toast('Enter genotypes for the foal and both parents.', 'error');
+        else alert('Please enter genotypes for the foal and both parents!');
         return;
-    }
-
-    // Sanity check — does this foal actually have Chimera or are we just here for fun?
-    if (!foalGeno.toLowerCase().includes('chimera')) {
-        alert('Warning: The foal genotype does not include Chimera trait. Calculating possibilities anyway...');
     }
 
     const possibilities = generateChimeraPossibilities(foalGeno, parent1Geno, parent2Geno);
 
     displayChimeraPossibilities(foalGeno, possibilities);
+}
+
+// A Creation's Chimera patch: any base colour (e/a changes freely), plus any
+// subset of the horse's OWN traits (genes can be removed, nothing new added).
+function generateCreationChimeraPossibilities(creationGeno) {
+    // Reuse the possibility engine with the horse as both "parents" to pull out
+    // its own dilutions / markings / modifiers / anomalies.
+    const own = generateChimeraPossibilities(creationGeno, creationGeno, creationGeno);
+
+    const allBases = ['Bay', 'Black', 'Chestnut'];
+    // Dilution genes can always be removed, so every dilution locus may be empty.
+    const l1 = own.locusInfo.locus1Phenotypes.slice(); if (l1.indexOf('none') < 0) l1.push('none');
+    const l2 = own.locusInfo.locus2Phenotypes.slice(); if (l2.indexOf('none') < 0) l2.push('none');
+    const dilCombos = [];
+    l1.forEach(a => l2.forEach(b => {
+        if (a === 'none' && b === 'none') { dilCombos.push('none'); return; }
+        dilCombos.push(a === 'none' ? b : (b === 'none' ? a : a + ' ' + b));
+    }));
+    const fullCoatNames = new Set();
+    allBases.forEach(bs => dilCombos.forEach(dil => {
+        if (dil === 'none') fullCoatNames.add(bs);
+        else fullCoatNames.add(SPECIAL_COAT_NAMES[bs + '_' + dil] || (dil + ' ' + bs));
+    }));
+
+    return {
+        isCreation: true,
+        baseCoats: allBases,
+        fullCoatNames: Array.from(fullCoatNames).sort(),
+        dilutions: own.dilutions,
+        whiteMarkings: own.whiteMarkings,
+        modifiers: own.modifiers,
+        anomalies: own.anomalies
+    };
+}
+
+function displayCreationChimera(creationGeno, poss) {
+    const resultsContainer = document.getElementById('chimeraResultsContainer');
+    const resultsContent = document.getElementById('chimeraResultsContent');
+    resultsContent.innerHTML = '';
+
+    const pheno = genotypeToPhenotype(creationGeno);
+    const card = (title, color, items, note) => {
+        if (!items || !items.length) return '';
+        return `<div style="background:#fff;padding:18px;border:1px solid #dcd8de;border-left:4px solid ${color};border-radius:5px;">
+            <h5 style="color:${color};margin-bottom:10px;font-size:1em;font-weight:600;">${title} (${items.length})</h5>
+            ${note ? `<div style="color:#8a8f98;font-size:0.8em;margin-bottom:10px;font-style:italic;">${note}</div>` : ''}
+            <ul style="list-style:none;padding:0;margin:0;">${items.map(i => `<li style="padding:7px;margin-bottom:5px;background:#f7f5f3;border-left:3px solid ${color};color:#2d2833;">${i}</li>`).join('')}</ul>
+        </div>`;
+    };
+
+    resultsContent.innerHTML = `
+        <div style="background:#fff;border:2px solid #5d4b60;border-radius:5px;padding:18px;margin-bottom:18px;">
+            <h4 style="color:#5d4b60;margin-bottom:8px;">Main Coat (Non-Chimera Areas)</h4>
+            <div style="margin-bottom:8px;"><strong style="color:#6f6877;">Phenotype:</strong> <span style="color:#5d4b60;">${pheno}</span></div>
+            <div><strong style="color:#6f6877;">Genotype:</strong> <span style="font-family:'Courier New',monospace;background:#f7f5f3;padding:6px;border:1px solid #dcd8de;">${creationGeno}</span></div>
+        </div>
+        <div style="background:#fff;border-left:4px solid #8a4fc0;padding:14px;margin-bottom:18px;color:#6f6877;">
+            <strong style="color:#8a4fc0;">Creation Chimera.</strong> The patch can be <strong>any base colour</strong> (the e/a base changes freely), with or without any of this horse's own traits. It <strong>cannot</strong> show anything the Creation doesn't already have.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;">
+            ${card('Possible patch coats', '#5d4b60', poss.fullCoatNames, "Any base colour, with or without this horse's dilutions.")}
+            ${card('White markings (optional)', '#8a4fc0', poss.whiteMarkings, 'Keep any, or drop them.')}
+            ${card('Modifiers (optional)', '#687f3f', poss.modifiers, 'Keep any, or drop them.')}
+            ${card('Anomalies (optional)', '#c8902e', poss.anomalies, 'Only ones this horse already has.')}
+        </div>
+    `;
+
+    resultsContainer.style.display = 'block';
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function displayChimeraPossibilities(foalGenotype, possibilities) {
