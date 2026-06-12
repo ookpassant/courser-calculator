@@ -580,17 +580,22 @@
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->
                 <section class="area" id="area-chimera">
                     <h1 class="page-title">Chimera Calculator</h1>
-                    <p class="blurb">Got a foal that rolled Chimera? See what could show up in the patch. Enter genotypes by hand, or jump here from a foal card.</p>
+                    <p class="blurb">Rolled Chimera? See what could show up in the patch. Works for lineaged foals (from their parents) and for Creations (no parents).</p>
 
                     <div class="info-box">
-                        <p><strong>Working out a Chimera patch:</strong> drop in the foal's genotype and both parents', and it lists the coats the patch could be.</p>
-                        <p><strong>The rule of thumb:</strong> a patch can show anything the two parents could produce, minus anomalies neither parent carries.</p>
+                        <p><strong>Lineaged foal:</strong> the patch can show anything the two parents could produce, minus anomalies neither parent carries.</p>
+                        <p><strong>Creation (no parents):</strong> the patch can be any base colour, plus any of the horse's own traits, but nothing it doesn't already have.</p>
                     </div>
 
-                    <label for="chimeraFoalGeno">Foal Genotype (with Chimera):</label>
+                    <div class="chimera-mode" style="margin-bottom:16px;">
+                        <label style="display:inline-block; font-weight:700; margin-right:18px;"><input type="radio" name="chimeraMode" value="foal" checked style="width:auto; margin:0 6px 0 0;"> Lineaged foal (from parents)</label>
+                        <label style="display:inline-block; font-weight:700;"><input type="radio" name="chimeraMode" value="creation" style="width:auto; margin:0 6px 0 0;"> Creation (no parents)</label>
+                    </div>
+
+                    <label for="chimeraFoalGeno" id="chimeraGenoLabel">Foal Genotype (with Chimera):</label>
                     <textarea id="chimeraFoalGeno" placeholder="Ee Aa nCr + Chimera"></textarea>
 
-                    <div class="parents-container">
+                    <div class="parents-container" id="chimeraParents">
                         <div class="parent-card">
                             <h2>Parent 1</h2>
                             <label for="chimeraParent1Geno">Genotype:</label>

@@ -66,6 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '10 Jun 2026', items: [
+      'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits.',
       'Clearer front page: every tool and import option is laid out with a short description and a way in.',
       'Mass-import your whole stable: one bookmarklet on your My Characters page imports every courser at once (Collection tab).',
       'Import a single courser with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
@@ -562,6 +563,14 @@
     // Live validation on the foal-generator parent fields
     wireLiveValidation('#parent1Geno', '#parent1GenoHint');
     wireLiveValidation('#parent2Geno', '#parent2GenoHint');
+
+    // Chimera mode toggle: Creation hides the parent inputs.
+    $$('input[name="chimeraMode"]').forEach((r) => r.addEventListener('change', () => {
+      const sel = $('input[name="chimeraMode"]:checked');
+      const creation = sel && sel.value === 'creation';
+      const par = $('#chimeraParents'); if (par) par.style.display = creation ? 'none' : '';
+      const lbl = $('#chimeraGenoLabel'); if (lbl) lbl.textContent = (creation ? 'Creation' : 'Foal') + ' Genotype (with Chimera):';
+    }));
 
     // Esc closes overlays
     document.addEventListener('keydown', (e) => {
