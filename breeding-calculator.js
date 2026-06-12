@@ -1656,81 +1656,19 @@ function extractTraitsFromQuery(query) {
     // Coat colors — ordered longest-first so "Amber Cream Pearl Champagne" doesn't just match "Bay"
     // One coat per query, we're not greedy
     // Format: [what you typed, what we actually meant]
-    const coatColors = [
-        // Legendary quad dilutions — if you can spell these you deserve the horse
-        ['amber cream pearl champagne', 'Amber Cream Pearl Champagne'],
-        ['classic cream pearl champagne', 'Classic Cream Pearl Champagne'],
-        ['gold cream pearl champagne', 'Gold Cream Pearl Champagne'],
-        ['ombre cream pearl ether', 'Ombre Cream Pearl Ether'],
-        ['classic cream pearl ether', 'Classic Cream Pearl Ether'],
-        ['cold cream pearl ether', 'Cold Cream Pearl Ether'],
-        // Legendary triple dilutions — names that sound like paint swatches from another dimension
-        ['tyrian pearl champagne', 'Tyrian Pearl Champagne'],
-        ['phthalo pearl champagne', 'Phthalo Pearl Champagne'],
-        ['ochre pearl champagne', 'Ochre Pearl Champagne'],
-        ['tyrian pearl ether', 'Tyrian Pearl Ether'],
-        ['phthalo pearl ether', 'Phthalo Pearl Ether'],
-        ['ochre pearl ether', 'Ochre Pearl Ether'],
-        ['madder cream champagne', 'Madder Cream Champagne'],
-        ['woad cream champagne', 'Woad Cream Champagne'],
-        ['weld cream champagne', 'Weld Cream Champagne'],
-        ['madder cream ether', 'Madder Cream Ether'],
-        ['woad cream ether', 'Woad Cream Ether'],
-        ['weld cream ether', 'Weld Cream Ether'],
-        // Epic double dilutions — still pretty fancy, just not "name your firstborn after it" fancy
-        ['bay pearl ether', 'Bay Pearl Ether'],
-        ['black pearl ether', 'Black Pearl Ether'],
-        ['gold pearl ether', 'Gold Pearl Ether'],
-        ['tyrian pearl', 'Tyrian Pearl'],
-        ['phthalo pearl', 'Phthalo Pearl'],
-        ['ochre pearl', 'Ochre Pearl'],
-        ['madder ether', 'Madder Ether'],
-        ['woad ether', 'Woad Ether'],
-        ['weld ether', 'Weld Ether'],
-        ['madder buckskin', 'Madder Buckskin'],
-        ['woad smoky black', 'Woad Smoky Black'],
-        ['weld palomino', 'Weld Palomino'],
-        // Uncommon/Rare dilutions — the bread and butter of "ooh that's nice"
-        ['amber champagne', 'Amber Champagne'], ['amber champ', 'Amber Champagne'],
-        ['gold champagne', 'Gold Champagne'], ['gold champ', 'Gold Champagne'],
-        ['classic champagne', 'Classic Champagne'],
-        ['bay pearl', 'Bay Pearl'],
-        ['black pearl', 'Black Pearl'],
-        ['gold pearl', 'Gold Pearl'],
-        ['smoky cream', 'Smoky Cream'],
-        ['smoky black', 'Smoky Black'],
-        // Generic compound dilutions — when you want a combo but aren't picky about the base
-        ['tapestry pearl', 'Tapestry Pearl'],
-        ['tapestry cream', 'Tapestry Cream'],
-        ['cream pearl', 'Cream Pearl'], ['pearl cream', 'Cream Pearl'],
-        // Single dilutions that got special nicknames — marketing, baby
-        ['madder', 'Madder'],
-        ['woad', 'Woad'],
-        ['weld', 'Weld'],
-        ['buckskin', 'Buckskin'],
-        ['palomino', 'Palomino'],
-        ['perlino', 'Perlino'],
-        ['cremello', 'Cremello'],
-        // Single Ether coats — special names plus the literal Bay/Black/Gold/Chestnut Ether forms
-        // Listed here (before the generic 'ether') so the base coat doesn't get dropped on the floor
-        ['ombre ether', 'Ombre Ether'],
-        ['classic ether', 'Classic Ether'],
-        ['cold ether', 'Cold Ether'],
-        ['bay ether', 'Bay Ether'],
-        ['black ether', 'Black Ether'],
-        ['gold ether', 'Gold Ether'],
-        ['chestnut ether', 'Chestnut Ether'],
-        // Generic single dilutions — "just give me anything with this"
-        ['tapestry', 'Tapestry'],
-        ['champagne', 'Champagne'],
-        ['cream', 'Cream'],
-        ['pearl', 'Pearl'],
-        ['ether', 'Ether'],
-        // Base coats — the humble foundations, matched last to avoid false positives
-        ['chestnut', 'Chestnut'],
-        ['bay', 'Bay'],
-        ['black', 'Black'],
-    ];
+    // Recognized coat names, built straight from the coat tables so every real
+    // coat (including the legendary multi-dilutions) is matched as a full name
+    // instead of collapsing to a generic dilution. Longest names first.
+    const _coatNames = ['Bay', 'Black', 'Chestnut'].concat(Object.values(SPECIAL_COAT_NAMES));
+    const coatColors = [...new Set(_coatNames)]
+        .sort((a, b) => b.length - a.length)
+        .map(n => [n.toLowerCase(), n]);
+    // Aliases + generic dilution fallbacks (after the full names, so a specific
+    // coat always wins over a bare "champagne" / "cream" / etc.).
+    [['amber champ', 'Amber Champagne'], ['gold champ', 'Gold Champagne'], ['pearl cream', 'Cream Pearl'],
+     ['tapestry pearl', 'Tapestry Pearl'], ['tapestry cream', 'Tapestry Cream'], ['cream pearl', 'Cream Pearl'],
+     ['champagne', 'Champagne'], ['cream', 'Cream'], ['pearl', 'Pearl'], ['ether', 'Ether'], ['tapestry', 'Tapestry']
+    ].forEach(e => coatColors.push(e));
 
     // Match the fanciest coat color first, then stop — greedy matching in reverse
     for (const [term, trait] of coatColors) {
@@ -1890,6 +1828,12 @@ const COAT_NAME_BASE = { 'bay': 'bay', 'black': 'black', 'chestnut': 'chestnut' 
     }
 })();
 
+// Every canonical coat name (lowercased). The search treats these as exact
+// coats and defers to the genetics engine to decide if a pair can make them.
+const CANONICAL_COATS = new Set(
+    ['bay', 'black', 'chestnut'].concat(Object.values(SPECIAL_COAT_NAMES).map(n => n.toLowerCase()))
+);
+
 // Which base (if any) a coat-name query requires. Longest match wins.
 function requiredBaseFromName(traitLower) {
     let best = null, bestLen = 0;
@@ -1916,12 +1860,30 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
 
     // Track which traits this pair can actually produce — no false advertising
     let traitsScores = [];
+    let _pairCoats = null; // lazily-computed set of coats this pair can actually make
 
     targetTraits.forEach(trait => {
         const traitLower = trait.toLowerCase();
-        // If the coat name pins a base colour, the pair must be able to make it.
+
+        // Exact coat names defer to the genetics engine (the validated source of
+        // truth): the pair matches only if it can really produce that coat. This
+        // covers base colour AND the exact dilution profile in one shot.
+        if (CANONICAL_COATS.has(traitLower)) {
+            if (!_pairCoats) {
+                _pairCoats = new Set(generateChimeraPossibilities('', parent1.genotype, parent2.genotype)
+                    .fullCoatNames.map(c => c.toLowerCase()));
+            }
+            if (_pairCoats.has(traitLower)) {
+                const words = traitLower.split(/\s+/).length;
+                traitsScores.push(Math.min(150, 60 + 20 * words)); // rarer (longer) coats rank higher
+            }
+            return;
+        }
+
+        // For any remaining base-named generic, the pair must be able to make the base.
         const _baseReq = requiredBaseFromName(traitLower);
         const genBaseOK = !_baseReq || canMakeBase(parent1, parent2, _baseReq);
+        if (!genBaseOK) return;
 
         // The great trait treasure hunt — does this pair have the genes or are we just dreaming?
         // Starting with the rarest combos first because we're ambitious like that

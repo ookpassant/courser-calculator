@@ -66,7 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '12 Jun 2026', items: [
-      'Smart Search now checks the base colour, so it no longer suggests pairs for coats they can\'t actually make (e.g. Woad from a pair that can\'t produce black).',
+      'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a pair for a coat it can\'t actually make. Fixes Woad, and also Amber/Classic/Gold Cream Champagne, Ombre/Classic/Cold Cream Ether, and other coats that matched too loosely.',
       'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.'
     ] },
     { date: '10 Jun 2026', items: [
