@@ -68,7 +68,8 @@
     { date: '12 Jun 2026', items: [
       'Fixed Pearl: a single copy (nprl) now reads as Carries Pearl, not an expressed Pearl coat. Pearl is recessive, so it only shows with two copies or in a compound (Cream/Tapestry Pearl). Caught by cross-checking the official Trait Index.',
       'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a pair for a coat it can\'t actually make. Fixes Woad, and also Amber/Classic/Gold Cream Champagne, Ombre/Classic/Cold Cream Ether, and other coats that matched too loosely.',
-      'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.'
+      'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.',
+      'Rarity scoring now matches the official Trait Index tier by tier. The whole Uncommon tier wasn\'t scoring (single Cream, single Tapestry, Overo, Sabino, Silver and friends all read as Common), the leopard complex was under-rated, and Carries Filigree/Starfield now sit at Epic where they belong.'
     ] },
     { date: '10 Jun 2026', items: [
       'Clearer front page: every tool and import option is laid out with a short description and a way in.',

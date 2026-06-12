@@ -1204,56 +1204,94 @@ function displayFoals(litters) {
     resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Rarity weights, aligned with the official Dungeon Coursers trait index.
+// common = 0 (left out), uncommon = 10, rare = 25, epic = 50, legendary = 100.
+const TIER_UNCOMMON = 10, TIER_RARE = 25, TIER_EPIC = 50, TIER_LEGENDARY = 100;
+
+// Per-gene tier for markings, modifiers and carriers, keyed by the exact gene
+// token (matched against the parsed genes, not the raw string, so nf can't be
+// mistaken for nfe). Coats and the leopard complex depend on combinations
+// across loci, so they're scored separately below.
+const GENE_RARITY = {
+    // --- Markings --- (Splash, Roan, Tobiano, Snowflake are common = 0)
+    'nCu': TIER_UNCOMMON, 'CuCu': TIER_UNCOMMON, 'CuCw': TIER_UNCOMMON,
+    'nCw': TIER_UNCOMMON, 'CwCw': TIER_UNCOMMON,
+    'nO': TIER_UNCOMMON, 'OO': TIER_UNCOMMON,
+    'nSb': TIER_UNCOMMON, 'SbSb': TIER_UNCOMMON,
+    'nGi': TIER_UNCOMMON, 'GiGi': TIER_UNCOMMON,
+    'nCo': TIER_UNCOMMON, 'CoCo': TIER_UNCOMMON, 'GiCo': TIER_UNCOMMON, 'CoGi': TIER_UNCOMMON,
+    'nB': TIER_RARE, 'BB': TIER_RARE,
+    'nW': TIER_RARE, 'WW': TIER_RARE,
+    'nRb': TIER_RARE, 'RbRb': TIER_RARE,
+    'nFl': TIER_RARE, 'FlFl': TIER_RARE, 'BFl': TIER_RARE, 'FlB': TIER_RARE,
+    'nHq': TIER_EPIC, 'HqHq': TIER_EPIC,
+    'nSh': TIER_EPIC, 'ShSh': TIER_EPIC,
+    'fefe': TIER_LEGENDARY,
+    'nOs': TIER_LEGENDARY, 'OsOs': TIER_LEGENDARY,
+    // KIT compounds — scored by the rarest pattern in the pair
+    'TSb': TIER_UNCOMMON, 'SbT': TIER_UNCOMMON,
+    'RnSb': TIER_UNCOMMON, 'SbRn': TIER_UNCOMMON,
+    'TW': TIER_RARE, 'WT': TIER_RARE,
+    'RnW': TIER_RARE, 'WRn': TIER_RARE,
+    'SbW': TIER_RARE, 'WSb': TIER_RARE,
+    // --- Modifiers --- (Dun, Pangare, Sooty, Gray are common = 0)
+    'ff': TIER_UNCOMMON,
+    'nZ': TIER_UNCOMMON, 'ZZ': TIER_UNCOMMON,
+    'nLu': TIER_UNCOMMON, 'LuLu': TIER_UNCOMMON, 'Lusp': TIER_UNCOMMON,
+    'spsp': TIER_UNCOMMON,
+    'nTd': TIER_RARE, 'TdTd': TIER_RARE,
+    'nGl': TIER_RARE, 'GlGl': TIER_RARE,
+    'nV': TIER_RARE, 'VV': TIER_RARE,
+    'nOp': TIER_EPIC, 'OpOp': TIER_EPIC,
+    'lrlr': TIER_EPIC,
+    'nPr': TIER_LEGENDARY, 'PrPr': TIER_LEGENDARY, 'PrOp': TIER_LEGENDARY,
+    'sfsf': TIER_LEGENDARY,
+    // --- Carriers --- (Carries Flaxen, Patn, Sepulchered are common = 0)
+    'ner': TIER_UNCOMMON, 'Cher': TIER_UNCOMMON,
+    'nprl': TIER_UNCOMMON,
+    'nlr': TIER_RARE,
+    'nfe': TIER_EPIC,
+    'nsf': TIER_EPIC
+};
+
+// Locus-1 dilutions (Cream/Tapestry/Pearl) by how fancy they are on their own.
+const L1_SINGLE = ['nCr', 'Cr', 'nTp', 'Tp', 'TpTp'];        // alone = uncommon
+const L1_RARE = ['CrCr', 'prlprl', 'TpCr'];                  // alone = rare
+const L1_EPIC = ['Crprl', 'Tpprl'];                          // alone = epic
+const L1_LEGENDARY = ['Crprl', 'TpCr', 'Tpprl'];             // + a locus-2 dilution = legendary
+const L2_DILUTIONS = ['nCh', 'Ch', 'ChCh', 'erer', 'Cher'];  // Champagne / Ether, rare on their own
+
+// Score the coat (dilution combination) as a single tier.
+function coatRarity(genes) {
+    const l1 = genes.find(g => L1_SINGLE.includes(g) || L1_RARE.includes(g) || L1_EPIC.includes(g));
+    const l2 = genes.find(g => L2_DILUTIONS.includes(g));
+    if (!l1 && !l2) return 0;
+    if (l1 && L1_LEGENDARY.includes(l1) && l2) return TIER_LEGENDARY;
+    if (l1 && l2) return TIER_EPIC;                 // two dilutions across both loci
+    if (l1 && L1_EPIC.includes(l1)) return TIER_EPIC;
+    if (l1 && L1_RARE.includes(l1)) return TIER_RARE;
+    if (l2) return TIER_RARE;                       // Champagne or Ether on its own
+    return TIER_UNCOMMON;                            // single Cream or single Tapestry
+}
+
+// Score the leopard complex (Lp + patn), which spans two loci.
+function leopardRarity(genes) {
+    const hasLp = genes.includes('nLp') || genes.includes('LpLp');
+    if (!hasLp) return 0;
+    const homLp = genes.includes('LpLp');
+    const patn = genes.includes('patnpatn') ? 'hom' : (genes.includes('npatn') ? 'het' : 'none');
+    if (homLp && patn === 'hom') return TIER_EPIC;   // Fewspot
+    if (homLp && patn === 'het') return TIER_RARE;   // Snowcap
+    if (homLp && patn === 'none') return TIER_RARE;  // Varnish Roan
+    if (!homLp && patn === 'hom') return TIER_RARE;  // Leopard
+    if (!homLp && patn === 'het') return TIER_UNCOMMON; // Blanket
+    return 0;                                        // Snowflake (nLp alone) = common
+}
+
 function calculateRarity(genotype) {
-    let score = 0;
-
-    // Legendary coat combos — triple dilutions so rare they have their own theme music
-    if (genotype.includes('Tpprl') && genotype.includes('erer')) score += 100;
-    if (genotype.includes('Tpprl') && genotype.includes('Ch')) score += 100;
-    if (genotype.includes('Crprl') && genotype.includes('Ch')) score += 100;
-    if (genotype.includes('Crprl') && genotype.includes('erer')) score += 100;
-    if (genotype.includes('TpCr') && genotype.includes('erer')) score += 100;
-    if (genotype.includes('TpCr') && genotype.includes('Ch')) score += 100;
-    // Legendary markings/modifiers — the "screenshot this immediately" tier
-    if (genotype.includes('fefe')) score += 100;
-    if (genotype.includes('nOs')) score += 100;
-    if (genotype.includes('nPr')) score += 100;
-    if (genotype.includes('sfsf')) score += 100;
-
-    // Epic coat combos — double dilutions that'll make your stablemates jealous
-    if (genotype.includes('Tpprl') && score < 100) score += 50;
-    if (genotype.includes('Crprl') && score < 100) score += 50;
-    if (genotype.includes('nCr') && genotype.includes('nCh') && score < 100) score += 50;
-    if (genotype.includes('nCr') && genotype.includes('erer') && score < 100) score += 50;
-    if (genotype.includes('nTp') && genotype.includes('nCh') && score < 100) score += 50;
-    if (genotype.includes('nTp') && genotype.includes('erer') && score < 100) score += 50;
-    if (genotype.includes('prlprl') && genotype.includes('Ch') && score < 100) score += 50;
-    if (genotype.includes('prlprl') && genotype.includes('erer') && score < 100) score += 50;
-    // Epic markings/modifiers — the "ooh, shiny" genes
-    if (genotype.includes('nSh')) score += 50;
-    if (genotype.includes('nHq')) score += 50;
-    if (genotype.includes('nOp')) score += 50;
-    if (genotype.includes('LpLp patnpatn')) score += 50;
-    if (genotype.includes('lrlr')) score += 50;
-    // Carriers — they have it in their pocket but refuse to show anyone
-    if (genotype.includes('nfe')) score += 25;
-    if (genotype.includes('nsf')) score += 25;
-    if (genotype.includes('nlr')) score += 25;
-
-    // Rare coat colors — uncommon enough to brag about in the tavern
-    if (genotype.includes('nCh') && score < 50) score += 25;
-    if (genotype.includes('CrCr') && score < 50) score += 25;
-    if (genotype.includes('prlprl') && score < 50) score += 25;
-    if (genotype.includes('TpCr') && score < 50) score += 25;
-    if (genotype.includes('erer') && score < 50) score += 25;
-    // Rare markings/modifiers — decent dungeon loot, not quite boss-drop tier
-    if (genotype.includes('nTd')) score += 25;
-    if (genotype.includes('nGl')) score += 25;
-    if (genotype.includes('nFl')) score += 25;
-    if (genotype.includes('nW')) score += 25;
-    if (genotype.includes('nRb')) score += 25;
-    if (genotype.includes('nV')) score += 25;
-
+    const { genes } = parseGenotype(genotype);
+    let score = coatRarity(genes) + leopardRarity(genes);
+    genes.forEach(g => { if (GENE_RARITY[g]) score += GENE_RARITY[g]; });
     return score;
 }
 
