@@ -1878,6 +1878,37 @@ function canProduceCompoundDilution(p1Geno, p2Geno, dilution1, dilution2) {
     return (p1Can1 && p2Can2) || (p1Can2 && p2Can1);
 }
 
+// Map fancy coat names to their base colour, built straight from the coat tables
+// so the search can verify a pair can actually make the required base (e.g. Woad
+// is black-based, Madder bay, Weld chestnut).
+const COAT_NAME_BASE = { 'bay': 'bay', 'black': 'black', 'chestnut': 'chestnut' };
+(function () {
+    const baseOf = { Bay: 'bay', Black: 'black', Chestnut: 'chestnut' };
+    for (const key in SPECIAL_COAT_NAMES) {
+        const base = baseOf[key.split('_')[0]];
+        if (base) COAT_NAME_BASE[SPECIAL_COAT_NAMES[key].toLowerCase()] = base;
+    }
+})();
+
+// Which base (if any) a coat-name query requires. Longest match wins.
+function requiredBaseFromName(traitLower) {
+    let best = null, bestLen = 0;
+    for (const name in COAT_NAME_BASE) {
+        if (name.length > bestLen && traitLower.indexOf(name) > -1) { best = COAT_NAME_BASE[name]; bestLen = name.length; }
+    }
+    return best;
+}
+
+// Can this pair produce a given base? bay = E_ A_, black = E_ aa, chestnut = ee.
+function canMakeBase(parent1, parent2, baseType) {
+    const p1 = parent1.genotype, p2 = parent2.genotype;
+    const hasE = /\bEE\b|\bEe\b/.test(p1) || /\bEE\b|\bEe\b/.test(p2);
+    if (baseType === 'chestnut') return /\bee\b|\bEe\b/.test(p1) && /\bee\b|\bEe\b/.test(p2);
+    if (baseType === 'black') return hasE && /\baa\b|\bAa\b/.test(p1) && /\baa\b|\bAa\b/.test(p2);
+    if (baseType === 'bay') return hasE && (/\bAA\b|\bAa\b/.test(p1) || /\bAA\b|\bAa\b/.test(p2));
+    return true;
+}
+
 function calculateMatchScore(parent1, parent2, targetTraits) {
     const p1Geno = parent1.genotype.toLowerCase();
     const p2Geno = parent2.genotype.toLowerCase();
@@ -1888,6 +1919,9 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
 
     targetTraits.forEach(trait => {
         const traitLower = trait.toLowerCase();
+        // If the coat name pins a base colour, the pair must be able to make it.
+        const _baseReq = requiredBaseFromName(traitLower);
+        const genBaseOK = !_baseReq || canMakeBase(parent1, parent2, _baseReq);
 
         // The great trait treasure hunt — does this pair have the genes or are we just dreaming?
         // Starting with the rarest combos first because we're ambitious like that
@@ -1924,12 +1958,12 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             const p1HasEther = etherPat.test(p1Geno);
             const p2HasEther = etherPat.test(p2Geno);
             const canMakeErer = p1HasEther && p2HasEther;
-            if (hasCreamPearl && canMakeErer) traitsScores.push(150);
+            if (hasCreamPearl && canMakeErer && genBaseOK) traitsScores.push(150);
         } else if (traitLower.includes('cream pearl champagne')) {
             // Need Crprl + Ch — cream, pearl, AND champagne? This horse is going to prom
             const hasCreamPearl = canProduceCompoundDilution(p1Geno, p2Geno, 'cr', 'prl');
             const hasChampagne = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno);
-            if (hasCreamPearl && hasChampagne) traitsScores.push(150);
+            if (hasCreamPearl && hasChampagne && genBaseOK) traitsScores.push(150);
         } else if (traitLower.includes('tapestry pearl ether') || traitLower === 'tyrian pearl ether' ||
                    traitLower === 'phthalo pearl ether' || traitLower === 'ochre pearl ether') {
             // Need Tpprl + erer — tapestry pearl ether, a name longer than most quest descriptions
@@ -1938,7 +1972,7 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             const p1HasEther = etherPat.test(p1Geno);
             const p2HasEther = etherPat.test(p2Geno);
             const canMakeErer = p1HasEther && p2HasEther;
-            if (hasTapestryPearl && canMakeErer) traitsScores.push(150);
+            if (hasTapestryPearl && canMakeErer && genBaseOK) traitsScores.push(150);
         } else if (traitLower.includes('tapestry pearl champagne') || traitLower === 'tyrian pearl champagne' ||
                    traitLower === 'phthalo pearl champagne' || traitLower === 'ochre pearl champagne') {
             // Need Tpprl + Ch — good news: Ch is on a separate locus so it can sneak in independently
@@ -1946,7 +1980,7 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             // One parent brings the tapestry-pearl combo, someone brings champagne, everyone's happy
             const p1HasCh = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(p1Geno);
             const p2HasCh = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(p2Geno);
-            if (hasTapestryPearl && (p1HasCh || p2HasCh)) traitsScores.push(150);
+            if (hasTapestryPearl && (p1HasCh || p2HasCh) && genBaseOK) traitsScores.push(150);
         } else if (traitLower.includes('tapestry cream ether') || traitLower === 'madder cream ether' ||
                    traitLower === 'woad cream ether' || traitLower === 'weld cream ether') {
             // Need TpCr + erer — both parents must carry er or no ethereal tapestry cream for you
@@ -1955,13 +1989,13 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             const p1HasEther = etherPat.test(p1Geno);
             const p2HasEther = etherPat.test(p2Geno);
             const canMakeErer = p1HasEther && p2HasEther;
-            if (hasTapestryCream && canMakeErer) traitsScores.push(150);
+            if (hasTapestryCream && canMakeErer && genBaseOK) traitsScores.push(150);
         } else if (traitLower.includes('tapestry cream champagne') || traitLower === 'madder cream champagne' ||
                    traitLower === 'woad cream champagne' || traitLower === 'weld cream champagne') {
             // Need TpCr + Ch — tapestry cream champagne, this horse is basically a dessert wine
             const hasTapestryCream = canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'cr');
             const hasChampagne = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno);
-            if (hasTapestryCream && hasChampagne) traitsScores.push(150);
+            if (hasTapestryCream && hasChampagne && genBaseOK) traitsScores.push(150);
         } else if (traitLower.includes('pearl ether') && !traitLower.includes('cream') && !traitLower.includes('tapestry')) {
             // Need prlprl + erer — double recessive combo, both parents must carry the goods
             const p1HasPearl = p1Geno.includes('prl');
