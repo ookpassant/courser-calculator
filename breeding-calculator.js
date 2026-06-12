@@ -272,7 +272,7 @@ const DILUTION_NAMES = {
     // Locus 1: Cr, Tp, prl — three dilutions crammed into one locus like adventurers in a tavern booth
     'nCr': 'Cream', 'Cr': 'Cream', 'CrCr': 'Double Cream',
     'nTp': 'Tapestry', 'Tp': 'Tapestry', 'TpTp': 'Tapestry',
-    'nprl': 'Pearl', 'prl': 'Pearl', 'prlprl': 'Pearl',
+    'prlprl': 'Pearl',
     'Crprl': 'Cream Pearl',
     'TpCr': 'Tapestry Cream',
     'Tpprl': 'Tapestry Pearl',
@@ -326,7 +326,7 @@ const TRAITS_AFTER_COAT = [
     // Gi/Co compound — accessorized from both ends
     'Girdle Collar',
     // Carrier traits — the "I swear it's in my bloodline" genes
-    'Carries Ether', 'Carries Patn'
+    'Carries Ether', 'Carries Patn', 'Carries Pearl'
 ];
 
 const WHITE_MARKING_NAMES = {
@@ -409,6 +409,12 @@ function genotypeToPhenotype(genoString) {
     }
     if (locus2Gene && DILUTION_NAMES[locus2Gene]) {
         dilutions.push(DILUTION_NAMES[locus2Gene]);
+    }
+
+    // Pearl is recessive too — a single nprl only CARRIES it (you need prlprl, or it
+    // riding along in a compound like Crprl/Tpprl, to actually show Pearl).
+    if (locus1Gene === 'nprl') {
+        allTraits.push('Carries Pearl');
     }
 
     // Ether is recessive — lurking in the shadows until it gets a matching copy, very dungeon energy

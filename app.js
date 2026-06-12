@@ -66,6 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '12 Jun 2026', items: [
+      'Fixed Pearl: a single copy (nprl) now reads as Carries Pearl, not an expressed Pearl coat. Pearl is recessive, so it only shows with two copies or in a compound (Cream/Tapestry Pearl). Caught by cross-checking the official Trait Index.',
       'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a pair for a coat it can\'t actually make. Fixes Woad, and also Amber/Classic/Gold Cream Champagne, Ombre/Classic/Cold Cream Ether, and other coats that matched too loosely.',
       'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.'
     ] },
