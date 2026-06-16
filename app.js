@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '16 Jun 2026', items: [
+      'Smart Search now finds pairs for Prism, Opal and Harlequin. They were never scored, so any search including one of them returned no matches even when your horses could make it. Reported by Criri.'
+    ] },
     { date: '12 Jun 2026', items: [
       'Fixed Pearl: a single copy (nprl) now reads as Carries Pearl, not an expressed Pearl coat. Pearl is recessive, so it only shows with two copies or in a compound (Cream/Tapestry Pearl). Caught by cross-checking the official Trait Index.',
       'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a pair for a coat it can\'t actually make. Fixes Woad, and also Amber/Classic/Gold Cream Champagne, Ombre/Classic/Cold Cream Ether, and other coats that matched too loosely.',
