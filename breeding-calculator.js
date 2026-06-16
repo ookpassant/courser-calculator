@@ -2260,6 +2260,15 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (/\bntd\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'gilt') {
             if (/\bngl\b/.test(combinedGeno)) traitsScores.push(80);
+        } else if (traitLower === 'prism') {
+            // Dominant — Pr shows with one copy; PrOp shares the locus with Opal
+            if (/\bnpr\b|\bprpr\b|\bprop\b/.test(combinedGeno)) traitsScores.push(80);
+        } else if (traitLower === 'opal') {
+            // Dominant — Op shows with one copy; PrOp shares the locus with Prism
+            if (/\bnop\b|\bopop\b|\bprop\b/.test(combinedGeno)) traitsScores.push(80);
+        } else if (traitLower === 'harlequin') {
+            // Dominant — Hq shows with one copy (nHq or HqHq)
+            if (/\bnhq\b|\bhqhq\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'blanched') {
             if (/\bnb\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'dominant white') {
