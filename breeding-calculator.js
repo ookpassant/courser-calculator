@@ -582,12 +582,12 @@ const DILUTION_DESC = {
     'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
     'Double Cream': "Two doses of cream take it almost all the way out — the coat goes pale cream-to-ivory, the skin pinkish, the eyes blue.",
     'Champagne': "Champagne lightens the whole coat and gives it a faint metallic sheen, with pumpkin-toned skin and lighter eyes.", // REVIEW: DC naming/appearance
-    'Ether': "Ether drains the colour toward a ghostly, washed-out version of itself, like the horse is half here and half somewhere else.", // REVIEW: DC-invented dilution
+    'Ether': "Ether is Dungeon Coursers' own dilution — a magical counterpart to Champagne that lays a mystical blue-silver sheen over the base coat.",
     'Pearl': "Pearl (double dose) lends an iridescent, shell-like glow that catches the light apricot-to-gold.", // REVIEW: verify DC pearl look
-    'Cream Pearl': "Cream and pearl together push the coat pale and luminous — soft gold with that tell-tale pearly sheen.", // REVIEW: DC compound
-    'Tapestry': "Tapestry mutes and antiques the colour into something that looks woven and faded, like a wall hanging left in the sun.", // REVIEW: DC-invented dilution
-    'Tapestry Cream': "Tapestry's faded-woven look layered over a cream-lightened body — antique and buttery at once.", // REVIEW: DC compound
-    'Tapestry Pearl': "Tapestry's muted weave plus pearl's iridescence — a faded coat that still glows where the light hits.", // REVIEW: DC compound
+    'Cream Pearl': "Cream and pearl together push the coat pale and luminous — soft gold with that tell-tale pearly sheen.", // REVIEW: pearl portion unconfirmed
+    'Tapestry': "Tapestry is Dungeon Coursers' own dilution — it dyes the base coat a bold, saturated hue, the vivid reds, greens and blues of Madder, Woad and Weld.",
+    'Tapestry Cream': "Tapestry dyes the coat a bold, saturated hue, and a dose of cream then softens and lightens it.",
+    'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's iridescent shell-sheen layered over the top.", // REVIEW: pearl portion unconfirmed
 };
 
 // Modifiers — the shading, sooting, greying and stranger DC treatments.
@@ -643,7 +643,7 @@ const LEOPARD_DESC = {
 // Hidden carriers — genes the horse quietly carries but doesn't visibly show.
 const CARRIER_DESC = {
     'Carries Pearl': "pearl (one copy — invisible until paired with another pearl or a cream)",
-    'Carries Ether': "ether (one copy, hidden)", // REVIEW: DC-invented dilution
+    'Carries Ether': "ether (one copy, hidden)",
     'Carrying Filigree': "filigree (one copy, hidden)", // REVIEW: DC-invented marking
     'Carries Patn': "a leopard pattern gene (patn) with no Lp to switch it on — silent for now",
     'Carrying Flaxen': "flaxen (one copy, hidden)",
