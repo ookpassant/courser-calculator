@@ -561,11 +561,11 @@ function genotypeToPhenotype(genoString) {
 // resolveTraits(), so a horse's description can never disagree with its
 // phenotype name.
 //
-// Confidence note: the coats, dilutions (incl. Tapestry, Ether, Champagne,
-// Pearl), modifiers, and white/leopard markings are written from the official
-// Trait Index and the real-world genetics they're based on. What's still a best
-// guess is marked `// REVIEW`: the anomalies, the four variants, and Dominant
-// White — Ook needs to correct those against the game before they're gospel.
+// Confidence note: the coats, dilutions, modifiers, white/leopard markings,
+// the four variants, and most anomalies are written from the official Trait
+// Index (and the real-world genetics they're based on). Only four anomalies are
+// still best guesses, marked `// REVIEW`: Bend-or Spots, Birdcatcher Spots,
+// Brindle, and Chimera — they weren't in the Trait Index text on hand.
 // ============================================================================
 
 // Base body colour — the canvas everything else paints onto.
@@ -581,7 +581,7 @@ const DILUTION_DESC = {
     'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
     'Double Cream': "Two doses of cream take it almost all the way out — the coat goes pale cream-to-ivory, the skin pinkish, the eyes blue.",
     'Champagne': "Champagne lightens the coat to a warm golden-to-grayish brown with peachy or lavender undertones, over pinkish-gray, often freckled skin, with gold or green eyes.",
-    'Ether': "Ether is Dungeon Coursers' own dilution — a magical counterpart to Champagne that lays a mystical blue-silver sheen over the base coat.",
+    'Ether': "Ether is Dungeon Coursers' own dilution — the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray: silvery-blue along the topline, purple-pink beneath the barrel and on the face, over gray skin with gray or brown eyes.",
     'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown — a warm grayish brown on a black base — even in tone, with pink skin and gray or green eyes.",
     'Cream Pearl': "Cream and pearl together push the coat pale and luminous — a soft warm gold with pearl's shiny caramel sheen.",
     'Tapestry': "Tapestry is Dungeon Coursers' own dilution — it dyes the base coat a bold, saturated hue, the vivid reds, greens and blues of Madder, Woad and Weld.",
@@ -616,7 +616,7 @@ const MARKING_DESC = {
     'Roan': "Roan mixes white hairs evenly through the body while the head and legs stay solid, giving a frosted, silvered look over the base colour.",
     'Sabino': "Sabino adds ragged, roaned white — tall stockings, a blazed face, jagged belly spots and flecking with soft, lacy edges.",
     'Rabicano': "Rabicano frosts white at the flanks and tail base — the classic 'coon tail' barring — without touching the rest much.",
-    'Dominant White': "Dominant White pushes toward extensive white or a fully white coat, over pink skin.", // REVIEW: confirm DC dominant-white expression
+    'Dominant White': "Dominant White covers most or all of the coat in white, spreading up from the horse's underside so some base colour may linger along the topline, with roaned, grainy edges like Sabino.",
     'Cuirass': "Cuirass is a solid, symmetrical white breastplate across the upper chest and part of the shoulders, like armour — it never touches the mane, crosses the topline, or reaches the belly.",
     'Crowned': "Crowned sets symmetrical white on the head — a single marking or a tidy arrangement of simple stripes, spots and splotches.",
     'Girdle': "Girdle wraps a single, even band of white all the way around the barrel, with crisp, smooth edges.",
@@ -651,33 +651,35 @@ const CARRIER_DESC = {
     'Carrying Lacquer': "lacquer (one copy, hidden)"
 };
 
-// Anomalies — the rare 'with ...' extras tacked onto a genotype. All REVIEW:
-// these are DC-invented and need checking against the in-game art.
+// Anomalies — the rare 'with ...' extras tacked onto a genotype. Most are now
+// written from the Trait Index; the four still marked // REVIEW weren't in the
+// text and need checking against the game.
 const ANOMALY_DESC = {
     'Bend-or Spots': "scattered dark 'Bend-or' smudges — random patches a shade or two darker than the base coat", // REVIEW
     'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life", // REVIEW
     'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume", // REVIEW
     'Chimera': "a chimera patch — a region that grew from a second genotype, so part of the horse is visibly a different colour", // REVIEW
-    'Geode': "crystalline, geode-like patterning, as if the coat cracked open to show mineral facets", // REVIEW
-    'Stained Glass': "bold, leaded 'stained glass' segments of colour outlined like a cathedral window (this now also covers the old 'Ore' trait)", // REVIEW
-    'Ore': "raw, metallic ore-like veining running through the coat", // REVIEW: legacy alias, normalised to Stained Glass upstream
-    'Kintsugi': "golden 'kintsugi' seams tracing across the coat, like the horse was broken and mended with gold", // REVIEW
-    'Swarf': "a fine metallic-shaving speckle (swarf) dusted across the coat", // REVIEW
-    'Vitiligo': "spreading patches of pigment loss (vitiligo), pink-skinned and pale", // REVIEW
-    'Oracle': "an uncanny, oracular marking — glyph-like patterning that looks deliberately drawn on", // REVIEW
-    'Signet': "a crisp, seal-like signet mark stamped somewhere on the coat", // REVIEW
-    'Pennant': "banner-like streaks of colour that trail like a flag caught in the wind", // REVIEW
-    'Pastiche': "a mash-up 'pastiche' of borrowed patterning, like several markings quilted together", // REVIEW
-    'Fresco': "soft, painterly 'fresco' patches, like faded plaster artwork on the coat", // REVIEW
-    'Lantern': "warm, glowing lantern-like spots, as if light were shining out through the coat", // REVIEW
+    'Geode': "an eye anomaly — the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
+    'Stained Glass': "an eye anomaly — the iris and/or pupil recoloured to colours unnatural for the horse, sometimes metallic or split into heterochromia (this also covers the old 'Ore' trait)",
+    'Ore': "an eye anomaly — recoloured iris and/or pupil; a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
+    'Kintsugi': "metallic borders and 'cracks' traced onto the horse's white markings in a single colour, like they were mended with gold",
+    'Swarf': "metallic flecks and glitter scattered across the coat, spreading from the topline and hooves, never dense enough to hide the base colour",
+    'Vitiligo': "irregular patches of lost pigment — pale, untinted white — that tend to start on the face, elbows and groin and can spread over the horse's life, sometimes as streaks in the mane and tail",
+    'Oracle': "an eye anomaly — a black or white film drawn evenly over the whole eyeball, from faint and translucent to fully opaque",
+    'Signet': "a hoof anomaly — the hooves recoloured to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic",
+    'Pennant': "the mane and tail recoloured to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip)",
+    'Pastiche': "reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms — stripes, skulls, emblems and the like",
+    'Fresco': "lets the crisp edges of the horse's Chimera and/or Somatic markings go soft — low-opacity, blurred, smoky or streaky",
+    'Lantern': "an eye anomaly — a coloured glow emanating from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil",
 };
 
-// Variants — the whole-horse skins layered on top. All REVIEW: DC-invented.
+// Variants — the four breed variants. These are a whole different physique the
+// colours above are painted onto, not a colour filter.
 const VARIANT_DESC = {
-    'Heraldic': "It's a **Heraldic** variant, so read all of the above through a formal, banner-and-crest filter — the colours sit in bold heraldic blocks.", // REVIEW
-    'Puck': "It's a **Puck** variant — mischievous and fae, the whole look skewed toward something wilder and more sprite-like.", // REVIEW
-    'Cavedweller': "It's a **Cavedweller** variant — pale, subterranean and cave-adapted, the colours dimmed like they've never seen sun.", // REVIEW
-    'Restored': "It's a **Restored** variant — cracked-and-mended, aged and pieced back together like a relic.", // REVIEW
+    'Heraldic': "On top of all that, it's a **Heraldic** — the nobility's old favourite. Regal carriage, cloven hooves for grip, and coat, mane and tail growth patterns that show off the muscle.",
+    'Puck': "On top of all that, it's a **Puck** — a fey-touched courser bred from archers' mounts. Long ears, a curly protective coat, a braying voice and a mischievous streak.",
+    'Cavedweller': "On top of all that, it's a **Cavedweller** — descended from coursers buried with the kingdom, generations in magical dark leaving it hairless and eyeless, navigating by sound and taste.",
+    'Restored': "On top of all that, it's a **Restored** — a courser whose memory was nearly devoured and then painstakingly mended by the Archivist, held together with binding, leatherwork and aberrant magic. Alive, but forever changed.",
 };
 
 // The leopard-pattern names, so the translator knows which allTraits entries are
