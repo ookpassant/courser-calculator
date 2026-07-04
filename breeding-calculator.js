@@ -377,12 +377,16 @@ function isLethalWhite(genes) {
     return hasOO || hasOsOs || hasWW || hasOveroOssuary;
 }
 
-function genotypeToPhenotype(genoString) {
+// The single source of truth. Both the phenotype namer (genotypeToPhenotype)
+// and the plain-English translator (genotypeToPlainEnglish) read their trait
+// data from HERE, so the two can never quietly drift out of sync. Returns
+// structured data: { lethal, baseCoat, dilutions, coatColor, allTraits, anomalies }.
+function resolveTraits(genoString) {
     const { genes, anomalies } = parseGenotype(genoString);
 
     // OO, OsOs, WW, or nO+nOs = dead foal, sorry
     if (isLethalWhite(genes)) {
-        return 'LETHAL WHITE - This foal would not survive.';
+        return { lethal: true, baseCoat: '', dilutions: [], coatColor: '', allTraits: [], anomalies };
     }
 
     let baseCoat = '';
@@ -517,6 +521,18 @@ function genotypeToPhenotype(genoString) {
         }
     });
 
+    return { lethal: false, baseCoat, dilutions, coatColor, allTraits, anomalies };
+}
+
+// Thin formatter over resolveTraits — turns the structured trait data into the
+// terse phenotype name the rest of the app has always shown.
+function genotypeToPhenotype(genoString) {
+    const { lethal, coatColor, allTraits, anomalies } = resolveTraits(genoString);
+
+    if (lethal) {
+        return 'LETHAL WHITE - This foal would not survive.';
+    }
+
     // Sort traits into their proper positions — phenotype formatting is an ancient and sacred art
     const traitsBeforeCoat = allTraits.filter(trait => TRAITS_BEFORE_COAT.includes(trait));
     const traitsAfterCoat = allTraits.filter(trait => TRAITS_AFTER_COAT.includes(trait));
@@ -535,6 +551,288 @@ function genotypeToPhenotype(genoString) {
     }
 
     return phenotype.trim();
+}
+
+// ============================================================================
+// PLAIN-ENGLISH TRANSLATOR
+// ----------------------------------------------------------------------------
+// Turns a genotype into a paragraph describing what the horse actually LOOKS
+// like, in the app's usual snarky register. Everything here reads from
+// resolveTraits(), so a horse's description can never disagree with its
+// phenotype name.
+//
+// Confidence note: real-world horse genetics (Bay/Black/Chestnut, the Cream
+// family, Dun, Gray, Sooty, Flaxen, Silver, Pangare, Tobiano, Overo, Splash,
+// Roan, Sabino, Rabicano, the leopard-complex patterns, Champagne, Pearl) are
+// described with reasonable confidence. Everything Dungeon-Coursers-invented is
+// a best guess and marked `// REVIEW` — Ook needs to correct these against how
+// they actually render in-game before they're treated as gospel.
+// ============================================================================
+
+// Base body colour — the canvas everything else paints onto.
+const COAT_BODY = {
+    'Bay': "underneath it all it's a bay: a reddish-brown body with a black mane, tail and lower legs",
+    'Black': "underneath it all it's a true black: dark from nose to hoof, no red anywhere",
+    'Chestnut': "underneath it all it's a chestnut: red-brown all over, with a mane and tail in the same reddish range — no black points"
+};
+
+// What each dilution actually does to the body. Keyed to the exact strings
+// resolveTraits pushes into `dilutions` (including compound entries).
+const DILUTION_DESC = {
+    'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
+    'Double Cream': "Two doses of cream take it almost all the way out — the coat goes pale cream-to-ivory, the skin pinkish, the eyes blue.",
+    'Champagne': "Champagne lightens the whole coat and gives it a faint metallic sheen, with pumpkin-toned skin and lighter eyes.", // REVIEW: DC naming/appearance
+    'Ether': "Ether drains the colour toward a ghostly, washed-out version of itself, like the horse is half here and half somewhere else.", // REVIEW: DC-invented dilution
+    'Pearl': "Pearl (double dose) lends an iridescent, shell-like glow that catches the light apricot-to-gold.", // REVIEW: verify DC pearl look
+    'Cream Pearl': "Cream and pearl together push the coat pale and luminous — soft gold with that tell-tale pearly sheen.", // REVIEW: DC compound
+    'Tapestry': "Tapestry mutes and antiques the colour into something that looks woven and faded, like a wall hanging left in the sun.", // REVIEW: DC-invented dilution
+    'Tapestry Cream': "Tapestry's faded-woven look layered over a cream-lightened body — antique and buttery at once.", // REVIEW: DC compound
+    'Tapestry Pearl': "Tapestry's muted weave plus pearl's iridescence — a faded coat that still glows where the light hits.", // REVIEW: DC compound
+};
+
+// Modifiers — the shading, sooting, greying and stranger DC treatments.
+const MODIFIER_DESC = {
+    'Dun': "Dun pales the body and stamps on primitive marks: a dark dorsal stripe down the spine, and often barring on the legs.",
+    'Pangare': "Pangare (mealy) lightens the soft parts — muzzle, eyes, belly, flanks, inner legs — to a paler shade.",
+    'Sooty': "Sooty throws a smudge of darker hairs over the top, heaviest along the back and shoulders, like it's been dusted with charcoal.",
+    'Gray': "Gray is progressive: the horse is born its base colour and then steadily silvers out with age, eventually toward white.",
+    'Flaxen': "Flaxen lightens the mane and tail to blonde or near-white while the body keeps its colour (only really visible on a red base).",
+    'Silver': "Silver dilutes black pigment specifically — chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
+    'Illuminated': "Illuminated gives the coat a soft glow, as if it's lit faintly from within.", // REVIEW: DC-invented modifier
+    'Sepulchered': "Sepulchered casts a grave-cold, muted pall over the colour — shadowed and dim, like it's been kept somewhere dark.", // REVIEW: DC-invented modifier
+    'Tabard': "Tabard lays a heraldic block of contrasting colour over the body, like the horse is wearing a herald's surcoat.", // REVIEW: DC-invented modifier
+    'Gilt': "Gilt edges the coat in a gold, metallic shimmer, brightest along the highlights.", // REVIEW: DC-invented modifier
+    'Vellum': "Vellum gives the coat a pale, parchment-like finish — smooth, aged and slightly translucent.", // REVIEW: DC-invented modifier
+    'Opal': "Opal scatters a shifting, milky-iridescent play of colour across the coat.", // REVIEW: DC-invented modifier
+    'Prism': "Prism refracts the light into faint rainbow glints where it catches the coat.", // REVIEW: DC-invented modifier
+    'Starfield': "Starfield speckles the coat with tiny points of light, like a night sky scattered across the horse.", // REVIEW: DC-invented modifier
+    'Lacquer': "Lacquer gives the coat a hard, glossy, wet-looking shine, as if it's been varnished.", // REVIEW: DC-invented modifier
+};
+
+// White patterns and markings.
+const MARKING_DESC = {
+    'Tobiano': "Tobiano throws big, rounded patches of white that cross the spine, usually with white legs and a mostly dark head.",
+    'Overo': "Overo (frame) carves horizontal blocks of white along the sides that don't cross the back, with a dark topline and often a bald face.",
+    'Splash': "Splash looks like the horse was dipped in white paint from below — white legs, belly, and a broad white face, with clean crisp edges.",
+    'Roan': "Roan mixes white hairs evenly through the body while the head and legs stay solid, giving a frosted, silvered look over the base colour.",
+    'Sabino': "Sabino adds ragged, roaned white — tall stockings, a blazed face, jagged belly spots and flecking with soft, lacy edges.",
+    'Rabicano': "Rabicano frosts white at the flanks and tail base — the classic 'coon tail' barring — without touching the rest much.",
+    'Dominant White': "Dominant White pushes toward extensive white or a fully white coat, over pink skin.", // REVIEW: confirm DC dominant-white expression
+    'Cuirass': "Cuirass drops a breastplate of white across the chest and shoulders, like armour worn over the coat.", // REVIEW: DC-invented marking
+    'Crowned': "Crowned marks the poll and top of the head with white, like a circlet or crown.", // REVIEW: DC-invented marking
+    'Girdle': "Girdle wraps a band of white around the barrel, like a belt cinched over the midsection.", // REVIEW: DC-invented marking
+    'Collar': "Collar rings the neck with white, like a collar sitting where the mane meets the shoulders.", // REVIEW: DC-invented marking
+    'Blanched': "Blanched leaches colour in pale, bleached patches, as though the coat was left out to fade unevenly.", // REVIEW: DC-invented marking
+    'False Leopard': "False Leopard mimics leopard-style spotting without the real leopard complex — spots that look the part but aren't Lp.", // REVIEW: DC-invented marking
+    'Harlequin': "Harlequin breaks the coat into a bold, patchwork scatter of contrasting blocks, like a jester's motley.", // REVIEW: DC-invented marking
+    'Shroud': "Shroud drapes a veil of pale, ghostly white over part of the horse, soft-edged like fabric.", // REVIEW: DC-invented marking
+    'Filigree': "Filigree traces fine, lacy lines of white across the coat, like delicate metalwork.", // REVIEW: DC-invented marking
+    'Ossuary': "Ossuary marks the horse with stark, bone-pale patterning — skeletal and severe.", // REVIEW: DC-invented marking
+};
+
+// Leopard complex — the appaloosa-family spotting patterns.
+const LEOPARD_DESC = {
+    'Snowflake': "Snowflake (single Lp, no pattern gene) scatters white flecks and spots over the dark coat, like a light snowfall that thickens with age.",
+    'Blanket': "Blanket lays a patch of white — usually over the hips and rump — often carrying dark leopard spots within it.",
+    'Snowcap': "Snowcap gives a large, mostly-clean white blanket over the hindquarters with few or no spots inside it.",
+    'Leopard': "Leopard is the full deal: a white coat covered head-to-tail in dark, egg-shaped spots.",
+    'Fewspot': "Fewspot is a near-white horse that has 'spotted out' — an almost solid white coat with only a handful of faint spots left.",
+    'Varnish Roan': "Varnish Roan is the leopard complex's roaning: a mottled mix of light and dark that spreads over the body, with darker 'varnish marks' over the bony bits.",
+};
+
+// Hidden carriers — genes the horse quietly carries but doesn't visibly show.
+const CARRIER_DESC = {
+    'Carries Pearl': "pearl (one copy — invisible until paired with another pearl or a cream)",
+    'Carries Ether': "ether (one copy, hidden)", // REVIEW: DC-invented dilution
+    'Carrying Filigree': "filigree (one copy, hidden)", // REVIEW: DC-invented marking
+    'Carries Patn': "a leopard pattern gene (patn) with no Lp to switch it on — silent for now",
+    'Carrying Flaxen': "flaxen (one copy, hidden)",
+    'Carrying Sepulchered': "sepulchered (one copy, hidden)", // REVIEW: DC-invented modifier
+    'Carrying Starfield': "starfield (one copy, hidden)", // REVIEW: DC-invented modifier
+    'Carrying Lacquer': "lacquer (one copy, hidden)", // REVIEW: DC-invented modifier
+};
+
+// Anomalies — the rare 'with ...' extras tacked onto a genotype. All REVIEW:
+// these are DC-invented and need checking against the in-game art.
+const ANOMALY_DESC = {
+    'Bend-or Spots': "scattered dark 'Bend-or' smudges — random patches a shade or two darker than the base coat", // REVIEW
+    'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life", // REVIEW
+    'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume", // REVIEW
+    'Chimera': "a chimera patch — a region that grew from a second genotype, so part of the horse is visibly a different colour", // REVIEW
+    'Geode': "crystalline, geode-like patterning, as if the coat cracked open to show mineral facets", // REVIEW
+    'Stained Glass': "bold, leaded 'stained glass' segments of colour outlined like a cathedral window (this now also covers the old 'Ore' trait)", // REVIEW
+    'Ore': "raw, metallic ore-like veining running through the coat", // REVIEW: legacy alias, normalised to Stained Glass upstream
+    'Kintsugi': "golden 'kintsugi' seams tracing across the coat, like the horse was broken and mended with gold", // REVIEW
+    'Swarf': "a fine metallic-shaving speckle (swarf) dusted across the coat", // REVIEW
+    'Vitiligo': "spreading patches of pigment loss (vitiligo), pink-skinned and pale", // REVIEW
+    'Oracle': "an uncanny, oracular marking — glyph-like patterning that looks deliberately drawn on", // REVIEW
+    'Signet': "a crisp, seal-like signet mark stamped somewhere on the coat", // REVIEW
+    'Pennant': "banner-like streaks of colour that trail like a flag caught in the wind", // REVIEW
+    'Pastiche': "a mash-up 'pastiche' of borrowed patterning, like several markings quilted together", // REVIEW
+    'Fresco': "soft, painterly 'fresco' patches, like faded plaster artwork on the coat", // REVIEW
+    'Lantern': "warm, glowing lantern-like spots, as if light were shining out through the coat", // REVIEW
+};
+
+// Variants — the whole-horse skins layered on top. All REVIEW: DC-invented.
+const VARIANT_DESC = {
+    'Heraldic': "It's a **Heraldic** variant, so read all of the above through a formal, banner-and-crest filter — the colours sit in bold heraldic blocks.", // REVIEW
+    'Puck': "It's a **Puck** variant — mischievous and fae, the whole look skewed toward something wilder and more sprite-like.", // REVIEW
+    'Cavedweller': "It's a **Cavedweller** variant — pale, subterranean and cave-adapted, the colours dimmed like they've never seen sun.", // REVIEW
+    'Restored': "It's a **Restored** variant — cracked-and-mended, aged and pieced back together like a relic.", // REVIEW
+};
+
+// The leopard-pattern names, so the translator knows which allTraits entries are
+// leopard spotting versus ordinary markings.
+const LEOPARD_PATTERN_NAMES = Object.keys(LEOPARD_DESC);
+
+// a vs an, for the odd spot where we need an article in front of a colour.
+function articleFor(word) {
+    return /^[aeiou]/i.test((word || '').trim()) ? 'an' : 'a';
+}
+
+// Oxford-comma list join: ['a'] -> 'a'; ['a','b'] -> 'a and b';
+// ['a','b','c'] -> 'a, b, and c'.
+function joinList(items) {
+    const list = (items || []).filter(Boolean);
+    if (list.length === 0) return '';
+    if (list.length === 1) return list[0];
+    if (list.length === 2) return list[0] + ' and ' + list[1];
+    return list.slice(0, -1).join(', ') + ', and ' + list[list.length - 1];
+}
+
+// Assemble the plain-English paragraph, in visual order:
+//   body colour (base + dilutions) -> shading/modifiers -> white/markings
+//   -> leopard spotting -> anomalies -> variant -> hidden carriers.
+// Returns text with the coat name wrapped in **bold**. `variant` is optional.
+function genotypeToPlainEnglish(genoString, variant) {
+    if (!genoString || !genoString.trim()) {
+        return "Give me a genotype and I'll tell you what the horse actually looks like. Right now you've given me nothing, which describes a lot of things but not a horse.";
+    }
+
+    const t = resolveTraits(genoString);
+
+    if (t.lethal) {
+        return "Oof — this one's a **lethal white**. Two copies of the wrong white genes (OO, OsOs, WW, or Overo stacked with Ossuary) and the foal doesn't survive to be a colour at all. There's no horse here to describe, just a hard lesson in why you don't double up on those. Sorry.";
+    }
+
+    const { baseCoat, dilutions, coatColor, allTraits, anomalies } = t;
+
+    // Bucket the loose traits by what section of the paragraph they belong in.
+    const modifiers = allTraits.filter(x => MODIFIER_DESC[x]);
+    const markings  = allTraits.filter(x => MARKING_DESC[x]);
+    const leopard   = allTraits.filter(x => LEOPARD_DESC[x]);
+    const carriers  = allTraits.filter(x => CARRIER_DESC[x]);
+
+    const paras = [];
+
+    // 1. Body colour — lead with the fancy coat name in bold, then explain it.
+    let body = `You're looking at ${articleFor(coatColor)} **${coatColor}**.`;
+    const baseDesc = COAT_BODY[baseCoat];
+    if (baseDesc) body += ' ' + baseDesc.charAt(0).toUpperCase() + baseDesc.slice(1) + '.';
+    dilutions.forEach(d => { if (DILUTION_DESC[d]) body += ' ' + DILUTION_DESC[d]; });
+    paras.push(body);
+
+    // 2. Shading / modifiers.
+    if (modifiers.length) {
+        paras.push(modifiers.map(m => MODIFIER_DESC[m]).join(' '));
+    }
+
+    // 3. White / markings.
+    if (markings.length) {
+        paras.push(markings.map(m => MARKING_DESC[m]).join(' '));
+    }
+
+    // 4. Leopard spotting.
+    if (leopard.length) {
+        paras.push(leopard.map(l => LEOPARD_DESC[l]).join(' '));
+    }
+
+    // 5. Anomalies — the weird 'with ...' extras.
+    if (anomalies.length) {
+        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a.toLowerCase()} (an anomaly I don't have notes on yet)`);
+        paras.push('Then there are the anomalies: ' + joinList(descs) + '.');
+    }
+
+    // 6. Variant — a whole-horse skin over everything above.
+    if (variant && variant !== 'Standard' && VARIANT_DESC[variant]) {
+        paras.push(VARIANT_DESC[variant]);
+    }
+
+    // 7. Hidden carriers — genes it quietly totes but doesn't show.
+    if (carriers.length) {
+        paras.push('Hiding in the bloodline, not visible on the horse: it carries ' +
+            joinList(carriers.map(c => CARRIER_DESC[c])) + '.');
+    }
+
+    return paras.join('\n\n');
+}
+
+// --- Translate tab UI handlers ---------------------------------------------
+
+// Escape HTML, then promote **bold** to <strong> and blank lines to paragraph
+// breaks. Deliberately tiny — the translator's text is the only input.
+function renderTranslateMarkup(text) {
+    const esc = String(text)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc
+        .split(/\n\n+/)
+        .map(p => '<p>' + p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') + '</p>')
+        .join('');
+}
+
+// Refresh the "pick from your collection" dropdown on the Translate tab.
+// Called on tab show and whenever the collection changes (e.g. CSV upload).
+function populateTranslateCollectionSelect() {
+    const sel = document.getElementById('translateFromColl');
+    if (!sel) return;
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Pick from collection…</option>' +
+        collection.map((h, i) =>
+            `<option value="${i}">${(h.name || 'Unnamed').replace(/</g, '&lt;')} (${(h.temperament || '—').replace(/</g, '&lt;')})</option>`
+        ).join('');
+    if (cur && Number(cur) < collection.length) sel.value = cur;
+    const row = document.getElementById('translateSourceRow');
+    if (row) row.style.display = collection.length ? '' : 'none';
+}
+
+// Drop a chosen collection horse into the genotype box + variant picker.
+function fillTranslateFromCollection(idx) {
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const h = collection[Number(idx)];
+    if (!h) return;
+    const ta = document.getElementById('translateGeno');
+    if (ta) ta.value = h.genotype || '';
+    const varSel = document.getElementById('translateVariant');
+    if (varSel) varSel.value = h.variant && h.variant !== 'Standard' ? h.variant : '';
+}
+
+// Run the translator and paint the result card.
+function translateGenotype() {
+    const ta = document.getElementById('translateGeno');
+    const varSel = document.getElementById('translateVariant');
+    const out = document.getElementById('translateResult');
+    if (!out) return;
+
+    const geno = ta ? ta.value.trim() : '';
+    const variant = varSel ? varSel.value : '';
+
+    if (!geno) {
+        out.style.display = 'block';
+        out.innerHTML = renderTranslateMarkup(
+            "You haven't given me a genotype yet. Paste one in, or pick a horse from your collection, and I'll tell you what it looks like."
+        );
+        return;
+    }
+
+    const prose = genotypeToPlainEnglish(geno, variant);
+    const pheno = genotypeToPhenotype(geno);
+
+    out.style.display = 'block';
+    out.innerHTML =
+        `<div class="translate-pheno"><span class="translate-pheno-label">Short version:</span> ${String(pheno).replace(/</g, '&lt;')}</div>` +
+        `<div class="translate-prose">${renderTranslateMarkup(prose)}</div>`;
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function getGeneAlleles(gene) {
