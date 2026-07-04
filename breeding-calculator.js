@@ -572,19 +572,19 @@ function genotypeToPhenotype(genoString) {
 const COAT_BODY = {
     'Bay': "underneath it all it's a bay: a reddish-brown body with a black mane, tail and lower legs",
     'Black': "underneath it all it's a true black: dark from nose to hoof, no red anywhere",
-    'Chestnut': "underneath it all it's a chestnut: red-brown all over, with a mane and tail in the same reddish range — no black points"
+    'Chestnut': "underneath it all it's a chestnut: red-brown all over, with a mane and tail in the same reddish range, and no black points anywhere"
 };
 
 // What each dilution actually does to the body. Keyed to the exact strings
 // resolveTraits pushes into `dilutions` (including compound entries).
 const DILUTION_DESC = {
     'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
-    'Double Cream': "Two doses of cream take it almost all the way out — the coat goes pale cream-to-ivory, the skin pinkish, the eyes blue.",
-    'Champagne': "Champagne lightens the coat to a warm golden-to-grayish brown with peachy or lavender undertones, over pinkish-gray, often freckled skin, with gold or green eyes.",
-    'Ether': "Ether is Dungeon Coursers' own dilution — the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray: silvery-blue along the topline, purple-pink beneath the barrel and on the face, over gray skin with gray or brown eyes.",
-    'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown — a warm grayish brown on a black base — even in tone, with pink skin and gray or green eyes.",
-    'Cream Pearl': "Cream and pearl together push the coat pale and luminous — a soft warm gold with pearl's shiny caramel sheen.",
-    'Tapestry': "Tapestry is Dungeon Coursers' own dilution — it dyes the base coat a bold, saturated hue, the vivid reds, greens and blues of Madder, Woad and Weld.",
+    'Double Cream': "Two doses of cream take it almost all the way out. The coat goes pale cream to ivory, the skin pinkish, the eyes blue.",
+    'Champagne': "Champagne lightens the coat to a warm golden or grayish brown, with peachy or lavender undertones. The skin turns pinkish-gray and often freckled, the eyes gold or green.",
+    'Ether': "Ether is Dungeon Coursers' own dilution, the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray, silvery-blue along the topline and purple-pink under the barrel and face. The skin is gray, the eyes gray or brown.",
+    'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown, or a warm grayish brown on a black base. The tone stays even, the skin pink, the eyes gray or green.",
+    'Cream Pearl': "Cream and pearl together push the coat pale and luminous, a soft warm gold with pearl's shiny caramel sheen.",
+    'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It dyes the base coat a bold, saturated hue: the vivid reds, greens and blues of Madder, Woad and Weld.",
     'Tapestry Cream': "Tapestry dyes the coat a bold, saturated hue, and a dose of cream then softens and lightens it.",
     'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's shiny warm sheen layered over the top.",
 };
@@ -592,19 +592,19 @@ const DILUTION_DESC = {
 // Modifiers — the shading, sooting, greying and stranger DC treatments.
 const MODIFIER_DESC = {
     'Dun': "Dun pales the body and stamps on primitive marks: a dark dorsal stripe down the spine, and often barring on the legs.",
-    'Pangare': "Pangare (mealy) lightens the soft parts — muzzle, eyes, belly, flanks, inner legs — to a paler shade.",
+    'Pangare': "Pangare (mealy) lightens the soft parts to a paler shade: the muzzle, eyes, belly, flanks and inner legs.",
     'Sooty': "Sooty throws a smudge of darker hairs over the top, heaviest along the back and shoulders, like it's been dusted with charcoal.",
     'Gray': "Gray is progressive: the horse is born its base colour and then steadily silvers out with age, eventually toward white.",
     'Flaxen': "Flaxen lightens the mane and tail to blonde or near-white while the body keeps its colour (only really visible on a red base).",
-    'Silver': "Silver dilutes black pigment specifically — chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
-    'Illuminated': "Illuminated pales the skin and hooves to a uniform, washed-out light colour, whatever the coat is doing — it leaves the coat itself alone.",
-    'Sepulchered': "Sepulchered darkens the skin and hooves to a uniform black, whatever the coat is doing — the coat colour itself is untouched.",
+    'Silver': "Silver dilutes black pigment specifically: a chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
+    'Illuminated': "Illuminated pales the skin and hooves to a uniform, washed-out light colour, whatever the coat is doing. The coat itself is left alone.",
+    'Sepulchered': "Sepulchered darkens the skin and hooves to a uniform black, whatever the coat is doing. The coat colour itself stays untouched.",
     'Tabard': "Tabard splits the coat into a gradient, lightening one half and darkening the other, often stamped with a mirrored pair of heraldic symbols reflected across the centre. Always symmetrical left-to-right.",
-    'Gilt': "Gilt turns the hooves metallic — gold, silver, copper, bronze or brass — and tints the skin to match. It's a skin-and-hoof trait, not a coat one.",
+    'Gilt': "Gilt turns the hooves metallic, whether gold, silver, copper, bronze or brass, and tints the skin to match. It's a skin-and-hoof trait, not a coat one.",
     'Vellum': "Vellum drops the opacity of the horse's white markings, making them semi-transparent and see-through (Roan, Blanched and False Leopard shrug it off).",
     'Opal': "Opal scatters colourful pastel flecks across all of the horse's white markings, sharp-edged or blurred.",
     'Prism': "Prism recolours the horse's Pangare or Sooty shading into any distinguishable colour (never white), blended smoothly with no hard edges.",
-    'Starfield': "Starfield turns all of the horse's white markings into a night sky — black, dark blue, or a blend — optionally with little round spots of the original colour showing through.",
+    'Starfield': "Starfield turns all of the horse's white markings into a night sky, black or dark blue or a blend of the two, optionally with little round spots of the original colour showing through.",
     'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Kintsugi, Swarf) into unnatural colours, each trait its own single colour.",
 };
 
@@ -612,39 +612,39 @@ const MODIFIER_DESC = {
 const MARKING_DESC = {
     'Tobiano': "Tobiano throws big, rounded patches of white that cross the spine, usually with white legs and a mostly dark head.",
     'Overo': "Overo (frame) carves horizontal blocks of white along the sides that don't cross the back, with a dark topline and often a bald face.",
-    'Splash': "Splash looks like the horse was dipped in white paint from below — white legs, belly, and a broad white face, with clean crisp edges.",
+    'Splash': "Splash looks like the horse was dipped in white paint from below: white legs, a white belly, and a broad white face, all with clean crisp edges.",
     'Roan': "Roan mixes white hairs evenly through the body while the head and legs stay solid, giving a frosted, silvered look over the base colour.",
-    'Sabino': "Sabino adds ragged, roaned white — tall stockings, a blazed face, jagged belly spots and flecking with soft, lacy edges.",
-    'Rabicano': "Rabicano frosts white at the flanks and tail base — the classic 'coon tail' barring — without touching the rest much.",
+    'Sabino': "Sabino adds ragged, roaned white: tall stockings, a blazed face, jagged belly spots and flecking, all with soft, lacy edges.",
+    'Rabicano': "Rabicano frosts white at the flanks and tail base, the classic 'coon tail' barring, without touching the rest much.",
     'Dominant White': "Dominant White covers most or all of the coat in white, spreading up from the horse's underside so some base colour may linger along the topline, with roaned, grainy edges like Sabino.",
-    'Cuirass': "Cuirass is a solid, symmetrical white breastplate across the upper chest and part of the shoulders, like armour — it never touches the mane, crosses the topline, or reaches the belly.",
-    'Crowned': "Crowned sets symmetrical white on the head — a single marking or a tidy arrangement of simple stripes, spots and splotches.",
+    'Cuirass': "Cuirass is a solid, symmetrical white breastplate across the upper chest and part of the shoulders, like armour. It never touches the mane, crosses the topline, or reaches the belly.",
+    'Crowned': "Crowned sets symmetrical white on the head, either a single marking or a tidy arrangement of simple stripes, spots and splotches.",
     'Girdle': "Girdle wraps a single, even band of white all the way around the barrel, with crisp, smooth edges.",
     'Collar': "Collar wraps a single, even band of white all the way around the neck, with crisp, smooth edges.",
-    'Blanched': "Blanched lightens the coat on the face and legs — the inverse of Roan — blending gradually from a subtle paling to bold white.",
-    'False Leopard': "False Leopard lightens the barrel, shoulders, chest and hindquarters like Roan, but with round spots 'cut out' of it — leopard-style spotting without the real leopard complex.",
+    'Blanched': "Blanched lightens the coat on the face and legs, the inverse of Roan, blending gradually from a subtle paling to bold white.",
+    'False Leopard': "False Leopard lightens the barrel, shoulders, chest and hindquarters like Roan, but with round spots 'cut out' of it. Think leopard-style spotting without the real leopard complex.",
     'Harlequin': "Harlequin scatters opaque white diamonds that radiate out in rings from a single point, usually the poll or croup.",
-    'Shroud': "Shroud drapes symmetrical white down from the spine — anywhere from poll to tail — never reaching more than halfway down the neck or barrel.",
-    'Filigree': "Filigree traces elegant white swirls that branch out of the horse's other white markings — it always attaches to existing white, never floating free.",
-    'Ossuary': "Ossuary is a stark, opaque white in skeletal shapes — a strange cousin to Overo — spreading from the barrel out to the legs and edges of the body, often with a bald or 'skull-like' face.",
+    'Shroud': "Shroud drapes symmetrical white down from the spine, anywhere from poll to tail, but never reaches more than halfway down the neck or barrel.",
+    'Filigree': "Filigree traces elegant white swirls that branch out of the horse's other white markings. It always attaches to existing white, never floating free.",
+    'Ossuary': "Ossuary is a stark, opaque white in skeletal shapes, a strange cousin to Overo, spreading from the barrel out to the legs and edges of the body. The face is often bald or 'skull-like'.",
 };
 
 // Leopard complex — the appaloosa-family spotting patterns.
 const LEOPARD_DESC = {
     'Snowflake': "Snowflake (single Lp, no pattern gene) scatters white flecks and spots over the dark coat, like a light snowfall that thickens with age.",
-    'Blanket': "Blanket lays a patch of white — usually over the hips and rump — often carrying dark leopard spots within it.",
+    'Blanket': "Blanket lays a patch of white, usually over the hips and rump, often carrying dark leopard spots within it.",
     'Snowcap': "Snowcap is a solid patch of white over the croup and hindquarters, maybe with a few spots and speckles at its edges.",
-    'Leopard': "Leopard covers the body in white with the base coat showing through as round spots head-to-tail — busier and spottier than a Fewspot.",
-    'Fewspot': "Fewspot is a near-white horse that has 'spotted out' — an almost solid white coat with only a handful of faint spots left.",
+    'Leopard': "Leopard covers the body in white with the base coat showing through as round spots head to tail, busier and spottier than a Fewspot.",
+    'Fewspot': "Fewspot is a near-white horse that has 'spotted out', an almost solid white coat with only a handful of faint spots left.",
     'Varnish Roan': "Varnish Roan is the leopard complex's roaning: a mottled mix of light and dark that spreads over the body, with darker 'varnish marks' over the bony bits.",
 };
 
 // Hidden carriers — genes the horse quietly carries but doesn't visibly show.
 const CARRIER_DESC = {
-    'Carries Pearl': "pearl (one copy — invisible until paired with another pearl or a cream)",
+    'Carries Pearl': "pearl (one copy, invisible until it's paired with another pearl or a cream)",
     'Carries Ether': "ether (one copy, hidden)",
     'Carrying Filigree': "filigree (one copy, hidden)",
-    'Carries Patn': "a leopard pattern gene (patn) with no Lp to switch it on — silent for now",
+    'Carries Patn': "a leopard pattern gene (patn) with no Lp to switch it on, so it's silent for now",
     'Carrying Flaxen': "flaxen (one copy, hidden)",
     'Carrying Sepulchered': "sepulchered (one copy, hidden)",
     'Carrying Starfield': "starfield (one copy, hidden)",
@@ -655,31 +655,31 @@ const CARRIER_DESC = {
 // written from the Trait Index; the four still marked // REVIEW weren't in the
 // text and need checking against the game.
 const ANOMALY_DESC = {
-    'Bend-or Spots': "scattered dark 'Bend-or' smudges — random patches a shade or two darker than the base coat", // REVIEW
+    'Bend-or Spots': "scattered dark 'Bend-or' smudges, random patches a shade or two darker than the base coat", // REVIEW
     'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life", // REVIEW
     'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume", // REVIEW
-    'Chimera': "a chimera patch — a region that grew from a second genotype, so part of the horse is visibly a different colour", // REVIEW
-    'Geode': "an eye anomaly — the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
-    'Stained Glass': "an eye anomaly — the iris and/or pupil recoloured to colours unnatural for the horse, sometimes metallic or split into heterochromia (this also covers the old 'Ore' trait)",
-    'Ore': "an eye anomaly — recoloured iris and/or pupil; a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
+    'Chimera': "a chimera patch, a region that grew from a second genotype, so part of the horse is visibly a different colour", // REVIEW
+    'Geode': "an eye anomaly where the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
+    'Stained Glass': "an eye anomaly where the iris and/or pupil are recoloured to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (this also covers the old 'Ore' trait)",
+    'Ore': "an eye anomaly with a recoloured iris and/or pupil, a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
     'Kintsugi': "metallic borders and 'cracks' traced onto the horse's white markings in a single colour, like they were mended with gold",
     'Swarf': "metallic flecks and glitter scattered across the coat, spreading from the topline and hooves, never dense enough to hide the base colour",
-    'Vitiligo': "irregular patches of lost pigment — pale, untinted white — that tend to start on the face, elbows and groin and can spread over the horse's life, sometimes as streaks in the mane and tail",
-    'Oracle': "an eye anomaly — a black or white film drawn evenly over the whole eyeball, from faint and translucent to fully opaque",
-    'Signet': "a hoof anomaly — the hooves recoloured to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic",
+    'Vitiligo': "irregular patches of lost pigment, pale and untinted white, that tend to start on the face, elbows and groin and can spread over the horse's life, sometimes as streaks in the mane and tail",
+    'Oracle': "an eye anomaly where a black or white film is drawn evenly over the whole eyeball, from faint and translucent to fully opaque",
+    'Signet': "a hoof anomaly where the hooves are recoloured to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic",
     'Pennant': "the mane and tail recoloured to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip)",
-    'Pastiche': "reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms — stripes, skulls, emblems and the like",
-    'Fresco': "lets the crisp edges of the horse's Chimera and/or Somatic markings go soft — low-opacity, blurred, smoky or streaky",
-    'Lantern': "an eye anomaly — a coloured glow emanating from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil",
+    'Pastiche': "reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems",
+    'Fresco': "lets the crisp edges of the horse's Chimera and/or Somatic markings go soft, low-opacity, blurred, smoky or streaky",
+    'Lantern': "an eye anomaly where a coloured glow comes from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil",
 };
 
 // Variants — the four breed variants. These are a whole different physique the
 // colours above are painted onto, not a colour filter.
 const VARIANT_DESC = {
-    'Heraldic': "On top of all that, it's a **Heraldic** — the nobility's old favourite. Regal carriage, cloven hooves for grip, and coat, mane and tail growth patterns that show off the muscle.",
-    'Puck': "On top of all that, it's a **Puck** — a fey-touched courser bred from archers' mounts. Long ears, a curly protective coat, a braying voice and a mischievous streak.",
-    'Cavedweller': "On top of all that, it's a **Cavedweller** — descended from coursers buried with the kingdom, generations in magical dark leaving it hairless and eyeless, navigating by sound and taste.",
-    'Restored': "On top of all that, it's a **Restored** — a courser whose memory was nearly devoured and then painstakingly mended by the Archivist, held together with binding, leatherwork and aberrant magic. Alive, but forever changed.",
+    'Heraldic': "On top of all that, it's a **Heraldic**, the nobility's old favourite. Regal carriage, cloven hooves for grip, and coat, mane and tail growth patterns that show off the muscle.",
+    'Puck': "On top of all that, it's a **Puck**, a fey-touched courser bred from archers' mounts. Long ears, a curly protective coat, a braying voice and a mischievous streak.",
+    'Cavedweller': "On top of all that, it's a **Cavedweller**, descended from coursers buried with the kingdom. Generations in magical dark have left it hairless and eyeless, navigating by sound and taste.",
+    'Restored': "On top of all that, it's a **Restored**, a courser whose memory was nearly devoured and then painstakingly mended by the Archivist, held together with binding, leatherwork and aberrant magic. Alive, but forever changed.",
 };
 
 // The leopard-pattern names, so the translator knows which allTraits entries are
@@ -713,7 +713,7 @@ function genotypeToPlainEnglish(genoString, variant) {
     const t = resolveTraits(genoString);
 
     if (t.lethal) {
-        return "Oof — this one's a **lethal white**. Two copies of the wrong white genes (OO, OsOs, WW, or Overo stacked with Ossuary) and the foal doesn't survive to be a colour at all. There's no horse here to describe, just a hard lesson in why you don't double up on those. Sorry.";
+        return "Oof. This one's a **lethal white**. Two copies of the wrong white genes (OO, OsOs, WW, or Overo stacked with Ossuary) and the foal doesn't survive to be a colour at all. There's no horse here to describe, just a hard lesson in why you don't double up on those. Sorry.";
     }
 
     const { baseCoat, dilutions, coatColor, allTraits, anomalies } = t;
