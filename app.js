@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '4 Jul 2026', items: [
+      'New Translate tab: paste a genotype (or pick one from your collection) and get a plain-English description of what the horse actually looks like, from body colour through markings, anomalies and variant. It reads the same trait data the phenotype namer does, so the two can never disagree.'
+    ] },
     { date: '16 Jun 2026', items: [
       'Smart Search now finds pairs for Prism, Opal and Harlequin. They were never scored, so any search including one of them returned no matches even when your horses could make it. Reported by Criri.'
     ] },
