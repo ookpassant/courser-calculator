@@ -561,12 +561,11 @@ function genotypeToPhenotype(genoString) {
 // resolveTraits(), so a horse's description can never disagree with its
 // phenotype name.
 //
-// Confidence note: real-world horse genetics (Bay/Black/Chestnut, the Cream
-// family, Dun, Gray, Sooty, Flaxen, Silver, Pangare, Tobiano, Overo, Splash,
-// Roan, Sabino, Rabicano, the leopard-complex patterns, Champagne, Pearl) are
-// described with reasonable confidence. Everything Dungeon-Coursers-invented is
-// a best guess and marked `// REVIEW` — Ook needs to correct these against how
-// they actually render in-game before they're treated as gospel.
+// Confidence note: the coats, dilutions (incl. Tapestry, Ether, Champagne,
+// Pearl), modifiers, and white/leopard markings are written from the official
+// Trait Index and the real-world genetics they're based on. What's still a best
+// guess is marked `// REVIEW`: the anomalies, the four variants, and Dominant
+// White — Ook needs to correct those against the game before they're gospel.
 // ============================================================================
 
 // Base body colour — the canvas everything else paints onto.
@@ -581,13 +580,13 @@ const COAT_BODY = {
 const DILUTION_DESC = {
     'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
     'Double Cream': "Two doses of cream take it almost all the way out — the coat goes pale cream-to-ivory, the skin pinkish, the eyes blue.",
-    'Champagne': "Champagne lightens the whole coat and gives it a faint metallic sheen, with pumpkin-toned skin and lighter eyes.", // REVIEW: DC naming/appearance
+    'Champagne': "Champagne lightens the coat to a warm golden-to-grayish brown with peachy or lavender undertones, over pinkish-gray, often freckled skin, with gold or green eyes.",
     'Ether': "Ether is Dungeon Coursers' own dilution — a magical counterpart to Champagne that lays a mystical blue-silver sheen over the base coat.",
-    'Pearl': "Pearl (double dose) lends an iridescent, shell-like glow that catches the light apricot-to-gold.", // REVIEW: verify DC pearl look
-    'Cream Pearl': "Cream and pearl together push the coat pale and luminous — soft gold with that tell-tale pearly sheen.", // REVIEW: pearl portion unconfirmed
+    'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown — a warm grayish brown on a black base — even in tone, with pink skin and gray or green eyes.",
+    'Cream Pearl': "Cream and pearl together push the coat pale and luminous — a soft warm gold with pearl's shiny caramel sheen.",
     'Tapestry': "Tapestry is Dungeon Coursers' own dilution — it dyes the base coat a bold, saturated hue, the vivid reds, greens and blues of Madder, Woad and Weld.",
     'Tapestry Cream': "Tapestry dyes the coat a bold, saturated hue, and a dose of cream then softens and lightens it.",
-    'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's iridescent shell-sheen layered over the top.", // REVIEW: pearl portion unconfirmed
+    'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's shiny warm sheen layered over the top.",
 };
 
 // Modifiers — the shading, sooting, greying and stranger DC treatments.
@@ -598,15 +597,15 @@ const MODIFIER_DESC = {
     'Gray': "Gray is progressive: the horse is born its base colour and then steadily silvers out with age, eventually toward white.",
     'Flaxen': "Flaxen lightens the mane and tail to blonde or near-white while the body keeps its colour (only really visible on a red base).",
     'Silver': "Silver dilutes black pigment specifically — chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
-    'Illuminated': "Illuminated gives the coat a soft glow, as if it's lit faintly from within.", // REVIEW: DC-invented modifier
-    'Sepulchered': "Sepulchered casts a grave-cold, muted pall over the colour — shadowed and dim, like it's been kept somewhere dark.", // REVIEW: DC-invented modifier
-    'Tabard': "Tabard lays a heraldic block of contrasting colour over the body, like the horse is wearing a herald's surcoat.", // REVIEW: DC-invented modifier
-    'Gilt': "Gilt edges the coat in a gold, metallic shimmer, brightest along the highlights.", // REVIEW: DC-invented modifier
-    'Vellum': "Vellum gives the coat a pale, parchment-like finish — smooth, aged and slightly translucent.", // REVIEW: DC-invented modifier
-    'Opal': "Opal scatters a shifting, milky-iridescent play of colour across the coat.", // REVIEW: DC-invented modifier
-    'Prism': "Prism refracts the light into faint rainbow glints where it catches the coat.", // REVIEW: DC-invented modifier
-    'Starfield': "Starfield speckles the coat with tiny points of light, like a night sky scattered across the horse.", // REVIEW: DC-invented modifier
-    'Lacquer': "Lacquer gives the coat a hard, glossy, wet-looking shine, as if it's been varnished.", // REVIEW: DC-invented modifier
+    'Illuminated': "Illuminated pales the skin and hooves to a uniform, washed-out light colour, whatever the coat is doing — it leaves the coat itself alone.",
+    'Sepulchered': "Sepulchered darkens the skin and hooves to a uniform black, whatever the coat is doing — the coat colour itself is untouched.",
+    'Tabard': "Tabard splits the coat into a gradient, lightening one half and darkening the other, often stamped with a mirrored pair of heraldic symbols reflected across the centre. Always symmetrical left-to-right.",
+    'Gilt': "Gilt turns the hooves metallic — gold, silver, copper, bronze or brass — and tints the skin to match. It's a skin-and-hoof trait, not a coat one.",
+    'Vellum': "Vellum drops the opacity of the horse's white markings, making them semi-transparent and see-through (Roan, Blanched and False Leopard shrug it off).",
+    'Opal': "Opal scatters colourful pastel flecks across all of the horse's white markings, sharp-edged or blurred.",
+    'Prism': "Prism recolours the horse's Pangare or Sooty shading into any distinguishable colour (never white), blended smoothly with no hard edges.",
+    'Starfield': "Starfield turns all of the horse's white markings into a night sky — black, dark blue, or a blend — optionally with little round spots of the original colour showing through.",
+    'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Kintsugi, Swarf) into unnatural colours, each trait its own single colour.",
 };
 
 // White patterns and markings.
@@ -618,24 +617,24 @@ const MARKING_DESC = {
     'Sabino': "Sabino adds ragged, roaned white — tall stockings, a blazed face, jagged belly spots and flecking with soft, lacy edges.",
     'Rabicano': "Rabicano frosts white at the flanks and tail base — the classic 'coon tail' barring — without touching the rest much.",
     'Dominant White': "Dominant White pushes toward extensive white or a fully white coat, over pink skin.", // REVIEW: confirm DC dominant-white expression
-    'Cuirass': "Cuirass drops a breastplate of white across the chest and shoulders, like armour worn over the coat.", // REVIEW: DC-invented marking
-    'Crowned': "Crowned marks the poll and top of the head with white, like a circlet or crown.", // REVIEW: DC-invented marking
-    'Girdle': "Girdle wraps a band of white around the barrel, like a belt cinched over the midsection.", // REVIEW: DC-invented marking
-    'Collar': "Collar rings the neck with white, like a collar sitting where the mane meets the shoulders.", // REVIEW: DC-invented marking
-    'Blanched': "Blanched leaches colour in pale, bleached patches, as though the coat was left out to fade unevenly.", // REVIEW: DC-invented marking
-    'False Leopard': "False Leopard mimics leopard-style spotting without the real leopard complex — spots that look the part but aren't Lp.", // REVIEW: DC-invented marking
-    'Harlequin': "Harlequin breaks the coat into a bold, patchwork scatter of contrasting blocks, like a jester's motley.", // REVIEW: DC-invented marking
-    'Shroud': "Shroud drapes a veil of pale, ghostly white over part of the horse, soft-edged like fabric.", // REVIEW: DC-invented marking
-    'Filigree': "Filigree traces fine, lacy lines of white across the coat, like delicate metalwork.", // REVIEW: DC-invented marking
-    'Ossuary': "Ossuary marks the horse with stark, bone-pale patterning — skeletal and severe.", // REVIEW: DC-invented marking
+    'Cuirass': "Cuirass is a solid, symmetrical white breastplate across the upper chest and part of the shoulders, like armour — it never touches the mane, crosses the topline, or reaches the belly.",
+    'Crowned': "Crowned sets symmetrical white on the head — a single marking or a tidy arrangement of simple stripes, spots and splotches.",
+    'Girdle': "Girdle wraps a single, even band of white all the way around the barrel, with crisp, smooth edges.",
+    'Collar': "Collar wraps a single, even band of white all the way around the neck, with crisp, smooth edges.",
+    'Blanched': "Blanched lightens the coat on the face and legs — the inverse of Roan — blending gradually from a subtle paling to bold white.",
+    'False Leopard': "False Leopard lightens the barrel, shoulders, chest and hindquarters like Roan, but with round spots 'cut out' of it — leopard-style spotting without the real leopard complex.",
+    'Harlequin': "Harlequin scatters opaque white diamonds that radiate out in rings from a single point, usually the poll or croup.",
+    'Shroud': "Shroud drapes symmetrical white down from the spine — anywhere from poll to tail — never reaching more than halfway down the neck or barrel.",
+    'Filigree': "Filigree traces elegant white swirls that branch out of the horse's other white markings — it always attaches to existing white, never floating free.",
+    'Ossuary': "Ossuary is a stark, opaque white in skeletal shapes — a strange cousin to Overo — spreading from the barrel out to the legs and edges of the body, often with a bald or 'skull-like' face.",
 };
 
 // Leopard complex — the appaloosa-family spotting patterns.
 const LEOPARD_DESC = {
     'Snowflake': "Snowflake (single Lp, no pattern gene) scatters white flecks and spots over the dark coat, like a light snowfall that thickens with age.",
     'Blanket': "Blanket lays a patch of white — usually over the hips and rump — often carrying dark leopard spots within it.",
-    'Snowcap': "Snowcap gives a large, mostly-clean white blanket over the hindquarters with few or no spots inside it.",
-    'Leopard': "Leopard is the full deal: a white coat covered head-to-tail in dark, egg-shaped spots.",
+    'Snowcap': "Snowcap is a solid patch of white over the croup and hindquarters, maybe with a few spots and speckles at its edges.",
+    'Leopard': "Leopard covers the body in white with the base coat showing through as round spots head-to-tail — busier and spottier than a Fewspot.",
     'Fewspot': "Fewspot is a near-white horse that has 'spotted out' — an almost solid white coat with only a handful of faint spots left.",
     'Varnish Roan': "Varnish Roan is the leopard complex's roaning: a mottled mix of light and dark that spreads over the body, with darker 'varnish marks' over the bony bits.",
 };
@@ -644,12 +643,12 @@ const LEOPARD_DESC = {
 const CARRIER_DESC = {
     'Carries Pearl': "pearl (one copy — invisible until paired with another pearl or a cream)",
     'Carries Ether': "ether (one copy, hidden)",
-    'Carrying Filigree': "filigree (one copy, hidden)", // REVIEW: DC-invented marking
+    'Carrying Filigree': "filigree (one copy, hidden)",
     'Carries Patn': "a leopard pattern gene (patn) with no Lp to switch it on — silent for now",
     'Carrying Flaxen': "flaxen (one copy, hidden)",
-    'Carrying Sepulchered': "sepulchered (one copy, hidden)", // REVIEW: DC-invented modifier
-    'Carrying Starfield': "starfield (one copy, hidden)", // REVIEW: DC-invented modifier
-    'Carrying Lacquer': "lacquer (one copy, hidden)", // REVIEW: DC-invented modifier
+    'Carrying Sepulchered': "sepulchered (one copy, hidden)",
+    'Carrying Starfield': "starfield (one copy, hidden)",
+    'Carrying Lacquer': "lacquer (one copy, hidden)"
 };
 
 // Anomalies — the rare 'with ...' extras tacked onto a genotype. All REVIEW:
