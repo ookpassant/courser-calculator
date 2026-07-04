@@ -144,6 +144,7 @@
     calculator: { label: 'Foal Generator', crumb: 'Foal Generator' },
     chimera: { label: 'Chimera Calculator', crumb: 'Chimera Calculator' },
     scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' },
+    translate: { label: 'Translate', crumb: 'Translate' },
     collection: { label: 'Collection', crumb: 'Collection' }
   };
 
@@ -162,6 +163,7 @@
     if (area === 'collection') renderCollection();
     if (area === 'search') { renderRecentQueries(); refreshSearchGate(); }
     if (area === 'calculator') populateParentPickers();
+    if (area === 'translate' && window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
   }
 
   // Legacy shim the engine calls (fillParents -> 'foals', fillChimera -> 'chimera')
@@ -476,6 +478,12 @@
         if (t === 'landing') showView('landing'); else showArea(t);
       }));
 
+    // Translate tab: fill genotype/variant when a collection horse is picked
+    const tSel = $('#translateFromColl');
+    if (tSel) tSel.addEventListener('change', () => {
+      if (tSel.value !== '' && window.fillTranslateFromCollection) window.fillTranslateFromCollection(tSel.value);
+    });
+
     // Collection toolbar
     const cs = $('#collSearch'); if (cs) cs.addEventListener('input', renderCollection);
     const cso = $('#collSort'); if (cso) cso.addEventListener('change', renderCollection);
@@ -774,6 +782,7 @@
       if (!opts || opts.persist !== false) persistCollection();
       renderCollection();
       populateParentPickers();
+      if (window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
       refreshSearchGate();
     }
   };

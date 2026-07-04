@@ -298,6 +298,14 @@
 
         .panel-footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--dc-line); text-align: center; color: var(--dc-slate); font-size: 0.85rem; }
 
+        /* ---- Translate result card ---- */
+        .translate-result { margin-top: 28px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-mauve); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-card); }
+        .translate-pheno { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-slate); padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--dc-line); }
+        .translate-pheno-label { color: var(--dc-mauve-soft); margin-right: 6px; }
+        .translate-prose p { color: var(--dc-ink); font-size: 1rem; line-height: 1.65; margin: 0 0 14px; }
+        .translate-prose p:last-child { margin-bottom: 0; }
+        .translate-prose strong { color: var(--dc-mauve); font-weight: 700; }
+
         /* ---- Responsive ---- */
         @media (max-width: 600px) {
             .parents-container { grid-template-columns: 1fr; }
@@ -316,6 +324,7 @@
             <button class="nav-link" data-area="calculator">Foal Generator</button>
             <button class="nav-link" data-area="chimera">Chimera</button>
             <button class="nav-link" data-area="scroll">Scroll Generator</button>
+            <button class="nav-link" data-area="translate">Translate</button>
             <button class="nav-link" data-area="search">Smart Search</button>
             <button class="nav-link" data-area="collection">Collection</button>
         </div>
@@ -353,6 +362,11 @@
                     <button class="tool-card" data-nav="scroll">
                         <h3>Scroll Generator</h3>
                         <p>Roll a random design for a custom scroll by rarity.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="translate">
+                        <h3>Translate</h3>
+                        <p>Paste a genotype and get a plain-English description of what the horse actually looks like.</p>
                         <span class="tool-open">Open →</span>
                     </button>
                     <button class="tool-card" data-nav="search">
@@ -575,6 +589,38 @@
 
                     <button class="generate-btn" onclick="displayCustomScrollResult()">Roll me a scroll</button>
                     <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
+                </section>
+
+                <!-- Area: Translate (genotype → plain English) -->
+                <section class="area" id="area-translate">
+                    <h1 class="page-title">Translate</h1>
+                    <p class="blurb">Paste a genotype (or pick one from your collection) and I'll tell you, in plain English, what the horse actually looks like.</p>
+
+                    <div class="info-box">
+                        <p><strong>Tip:</strong> Works on anything the calculator understands, like <code>Ee Aa nCr nT + Brindle</code>. Pick a variant if you want it factored in.</p>
+                        <p><strong>Heads up:</strong> Descriptions for real-world horse genetics are solid; the Dungeon-Coursers-invented traits are best guesses until Ook signs off on them.</p>
+                    </div>
+
+                    <div class="parent-source-row" id="translateSourceRow" style="display:none;">
+                        <label for="translateFromColl">From Collection:</label>
+                        <select id="translateFromColl"><option value="">Pick from collection…</option></select>
+                    </div>
+
+                    <label for="translateGeno">Genotype:</label>
+                    <textarea id="translateGeno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+
+                    <label for="translateVariant">Variant (Optional):</label>
+                    <select id="translateVariant">
+                        <option value="">Standard</option>
+                        <option value="Heraldic">Heraldic</option>
+                        <option value="Puck">Puck</option>
+                        <option value="Cavedweller">Cavedweller</option>
+                        <option value="Restored">Restored</option>
+                    </select>
+
+                    <button class="generate-btn" onclick="translateGenotype()">Translate to Plain English</button>
+
+                    <div class="translate-result" id="translateResult" style="display:none;"></div>
                 </section>
 
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->
