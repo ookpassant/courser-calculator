@@ -660,6 +660,100 @@ const COAT_BODY = {
     'Chestnut': "underneath it all it's a chestnut: red-brown all over, with a mane and tail in the same reddish range, and no black points anywhere"
 };
 
+// The total coat colour, keyed by the fancy coat NAME (coatColor). Read first,
+// before the base-and-dilution breakdown, so the description leads with what the
+// whole horse actually looks like. Plain base coats (Bay/Black/Chestnut) aren't
+// here — COAT_BODY already describes those in full.
+// Real-world coats and the Tapestry dyes (Madder red, Woad blue, Weld yellow;
+// with pearl: Tyrian purple, Phthalo green, Ochre orange) are solid; the exotic
+// multi-dilution composites are best-guess wording pending a look-over.
+const COAT_DESC = {
+    // Cream
+    'Buckskin': "It's a golden tan body with black points, mane and tail.",
+    'Smoky Black': "It's a dark, smoky near-black — cream barely reads on a black base.",
+    'Palomino': "It's a gold body with a near-white mane and tail.",
+    // Double Cream
+    'Perlino': "It's a pale cream coat with faintly rusty points, pink skin and blue eyes.",
+    'Smoky Cream': "It's a pale, smoky cream with pink skin and blue eyes.",
+    'Cremello': "It's an almost-white cream to ivory, with pink skin and blue eyes.",
+    // Tapestry
+    'Madder': "It's a deep blood red, the colour of madder dye.",
+    'Woad': "It's a deep, saturated blue, the colour of woad dye.",
+    'Weld': "It's a bright, saturated yellow, the colour of weld dye.",
+    // Pearl
+    'Bay Pearl': "It's a warm gold-to-caramel brown with a soft, shiny sheen.",
+    'Black Pearl': "It's an even, warm grayish brown with a soft sheen.",
+    'Gold Pearl': "It's a shiny, warm gold-to-caramel.",
+    // Champagne
+    'Amber Champagne': "It's a warm golden tan with darker points and champagne's metallic sheen.",
+    'Classic Champagne': "It's a warm taupe-brown with a metallic sheen over freckled skin.",
+    'Gold Champagne': "It's a bright gold with a metallic sheen.",
+    // Ether
+    'Ombre Ether': "It's a pale, otherworldly blue-gray, silvery on top and purple-pink below.",
+    'Classic Ether': "It's a pale, ghostly blue-gray.",
+    'Cold Ether': "It's a cold, pale blue-gray with a faint warm cast.",
+    // Cream Pearl
+    'Buckskin Pearl': "It's a pale, luminous gold with a caramel sheen and dark points.",
+    'Smoky Black Pearl': "It's a soft, smoky brown with a pearly sheen.",
+    'Palomino Pearl': "It's a pale, luminous gold with a pearly sheen.",
+    // Tapestry Cream
+    'Madder Buckskin': "It's a softened, lighter madder red over a golden buckskin.",
+    'Woad Smoky Black': "It's a deep woad blue darkened over a smoky black.",
+    'Weld Palomino': "It's a bright weld yellow lightened over a golden palomino.",
+    // Tapestry Ether
+    'Madder Ether': "It's a madder red washed pale and ghostly by ether's blue-gray.",
+    'Woad Ether': "It's a woad blue faded into ether's pale, otherworldly gray.",
+    'Weld Ether': "It's a weld yellow cooled and paled by ether.",
+    // Pearl Ether
+    'Bay Pearl Ether': "It's a caramel-gold pearl washed pale by ether's blue-gray.",
+    'Black Pearl Ether': "It's a grayish-brown pearl faded into ghostly ether.",
+    'Gold Pearl Ether': "It's a gold-caramel pearl cooled by ether's pale gray.",
+    // Pearl Champagne
+    'Bay Pearl Champagne': "It's a warm caramel gold with both pearl's sheen and champagne's metallic glow.",
+    'Black Pearl Champagne': "It's a warm grayish taupe with a doubled pearl-and-champagne sheen.",
+    'Gold Pearl Champagne': "It's a luminous gold with a pearl-and-champagne sheen.",
+    // Cream Champagne
+    'Amber Cream Champagne': "It's a pale gold with darker points and a metallic sheen.",
+    'Classic Cream Champagne': "It's a pale taupe with a metallic sheen.",
+    'Gold Cream Champagne': "It's a pale, bright gold with a metallic sheen.",
+    // Cream Ether
+    'Ombre Cream Ether': "It's a very pale blue-gray with faint golden undertones.",
+    'Classic Cream Ether': "It's an extremely pale, ghostly blue-gray.",
+    'Cold Cream Ether': "It's a pale, cold blue-gray with a faint warm cast.",
+    // Tapestry Champagne
+    'Madder Champagne': "It's a madder red lifted by champagne's metallic sheen.",
+    'Woad Champagne': "It's a woad blue with a champagne metallic sheen.",
+    'Weld Champagne': "It's a weld yellow with a champagne metallic sheen.",
+    // Cream Pearl Champagne (triple)
+    'Amber Cream Pearl Champagne': "It's a pale, luminous gold with darker points and a triple pearl-and-champagne sheen.",
+    'Classic Cream Pearl Champagne': "It's a pale taupe-brown with a luminous pearl-and-champagne sheen.",
+    'Gold Cream Pearl Champagne': "It's a pale, luminous gold with a pearl-and-champagne sheen.",
+    // Cream Pearl Ether (triple)
+    'Ombre Cream Pearl Ether': "It's an extremely pale, luminous blue-gray.",
+    'Classic Cream Pearl Ether': "It's a near-translucent, ghostly pale gray.",
+    'Cold Cream Pearl Ether': "It's an extremely pale, cold blue-gray.",
+    // Tapestry Cream Ether (triple)
+    'Madder Cream Ether': "It's a madder red washed pale by cream and ether's blue-gray.",
+    'Woad Cream Ether': "It's a woad blue faded pale and ghostly.",
+    'Weld Cream Ether': "It's a weld yellow cooled and paled to a soft wash.",
+    // Tapestry Pearl (double) — pearl shifts the dye hue
+    'Tyrian Pearl': "It's a rich Tyrian purple with a pearly sheen (madder red shifted by pearl).",
+    'Phthalo Pearl': "It's a deep phthalo blue-green with a pearly sheen (woad blue shifted by pearl).",
+    'Ochre Pearl': "It's a warm ochre orange with a pearly sheen (weld yellow shifted by pearl).",
+    // Tapestry Pearl Champagne (triple)
+    'Tyrian Pearl Champagne': "It's a Tyrian purple with a doubled pearl-and-champagne sheen.",
+    'Phthalo Pearl Champagne': "It's a phthalo blue-green with a pearl-and-champagne sheen.",
+    'Ochre Pearl Champagne': "It's an ochre orange with a pearl-and-champagne sheen.",
+    // Tapestry Pearl Ether (triple)
+    'Tyrian Pearl Ether': "It's a Tyrian purple washed pale and ghostly by ether.",
+    'Phthalo Pearl Ether': "It's a phthalo blue-green faded into pale ether.",
+    'Ochre Pearl Ether': "It's an ochre orange cooled and paled by ether.",
+    // Tapestry Cream Champagne (triple)
+    'Madder Cream Champagne': "It's a madder red softened by cream and lifted by a champagne sheen. Pink pony club.",
+    'Woad Cream Champagne': "It's a woad blue softened by cream with a champagne sheen.",
+    'Weld Cream Champagne': "It's a weld yellow softened by cream with a champagne sheen.",
+};
+
 // What each dilution actually does to the body. Keyed to the exact strings
 // resolveTraits pushes into `dilutions` (including compound entries).
 const DILUTION_DESC = {
@@ -669,9 +763,9 @@ const DILUTION_DESC = {
     'Ether': "Ether is Dungeon Coursers' own dilution, the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray, silvery-blue along the topline and purple-pink under the barrel and face. The skin is gray, the eyes gray or brown.",
     'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown, or a warm grayish brown on a black base. The tone stays even, the skin pink, the eyes gray or green.",
     'Cream Pearl': "Cream and pearl together push the coat pale and luminous, a soft warm gold with pearl's shiny caramel sheen.",
-    'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It dyes the base coat a bold, saturated hue: the vivid reds, greens and blues of Madder, Woad and Weld.",
-    'Tapestry Cream': "Tapestry dyes the coat a bold, saturated hue, and a dose of cream then softens and lightens it.",
-    'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's shiny warm sheen layered over the top.",
+    'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It paints the base coat one of three bold, saturated dyes: Madder red on a bay, Weld yellow on a chestnut, and Woad blue on a black. Stack another dilution on top and those shift, in places, into oranges, greens and purples.",
+    'Tapestry Cream': "Tapestry dyes the coat one of its three bold hues (Madder red, Weld yellow or Woad blue), and a dose of cream then softens and lightens it.",
+    'Tapestry Pearl': "Tapestry dyes the coat one of its three bold hues, and pearl pushes it further into the oranges, greens and purples: Madder red to Tyrian purple, Weld yellow to Ochre orange, Woad blue to Phthalo green.",
 };
 
 // Modifiers — the shading, sooting, greying and stranger DC treatments.
@@ -739,22 +833,22 @@ const CARRIER_DESC = {
 // Anomalies — the rare 'with ...' extras tacked onto a genotype, written from
 // the Trait Index and confirmed against the game.
 const ANOMALY_DESC = {
-    'Bend-or Spots': "scattered dark 'Bend-or' smudges, random patches a shade or two darker than the base coat",
-    'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life",
-    'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume",
-    'Chimera': "a chimera patch, a region that grew from a second genotype, so part of the horse is visibly a different colour",
-    'Geode': "an eye anomaly where the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
-    'Stained Glass': "an eye anomaly where the iris and/or pupil are recoloured to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (this also covers the old 'Ore' trait)",
-    'Ore': "an eye anomaly with a recoloured iris and/or pupil, a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
-    'Kintsugi': "metallic borders and 'cracks' traced onto the horse's white markings in a single colour, like they were mended with gold",
-    'Swarf': "metallic flecks and glitter scattered across the coat, spreading from the topline and hooves, never dense enough to hide the base colour",
-    'Vitiligo': "irregular patches of lost pigment, pale and untinted white, that tend to start on the face, elbows and groin and can spread over the horse's life, sometimes as streaks in the mane and tail",
-    'Oracle': "an eye anomaly where a black or white film is drawn evenly over the whole eyeball, from faint and translucent to fully opaque",
-    'Signet': "a hoof anomaly where the hooves are recoloured to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic",
-    'Pennant': "the mane and tail recoloured to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip)",
-    'Pastiche': "reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems",
-    'Fresco': "lets the crisp edges of the horse's Chimera and/or Somatic markings go soft, low-opacity, blurred, smoky or streaky",
-    'Lantern': "an eye anomaly where a coloured glow comes from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil",
+    'Bend-or Spots': "Bend-or Spots scatter dark smudges across the coat, random patches a shade or two darker than the base.",
+    'Birdcatcher Spots': "Birdcatcher Spots are small, random white flecks that can come and go over the horse's life.",
+    'Brindle': "Brindle lays faint vertical striping down the body, like a brindle dog wearing a horse costume.",
+    'Chimera': "Chimera gives it a patch that grew from a second genotype, so part of the horse is visibly a different colour.",
+    'Geode': "Geode is an eye anomaly: the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil.",
+    'Stained Glass': "Stained Glass recolours the iris and/or pupil to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (it also covers the old 'Ore' trait).",
+    'Ore': "Ore is an old name for a recoloured iris and/or pupil, now folded into Stained Glass.", // legacy alias, normalised to Stained Glass upstream
+    'Kintsugi': "Kintsugi traces metallic borders and 'cracks' onto the horse's white markings in a single colour, like they were mended with gold.",
+    'Swarf': "Swarf scatters metallic flecks and glitter across the coat, spreading from the topline and hooves, never dense enough to hide the base colour.",
+    'Vitiligo': "Vitiligo spreads irregular patches of lost pigment, pale untinted white, usually starting on the face, elbows and groin, sometimes streaking the mane and tail as it grows over the horse's life.",
+    'Oracle': "Oracle is an eye anomaly: a black or white film drawn evenly over the whole eyeball, anywhere from faint and translucent to fully opaque.",
+    'Signet': "Signet recolours the hooves to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic.",
+    'Pennant': "Pennant recolours the mane and tail to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip).",
+    'Pastiche': "Pastiche reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems.",
+    'Fresco': "Fresco softens the crisp edges of the horse's Chimera and/or Somatic markings, letting them go low-opacity, blurred, smoky or streaky.",
+    'Lantern': "Lantern is an eye anomaly: a coloured glow coming from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil.",
 };
 
 // Variants — the four breed variants. These are a whole different physique the
@@ -810,8 +904,10 @@ function genotypeToPlainEnglish(genoString, variant) {
 
     const paras = [];
 
-    // 1. Body colour — lead with the fancy coat name in bold, then explain it.
+    // 1. Body colour — name the coat, say what colour the whole thing is, then
+    //    explain the base and each dilution underneath it.
     let body = `You're looking at ${articleFor(coatColor)} **${coatColor}**.`;
+    if (COAT_DESC[coatColor]) body += ' ' + COAT_DESC[coatColor];
     const baseDesc = COAT_BODY[baseCoat];
     if (baseDesc) body += ' ' + baseDesc.charAt(0).toUpperCase() + baseDesc.slice(1) + '.';
     dilutions.forEach(d => { if (DILUTION_DESC[d]) body += ' ' + DILUTION_DESC[d]; });
@@ -832,10 +928,11 @@ function genotypeToPlainEnglish(genoString, variant) {
         paras.push(leopard.map(l => LEOPARD_DESC[l]).join(' '));
     }
 
-    // 5. Anomalies — the weird 'with ...' extras.
+    // 5. Anomalies — the weird 'with ...' extras. Each names its own trait, so
+    //    they read as separate sentences rather than one comma-run list.
     if (anomalies.length) {
-        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a.toLowerCase()} (an anomaly I don't have notes on yet)`);
-        paras.push('Then there are the anomalies: ' + joinList(descs) + '.');
+        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a} is an anomaly I don't have notes on yet.`);
+        paras.push(descs.join(' '));
     }
 
     // 6. Variant — a whole-horse skin over everything above.
