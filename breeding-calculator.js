@@ -83,6 +83,7 @@ window.parseHorsesCSV = function (text) {
     }
 
     const horses = [];
+    const skipped = []; // rows with content but no genotype — surfaced, not dropped
     for (let i = startLine; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
 
@@ -92,18 +93,24 @@ window.parseHorsesCSV = function (text) {
             horse[header] = values[index] ? values[index].trim() : '';
         });
 
-        if (horse.genotype && horse.temperament) {
+        // A genotype is the one field a horse can't do without. Keep everything
+        // that has one (even with a blank temperament — that's flagged in the
+        // preview, not silently discarded). Genotype-less rows go to `skipped`
+        // so the wizard can tell the user instead of them just vanishing.
+        if (horse.genotype) {
             horses.push({
                 id: horse.id || horse.name || `Horse ${i}`,
                 name: horse.name || `Horse ${i}`,
                 genotype: horse.genotype,
-                temperament: horse.temperament,
-                variant: horse.variant || 'Standard',
+                temperament: horse.temperament || '',
+                variant: horse.variant || '',
                 _row: i + 1
             });
+        } else {
+            skipped.push({ row: i + 1, raw: lines[i].trim() });
         }
     }
-    return { headerDetected: hasHeaders, horses };
+    return { headerDetected: hasHeaders, horses, skipped };
 };
 
 function parseCSV(text) {
@@ -421,6 +428,31 @@ function findUnknownTokens(genoString) {
         unknownGenes: geneTokens.filter(t => !isKnownGeneToken(t)),
         unknownAnomalies: anomalyTokens.filter(t => !knownAnoms.has(t.toLowerCase()))
     };
+}
+
+// Canonical variants and temperaments, with lenient normalisers. Imports run
+// values through these so a typo like "Herald" is caught and shown, instead of
+// being silently kept (CSV) or silently swapped to Standard (bookmarklet).
+const KNOWN_VARIANTS = ['Standard', 'Heraldic', 'Puck', 'Cavedweller', 'Restored'];
+const KNOWN_TEMPERAMENTS = ['Choleric', 'Melancholic', 'Phlegmatic', 'Sanguine'];
+
+function normalizeVariant(v) {
+    const s = (v || '').trim().toLowerCase();
+    return KNOWN_VARIANTS.find(k => k.toLowerCase() === s) || 'Standard';
+}
+// Blank counts as "known" (it just defaults to Standard); only a non-empty
+// value the list doesn't contain is unrecognised.
+function isKnownVariant(v) {
+    const s = (v || '').trim().toLowerCase();
+    return s === '' || KNOWN_VARIANTS.some(k => k.toLowerCase() === s);
+}
+function normalizeTemperament(v) {
+    const s = (v || '').trim().toLowerCase();
+    return KNOWN_TEMPERAMENTS.find(k => k.toLowerCase() === s) || '';
+}
+function isKnownTemperament(v) {
+    const s = (v || '').trim().toLowerCase();
+    return s === '' || KNOWN_TEMPERAMENTS.some(k => k.toLowerCase() === s);
 }
 
 function isLethalWhite(genes) {
@@ -1367,6 +1399,16 @@ function generateFoals() {
             window.AppShell.toast(`Both parents are ${parent1.temperament} — they can't breed.`, 'error');
         }
         return;
+    }
+
+    // Non-blocking: warn if either parent's genotype carries tokens the engine
+    // will ignore, so a typo doesn't quietly skew the foals (getGeneAlleles
+    // would otherwise treat an unknown gene as a single always-inherited allele).
+    const u1 = findUnknownTokens(parent1.genotype);
+    const u2 = findUnknownTokens(parent2.genotype);
+    const stray = [...new Set([...u1.unknownGenes, ...u1.unknownAnomalies, ...u2.unknownGenes, ...u2.unknownAnomalies])];
+    if (stray.length && window.AppShell && window.AppShell.toast) {
+        window.AppShell.toast('Ignoring unrecognised token(s): ' + stray.join(', ') + '. Check for a typo.', 'error');
     }
 
     // Every breeding has a 5% chance of twins (handbook): two separate foals,
