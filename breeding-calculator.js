@@ -749,7 +749,7 @@ const COAT_DESC = {
     'Phthalo Pearl Ether': "It's a phthalo blue-green faded into pale ether.",
     'Ochre Pearl Ether': "It's an ochre orange cooled and paled by ether.",
     // Tapestry Cream Champagne (triple)
-    'Madder Cream Champagne': "It's a madder red softened by cream and lifted by a champagne sheen.",
+    'Madder Cream Champagne': "It's a madder red softened by cream and lifted by a champagne sheen. Pink pony club.",
     'Woad Cream Champagne': "It's a woad blue softened by cream with a champagne sheen.",
     'Weld Cream Champagne': "It's a weld yellow softened by cream with a champagne sheen.",
 };
