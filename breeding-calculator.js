@@ -660,6 +660,100 @@ const COAT_BODY = {
     'Chestnut': "underneath it all it's a chestnut: red-brown all over, with a mane and tail in the same reddish range, and no black points anywhere"
 };
 
+// The total coat colour, keyed by the fancy coat NAME (coatColor). Read first,
+// before the base-and-dilution breakdown, so the description leads with what the
+// whole horse actually looks like. Plain base coats (Bay/Black/Chestnut) aren't
+// here — COAT_BODY already describes those in full.
+// Real-world coats and the Tapestry dyes (Madder red, Woad blue, Weld yellow;
+// with pearl: Tyrian purple, Phthalo green, Ochre orange) are solid; the exotic
+// multi-dilution composites are best-guess wording pending a look-over.
+const COAT_DESC = {
+    // Cream
+    'Buckskin': "It's a golden tan body with black points, mane and tail.",
+    'Smoky Black': "It's a dark, smoky near-black — cream barely reads on a black base.",
+    'Palomino': "It's a gold body with a near-white mane and tail.",
+    // Double Cream
+    'Perlino': "It's a pale cream coat with faintly rusty points, pink skin and blue eyes.",
+    'Smoky Cream': "It's a pale, smoky cream with pink skin and blue eyes.",
+    'Cremello': "It's an almost-white cream to ivory, with pink skin and blue eyes.",
+    // Tapestry
+    'Madder': "It's a deep blood red, the colour of madder dye.",
+    'Woad': "It's a deep, saturated blue, the colour of woad dye.",
+    'Weld': "It's a bright, saturated yellow, the colour of weld dye.",
+    // Pearl
+    'Bay Pearl': "It's a warm gold-to-caramel brown with a soft, shiny sheen.",
+    'Black Pearl': "It's an even, warm grayish brown with a soft sheen.",
+    'Gold Pearl': "It's a shiny, warm gold-to-caramel.",
+    // Champagne
+    'Amber Champagne': "It's a warm golden tan with darker points and champagne's metallic sheen.",
+    'Classic Champagne': "It's a warm taupe-brown with a metallic sheen over freckled skin.",
+    'Gold Champagne': "It's a bright gold with a metallic sheen.",
+    // Ether
+    'Ombre Ether': "It's a pale, otherworldly blue-gray, silvery on top and purple-pink below.",
+    'Classic Ether': "It's a pale, ghostly blue-gray.",
+    'Cold Ether': "It's a cold, pale blue-gray with a faint warm cast.",
+    // Cream Pearl
+    'Buckskin Pearl': "It's a pale, luminous gold with a caramel sheen and dark points.",
+    'Smoky Black Pearl': "It's a soft, smoky brown with a pearly sheen.",
+    'Palomino Pearl': "It's a pale, luminous gold with a pearly sheen.",
+    // Tapestry Cream
+    'Madder Buckskin': "It's a softened, lighter madder red over a golden buckskin.",
+    'Woad Smoky Black': "It's a deep woad blue darkened over a smoky black.",
+    'Weld Palomino': "It's a bright weld yellow lightened over a golden palomino.",
+    // Tapestry Ether
+    'Madder Ether': "It's a madder red washed pale and ghostly by ether's blue-gray.",
+    'Woad Ether': "It's a woad blue faded into ether's pale, otherworldly gray.",
+    'Weld Ether': "It's a weld yellow cooled and paled by ether.",
+    // Pearl Ether
+    'Bay Pearl Ether': "It's a caramel-gold pearl washed pale by ether's blue-gray.",
+    'Black Pearl Ether': "It's a grayish-brown pearl faded into ghostly ether.",
+    'Gold Pearl Ether': "It's a gold-caramel pearl cooled by ether's pale gray.",
+    // Pearl Champagne
+    'Bay Pearl Champagne': "It's a warm caramel gold with both pearl's sheen and champagne's metallic glow.",
+    'Black Pearl Champagne': "It's a warm grayish taupe with a doubled pearl-and-champagne sheen.",
+    'Gold Pearl Champagne': "It's a luminous gold with a pearl-and-champagne sheen.",
+    // Cream Champagne
+    'Amber Cream Champagne': "It's a pale gold with darker points and a metallic sheen.",
+    'Classic Cream Champagne': "It's a pale taupe with a metallic sheen.",
+    'Gold Cream Champagne': "It's a pale, bright gold with a metallic sheen.",
+    // Cream Ether
+    'Ombre Cream Ether': "It's a very pale blue-gray with faint golden undertones.",
+    'Classic Cream Ether': "It's an extremely pale, ghostly blue-gray.",
+    'Cold Cream Ether': "It's a pale, cold blue-gray with a faint warm cast.",
+    // Tapestry Champagne
+    'Madder Champagne': "It's a madder red lifted by champagne's metallic sheen.",
+    'Woad Champagne': "It's a woad blue with a champagne metallic sheen.",
+    'Weld Champagne': "It's a weld yellow with a champagne metallic sheen.",
+    // Cream Pearl Champagne (triple)
+    'Amber Cream Pearl Champagne': "It's a pale, luminous gold with darker points and a triple pearl-and-champagne sheen.",
+    'Classic Cream Pearl Champagne': "It's a pale taupe-brown with a luminous pearl-and-champagne sheen.",
+    'Gold Cream Pearl Champagne': "It's a pale, luminous gold with a pearl-and-champagne sheen.",
+    // Cream Pearl Ether (triple)
+    'Ombre Cream Pearl Ether': "It's an extremely pale, luminous blue-gray.",
+    'Classic Cream Pearl Ether': "It's a near-translucent, ghostly pale gray.",
+    'Cold Cream Pearl Ether': "It's an extremely pale, cold blue-gray.",
+    // Tapestry Cream Ether (triple)
+    'Madder Cream Ether': "It's a madder red washed pale by cream and ether's blue-gray.",
+    'Woad Cream Ether': "It's a woad blue faded pale and ghostly.",
+    'Weld Cream Ether': "It's a weld yellow cooled and paled to a soft wash.",
+    // Tapestry Pearl (double) — pearl shifts the dye hue
+    'Tyrian Pearl': "It's a rich Tyrian purple with a pearly sheen (madder red shifted by pearl).",
+    'Phthalo Pearl': "It's a deep phthalo blue-green with a pearly sheen (woad blue shifted by pearl).",
+    'Ochre Pearl': "It's a warm ochre orange with a pearly sheen (weld yellow shifted by pearl).",
+    // Tapestry Pearl Champagne (triple)
+    'Tyrian Pearl Champagne': "It's a Tyrian purple with a doubled pearl-and-champagne sheen.",
+    'Phthalo Pearl Champagne': "It's a phthalo blue-green with a pearl-and-champagne sheen.",
+    'Ochre Pearl Champagne': "It's an ochre orange with a pearl-and-champagne sheen.",
+    // Tapestry Pearl Ether (triple)
+    'Tyrian Pearl Ether': "It's a Tyrian purple washed pale and ghostly by ether.",
+    'Phthalo Pearl Ether': "It's a phthalo blue-green faded into pale ether.",
+    'Ochre Pearl Ether': "It's an ochre orange cooled and paled by ether.",
+    // Tapestry Cream Champagne (triple)
+    'Madder Cream Champagne': "It's a madder red softened by cream and lifted by a champagne sheen.",
+    'Woad Cream Champagne': "It's a woad blue softened by cream with a champagne sheen.",
+    'Weld Cream Champagne': "It's a weld yellow softened by cream with a champagne sheen.",
+};
+
 // What each dilution actually does to the body. Keyed to the exact strings
 // resolveTraits pushes into `dilutions` (including compound entries).
 const DILUTION_DESC = {
@@ -810,8 +904,10 @@ function genotypeToPlainEnglish(genoString, variant) {
 
     const paras = [];
 
-    // 1. Body colour — lead with the fancy coat name in bold, then explain it.
+    // 1. Body colour — name the coat, say what colour the whole thing is, then
+    //    explain the base and each dilution underneath it.
     let body = `You're looking at ${articleFor(coatColor)} **${coatColor}**.`;
+    if (COAT_DESC[coatColor]) body += ' ' + COAT_DESC[coatColor];
     const baseDesc = COAT_BODY[baseCoat];
     if (baseDesc) body += ' ' + baseDesc.charAt(0).toUpperCase() + baseDesc.slice(1) + '.';
     dilutions.forEach(d => { if (DILUTION_DESC[d]) body += ' ' + DILUTION_DESC[d]; });
