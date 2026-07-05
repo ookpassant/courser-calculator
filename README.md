@@ -35,6 +35,15 @@ leaves your machine.
 - A coat colour at that rarity, one marking/modifier/carrier at that rarity or
   below, a 10% chance of an anomaly, and a 5% chance of a variant.
 
+### Translate
+- Paste a genotype (or pick one from your collection) and get a plain-English
+  description of what the horse actually looks like, in visual order: body
+  colour, shading, white markings, leopard spotting, anomalies, variant, and
+  any hidden carriers.
+- Reads its trait data from the same engine that names the phenotype, so the
+  description can never disagree with the short phenotype it shows alongside.
+- An optional variant picker factors the four breed variants in.
+
 ### Smart Search
 - Ask a breeding goal in plain language ("How can I make Amber Champagne?",
   "Who can breed for fewspot and starfield?", "Which pairs can produce false

@@ -152,6 +152,8 @@
         .geno-hint { display: block; font-size: 0.78rem; margin: -8px 0 12px; min-height: 1em; }
         .geno-hint.ok { color: var(--dc-uncommon); }
         .geno-hint.bad { color: var(--dc-blood); }
+        .geno-hint.warn { color: var(--dc-legendary); }
+        .cell-missing { color: var(--dc-legendary); }
 
         /* ---- Buttons ---- */
         .generate-btn, .dc-btn { width: 100%; padding: 12px 18px; border-radius: var(--radius-sm); font-family: var(--font-stamp); font-size: 0.85rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); cursor: pointer; line-height: 1.4; border: 1px solid var(--dc-moss); background: var(--dc-moss); color: var(--dc-white); transition: background var(--ease-default), transform var(--ease-snappy), box-shadow var(--ease-default); margin-bottom: 24px; }
@@ -298,6 +300,17 @@
 
         .panel-footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--dc-line); text-align: center; color: var(--dc-slate); font-size: 0.85rem; }
 
+        /* ---- Translate result card ---- */
+        .translate-result { margin-top: 28px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-mauve); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-card); }
+        .translate-pheno { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-slate); padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--dc-line); }
+        .translate-pheno-label { color: var(--dc-mauve-soft); margin-right: 6px; }
+        .translate-prose p { color: var(--dc-ink); font-size: 1rem; line-height: 1.65; margin: 0 0 14px; }
+        .translate-prose p:last-child { margin-bottom: 0; }
+        .translate-prose strong { color: var(--dc-mauve); font-weight: 700; }
+        .translate-warn { background: #fbf3e1; border: 1px solid var(--dc-legendary-edge); border-left: 4px solid var(--dc-legendary); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 18px; color: var(--dc-ink); font-size: 0.9rem; line-height: 1.5; }
+        .translate-warn strong { color: var(--dc-legendary); }
+        .translate-warn code { background: rgba(200,144,46,0.14); padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
+
         /* ---- Responsive ---- */
         @media (max-width: 600px) {
             .parents-container { grid-template-columns: 1fr; }
@@ -316,6 +329,7 @@
             <button class="nav-link" data-area="calculator">Foal Generator</button>
             <button class="nav-link" data-area="chimera">Chimera</button>
             <button class="nav-link" data-area="scroll">Scroll Generator</button>
+            <button class="nav-link" data-area="translate">Translate</button>
             <button class="nav-link" data-area="search">Smart Search</button>
             <button class="nav-link" data-area="collection">Collection</button>
         </div>
@@ -353,6 +367,11 @@
                     <button class="tool-card" data-nav="scroll">
                         <h3>Scroll Generator</h3>
                         <p>Roll a random design for a custom scroll by rarity.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="translate">
+                        <h3>Translate</h3>
+                        <p>Paste a genotype and get a plain-English description of what the horse actually looks like.</p>
                         <span class="tool-open">Open →</span>
                     </button>
                     <button class="tool-card" data-nav="search">
@@ -577,6 +596,38 @@
                     <div id="scrollResult" style="display: none; margin-top: 30px;"></div>
                 </section>
 
+                <!-- Area: Translate (genotype → plain English) -->
+                <section class="area" id="area-translate">
+                    <h1 class="page-title">Translate</h1>
+                    <p class="blurb">Paste a genotype (or pick one from your collection) and I'll tell you, in plain English, what the horse actually looks like.</p>
+
+                    <div class="info-box">
+                        <p><strong>Tip:</strong> Works on anything the calculator understands, like <code>Ee Aa nCr nT + Brindle</code>. Pick a variant if you want it factored in.</p>
+                        <p><strong>Heads up:</strong> Descriptions for real-world horse genetics are solid; the Dungeon-Coursers-invented traits are best guesses until Ook signs off on them.</p>
+                    </div>
+
+                    <div class="parent-source-row" id="translateSourceRow" style="display:none;">
+                        <label for="translateFromColl">From Collection:</label>
+                        <select id="translateFromColl"><option value="">Pick from collection…</option></select>
+                    </div>
+
+                    <label for="translateGeno">Genotype:</label>
+                    <textarea id="translateGeno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+
+                    <label for="translateVariant">Variant (Optional):</label>
+                    <select id="translateVariant">
+                        <option value="">Standard</option>
+                        <option value="Heraldic">Heraldic</option>
+                        <option value="Puck">Puck</option>
+                        <option value="Cavedweller">Cavedweller</option>
+                        <option value="Restored">Restored</option>
+                    </select>
+
+                    <button class="generate-btn" onclick="translateGenotype()">Translate to Plain English</button>
+
+                    <div class="translate-result" id="translateResult" style="display:none;"></div>
+                </section>
+
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->
                 <section class="area" id="area-chimera">
                     <h1 class="page-title">Chimera Calculator</h1>
@@ -681,7 +732,8 @@
                 <div class="wiz-step" data-step="2">
                     <p id="wizDetect" class="subtitle"></p>
                     <p style="margin:8px 0;"><strong id="wizCount">0</strong> horse row(s) found.</p>
-                    <div id="wizBadWrap" style="display:none;"><p style="color:var(--dc-blood);"><strong id="wizBad">0</strong> row(s) have genotype warnings (they'll still import, flagged below).</p></div>
+                    <div id="wizBadWrap" style="display:none;"><p style="color:var(--dc-legendary);"><strong id="wizBad">0</strong> row(s) have warnings (they'll still import, flagged below).</p></div>
+                    <div id="wizSkipWrap" style="display:none;"><p style="color:var(--dc-blood);"><strong id="wizSkip">0</strong> row(s) had no genotype and were skipped.</p></div>
                     <div class="preview-wrap">
                         <table class="preview-table">
                             <thead><tr><th>Row</th><th>Name</th><th>Genotype</th><th>Temp.</th><th>Check</th></tr></thead>

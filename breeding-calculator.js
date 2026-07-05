@@ -83,6 +83,7 @@ window.parseHorsesCSV = function (text) {
     }
 
     const horses = [];
+    const skipped = []; // rows with content but no genotype — surfaced, not dropped
     for (let i = startLine; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
 
@@ -92,18 +93,24 @@ window.parseHorsesCSV = function (text) {
             horse[header] = values[index] ? values[index].trim() : '';
         });
 
-        if (horse.genotype && horse.temperament) {
+        // A genotype is the one field a horse can't do without. Keep everything
+        // that has one (even with a blank temperament — that's flagged in the
+        // preview, not silently discarded). Genotype-less rows go to `skipped`
+        // so the wizard can tell the user instead of them just vanishing.
+        if (horse.genotype) {
             horses.push({
                 id: horse.id || horse.name || `Horse ${i}`,
                 name: horse.name || `Horse ${i}`,
                 genotype: horse.genotype,
-                temperament: horse.temperament,
-                variant: horse.variant || 'Standard',
+                temperament: horse.temperament || '',
+                variant: horse.variant || '',
                 _row: i + 1
             });
+        } else {
+            skipped.push({ row: i + 1, raw: lines[i].trim() });
         }
     }
-    return { headerDetected: hasHeaders, horses };
+    return { headerDetected: hasHeaders, horses, skipped };
 };
 
 function parseCSV(text) {
@@ -356,10 +363,23 @@ const WHITE_MARKING_NAMES = {
     'SbW': 'Sabino Dominant White', 'WSb': 'Sabino Dominant White'
 };
 
+// Gene tokens people write by hand that mean a canonical allele pair. `patn`
+// is the leopard pattern gene written bare; it means one copy, i.e. `npatn`.
+// Normalising here (not just in the phenotype namer) means breeding, lethal
+// checks and validation all agree on the same allele pair.
+const GENE_TOKEN_ALIASES = { 'patn': 'npatn' };
+function normalizeGeneToken(tok) {
+    return Object.prototype.hasOwnProperty.call(GENE_TOKEN_ALIASES, tok) ? GENE_TOKEN_ALIASES[tok] : tok;
+}
+
 function parseGenotype(genoString) {
     const parts = genoString.trim().split('+');
-    const genes = parts[0].trim().split(/\s+/);
-    let anomalies = parts.length > 1 ? parts[1].trim().split(',').map(a => a.trim()).filter(Boolean) : [];
+    const genes = parts[0].trim().split(/\s+/).filter(Boolean).map(normalizeGeneToken);
+    // Everything after the first + is anomalies. Accept both separators so
+    // "+ A, B" and "+ A + B" both parse instead of quietly dropping the rest.
+    let anomalies = parts.length > 1
+        ? parts.slice(1).join(',').split(',').map(a => a.trim()).filter(Boolean)
+        : [];
     // Stained Glass and Ore were merged into one trait, called "Stained Glass"
     // going forward. Older coursers may still list "Ore" (or both), so normalise
     // any "Ore" to "Stained Glass" and de-duplicate.
@@ -367,6 +387,72 @@ function parseGenotype(genoString) {
     anomalies = anomalies.filter((a, i) => anomalies.indexOf(a) === i);
 
     return { genes, anomalies };
+}
+
+// ---------------------------------------------------------------------------
+// Token validation. parseGenotype silently drops any token it doesn't know, so
+// an unrecognised token quietly changes the horse with no warning. This checks
+// tokens (after alias normalisation) against the SAME name tables the engine
+// reads from, so "known" can never drift from "actually does something".
+// ---------------------------------------------------------------------------
+const KNOWN_GENE_TOKENS = new Set([
+    ...Object.keys(DILUTION_NAMES),
+    ...Object.keys(MODIFIER_NAMES),
+    ...Object.keys(WHITE_MARKING_NAMES),
+    // Leopard complex + the two recessive carriers the engine reads by hand;
+    // these don't live in any name table.
+    'nLp', 'LpLp', 'npatn', 'patnpatn', 'nprl', 'ner'
+]);
+
+// A base-coat allele pair at the E or A locus (Ee, EE, ee, Aa, aa, ...).
+function isBaseCoatToken(tok) {
+    return /^[Ee]{1,2}$/.test(tok) || /^[Aa]{1,2}$/.test(tok);
+}
+
+function isKnownGeneToken(tok) {
+    return isBaseCoatToken(tok) || KNOWN_GENE_TOKENS.has(tok);
+}
+
+// Report anything in a genotype the engine would silently ignore.
+// Returns { unknownGenes: [...], unknownAnomalies: [...] }.
+function findUnknownTokens(genoString) {
+    const s = (genoString || '').trim();
+    if (!s) return { unknownGenes: [], unknownAnomalies: [] };
+    const parts = s.split('+');
+    const geneTokens = parts[0].trim().split(/\s+/).filter(Boolean).map(normalizeGeneToken);
+    // Everything after the first + is anomalies, separated by commas or pluses.
+    const anomalyTokens = parts.slice(1).join(',').split(',').map(a => a.trim()).filter(Boolean);
+
+    const knownAnoms = new Set(ALL_ANOMALIES.map(a => a.toLowerCase()).concat('ore'));
+    return {
+        unknownGenes: geneTokens.filter(t => !isKnownGeneToken(t)),
+        unknownAnomalies: anomalyTokens.filter(t => !knownAnoms.has(t.toLowerCase()))
+    };
+}
+
+// Canonical variants and temperaments, with lenient normalisers. Imports run
+// values through these so a typo like "Herald" is caught and shown, instead of
+// being silently kept (CSV) or silently swapped to Standard (bookmarklet).
+const KNOWN_VARIANTS = ['Standard', 'Heraldic', 'Puck', 'Cavedweller', 'Restored'];
+const KNOWN_TEMPERAMENTS = ['Choleric', 'Melancholic', 'Phlegmatic', 'Sanguine'];
+
+function normalizeVariant(v) {
+    const s = (v || '').trim().toLowerCase();
+    return KNOWN_VARIANTS.find(k => k.toLowerCase() === s) || 'Standard';
+}
+// Blank counts as "known" (it just defaults to Standard); only a non-empty
+// value the list doesn't contain is unrecognised.
+function isKnownVariant(v) {
+    const s = (v || '').trim().toLowerCase();
+    return s === '' || KNOWN_VARIANTS.some(k => k.toLowerCase() === s);
+}
+function normalizeTemperament(v) {
+    const s = (v || '').trim().toLowerCase();
+    return KNOWN_TEMPERAMENTS.find(k => k.toLowerCase() === s) || '';
+}
+function isKnownTemperament(v) {
+    const s = (v || '').trim().toLowerCase();
+    return s === '' || KNOWN_TEMPERAMENTS.some(k => k.toLowerCase() === s);
 }
 
 function isLethalWhite(genes) {
@@ -377,12 +463,16 @@ function isLethalWhite(genes) {
     return hasOO || hasOsOs || hasWW || hasOveroOssuary;
 }
 
-function genotypeToPhenotype(genoString) {
+// The single source of truth. Both the phenotype namer (genotypeToPhenotype)
+// and the plain-English translator (genotypeToPlainEnglish) read their trait
+// data from HERE, so the two can never quietly drift out of sync. Returns
+// structured data: { lethal, baseCoat, dilutions, coatColor, allTraits, anomalies }.
+function resolveTraits(genoString) {
     const { genes, anomalies } = parseGenotype(genoString);
 
     // OO, OsOs, WW, or nO+nOs = dead foal, sorry
     if (isLethalWhite(genes)) {
-        return 'LETHAL WHITE - This foal would not survive.';
+        return { lethal: true, baseCoat: '', dilutions: [], coatColor: '', allTraits: [], anomalies };
     }
 
     let baseCoat = '';
@@ -517,6 +607,18 @@ function genotypeToPhenotype(genoString) {
         }
     });
 
+    return { lethal: false, baseCoat, dilutions, coatColor, allTraits, anomalies };
+}
+
+// Thin formatter over resolveTraits — turns the structured trait data into the
+// terse phenotype name the rest of the app has always shown.
+function genotypeToPhenotype(genoString) {
+    const { lethal, coatColor, allTraits, anomalies } = resolveTraits(genoString);
+
+    if (lethal) {
+        return 'LETHAL WHITE - This foal would not survive.';
+    }
+
     // Sort traits into their proper positions — phenotype formatting is an ancient and sacred art
     const traitsBeforeCoat = allTraits.filter(trait => TRAITS_BEFORE_COAT.includes(trait));
     const traitsAfterCoat = allTraits.filter(trait => TRAITS_AFTER_COAT.includes(trait));
@@ -535,6 +637,303 @@ function genotypeToPhenotype(genoString) {
     }
 
     return phenotype.trim();
+}
+
+// ============================================================================
+// PLAIN-ENGLISH TRANSLATOR
+// ----------------------------------------------------------------------------
+// Turns a genotype into a paragraph describing what the horse actually LOOKS
+// like, in the app's usual snarky register. Everything here reads from
+// resolveTraits(), so a horse's description can never disagree with its
+// phenotype name.
+//
+// Confidence note: every description here is written from the official Trait
+// Index and the real-world genetics they're based on. Bend-or Spots,
+// Birdcatcher Spots, Brindle and Chimera weren't in the Trait Index text, so
+// they were confirmed with Ook directly.
+// ============================================================================
+
+// Base body colour — the canvas everything else paints onto.
+const COAT_BODY = {
+    'Bay': "underneath it all it's a bay: a reddish-brown body with a black mane, tail and lower legs",
+    'Black': "underneath it all it's a true black: dark from nose to hoof, no red anywhere",
+    'Chestnut': "underneath it all it's a chestnut: red-brown all over, with a mane and tail in the same reddish range, and no black points anywhere"
+};
+
+// What each dilution actually does to the body. Keyed to the exact strings
+// resolveTraits pushes into `dilutions` (including compound entries).
+const DILUTION_DESC = {
+    'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
+    'Double Cream': "Two doses of cream take it almost all the way out. The coat goes pale cream to ivory, the skin pinkish, the eyes blue.",
+    'Champagne': "Champagne lightens the coat to a warm golden or grayish brown, with peachy or lavender undertones. The skin turns pinkish-gray and often freckled, the eyes gold or green.",
+    'Ether': "Ether is Dungeon Coursers' own dilution, the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray, silvery-blue along the topline and purple-pink under the barrel and face. The skin is gray, the eyes gray or brown.",
+    'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown, or a warm grayish brown on a black base. The tone stays even, the skin pink, the eyes gray or green.",
+    'Cream Pearl': "Cream and pearl together push the coat pale and luminous, a soft warm gold with pearl's shiny caramel sheen.",
+    'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It dyes the base coat a bold, saturated hue: the vivid reds, greens and blues of Madder, Woad and Weld.",
+    'Tapestry Cream': "Tapestry dyes the coat a bold, saturated hue, and a dose of cream then softens and lightens it.",
+    'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's shiny warm sheen layered over the top.",
+};
+
+// Modifiers — the shading, sooting, greying and stranger DC treatments.
+const MODIFIER_DESC = {
+    'Dun': "Dun pales the body and stamps on primitive marks: a dark dorsal stripe down the spine, and often barring on the legs.",
+    'Pangare': "Pangare (mealy) lightens the soft parts to a paler shade: the muzzle, eyes, belly, flanks and inner legs.",
+    'Sooty': "Sooty throws a smudge of darker hairs over the top, heaviest along the back and shoulders, like it's been dusted with charcoal.",
+    'Gray': "Gray is progressive: the horse is born its base colour and then steadily silvers out with age, eventually toward white.",
+    'Flaxen': "Flaxen lightens the mane and tail to blonde or near-white while the body keeps its colour (only really visible on a red base).",
+    'Silver': "Silver dilutes black pigment specifically: a chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
+    'Illuminated': "Illuminated pales the skin and hooves to a uniform, washed-out light colour, whatever the coat is doing. The coat itself is left alone.",
+    'Sepulchered': "Sepulchered darkens the skin and hooves to a uniform black, whatever the coat is doing. The coat colour itself stays untouched.",
+    'Tabard': "Tabard splits the coat into a gradient, lightening one half and darkening the other, often stamped with a mirrored pair of heraldic symbols reflected across the centre. Always symmetrical left-to-right.",
+    'Gilt': "Gilt turns the hooves metallic, whether gold, silver, copper, bronze or brass, and tints the skin to match. It's a skin-and-hoof trait, not a coat one.",
+    'Vellum': "Vellum drops the opacity of the horse's white markings, making them semi-transparent and see-through (Roan, Blanched and False Leopard shrug it off).",
+    'Opal': "Opal scatters colourful pastel flecks across all of the horse's white markings, sharp-edged or blurred.",
+    'Prism': "Prism recolours the horse's Pangare or Sooty shading into any distinguishable colour (never white), blended smoothly with no hard edges.",
+    'Starfield': "Starfield turns all of the horse's white markings into a night sky, black or dark blue or a blend of the two, optionally with little round spots of the original colour showing through.",
+    'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Kintsugi, Swarf) into unnatural colours, each trait its own single colour.",
+};
+
+// White patterns and markings.
+const MARKING_DESC = {
+    'Tobiano': "Tobiano throws big, rounded patches of white that cross the spine, usually with white legs and a mostly dark head.",
+    'Overo': "Overo (frame) carves horizontal blocks of white along the sides that don't cross the back, with a dark topline and often a bald face.",
+    'Splash': "Splash looks like the horse was dipped in white paint from below: white legs, a white belly, and a broad white face, all with clean crisp edges.",
+    'Roan': "Roan mixes white hairs evenly through the body while the head and legs stay solid, giving a frosted, silvered look over the base colour.",
+    'Sabino': "Sabino adds ragged, roaned white: tall stockings, a blazed face, jagged belly spots and flecking, all with soft, lacy edges.",
+    'Rabicano': "Rabicano frosts white at the flanks and tail base, the classic 'coon tail' barring, without touching the rest much.",
+    'Dominant White': "Dominant White covers most or all of the coat in white, spreading up from the horse's underside so some base colour may linger along the topline, with roaned, grainy edges like Sabino.",
+    'Cuirass': "Cuirass is a solid, symmetrical white breastplate across the upper chest and part of the shoulders, like armour. It never touches the mane, crosses the topline, or reaches the belly.",
+    'Crowned': "Crowned sets symmetrical white on the head, either a single marking or a tidy arrangement of simple stripes, spots and splotches.",
+    'Girdle': "Girdle wraps a single, even band of white all the way around the barrel, with crisp, smooth edges.",
+    'Collar': "Collar wraps a single, even band of white all the way around the neck, with crisp, smooth edges.",
+    'Blanched': "Blanched lightens the coat on the face and legs, the inverse of Roan, blending gradually from a subtle paling to bold white.",
+    'False Leopard': "False Leopard lightens the barrel, shoulders, chest and hindquarters like Roan, but with round spots 'cut out' of it. Think leopard-style spotting without the real leopard complex.",
+    'Harlequin': "Harlequin scatters opaque white diamonds that radiate out in rings from a single point, usually the poll or croup.",
+    'Shroud': "Shroud drapes symmetrical white down from the spine, anywhere from poll to tail, but never reaches more than halfway down the neck or barrel.",
+    'Filigree': "Filigree traces elegant white swirls that branch out of the horse's other white markings. It always attaches to existing white, never floating free.",
+    'Ossuary': "Ossuary is a stark, opaque white in skeletal shapes, a strange cousin to Overo, spreading from the barrel out to the legs and edges of the body. The face is often bald or 'skull-like'.",
+};
+
+// Leopard complex — the appaloosa-family spotting patterns.
+const LEOPARD_DESC = {
+    'Snowflake': "Snowflake (single Lp, no pattern gene) scatters white flecks and spots over the dark coat, like a light snowfall that thickens with age.",
+    'Blanket': "Blanket lays a patch of white, usually over the hips and rump, often carrying dark leopard spots within it.",
+    'Snowcap': "Snowcap is a solid patch of white over the croup and hindquarters, maybe with a few spots and speckles at its edges.",
+    'Leopard': "Leopard covers the body in white with the base coat showing through as round spots head to tail, busier and spottier than a Fewspot.",
+    'Fewspot': "Fewspot is a near-white horse that has 'spotted out', an almost solid white coat with only a handful of faint spots left.",
+    'Varnish Roan': "Varnish Roan is the leopard complex's roaning: a mottled mix of light and dark that spreads over the body, with darker 'varnish marks' over the bony bits.",
+};
+
+// Hidden carriers — genes the horse quietly carries but doesn't visibly show.
+const CARRIER_DESC = {
+    'Carries Pearl': "pearl (one copy, invisible until it's paired with another pearl or a cream)",
+    'Carries Ether': "ether (one copy, hidden)",
+    'Carrying Filigree': "filigree (one copy, hidden)",
+    'Carries Patn': "a leopard pattern gene (patn) with no Lp to switch it on, so it's silent for now",
+    'Carrying Flaxen': "flaxen (one copy, hidden)",
+    'Carrying Sepulchered': "sepulchered (one copy, hidden)",
+    'Carrying Starfield': "starfield (one copy, hidden)",
+    'Carrying Lacquer': "lacquer (one copy, hidden)"
+};
+
+// Anomalies — the rare 'with ...' extras tacked onto a genotype, written from
+// the Trait Index and confirmed against the game.
+const ANOMALY_DESC = {
+    'Bend-or Spots': "scattered dark 'Bend-or' smudges, random patches a shade or two darker than the base coat",
+    'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life",
+    'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume",
+    'Chimera': "a chimera patch, a region that grew from a second genotype, so part of the horse is visibly a different colour",
+    'Geode': "an eye anomaly where the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
+    'Stained Glass': "an eye anomaly where the iris and/or pupil are recoloured to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (this also covers the old 'Ore' trait)",
+    'Ore': "an eye anomaly with a recoloured iris and/or pupil, a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
+    'Kintsugi': "metallic borders and 'cracks' traced onto the horse's white markings in a single colour, like they were mended with gold",
+    'Swarf': "metallic flecks and glitter scattered across the coat, spreading from the topline and hooves, never dense enough to hide the base colour",
+    'Vitiligo': "irregular patches of lost pigment, pale and untinted white, that tend to start on the face, elbows and groin and can spread over the horse's life, sometimes as streaks in the mane and tail",
+    'Oracle': "an eye anomaly where a black or white film is drawn evenly over the whole eyeball, from faint and translucent to fully opaque",
+    'Signet': "a hoof anomaly where the hooves are recoloured to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic",
+    'Pennant': "the mane and tail recoloured to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip)",
+    'Pastiche': "reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems",
+    'Fresco': "lets the crisp edges of the horse's Chimera and/or Somatic markings go soft, low-opacity, blurred, smoky or streaky",
+    'Lantern': "an eye anomaly where a coloured glow comes from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil",
+};
+
+// Variants — the four breed variants. These are a whole different physique the
+// colours above are painted onto, not a colour filter.
+const VARIANT_DESC = {
+    'Heraldic': "On top of all that, it's a **Heraldic**, the nobility's old favourite. Regal carriage, cloven hooves for grip, and coat, mane and tail growth patterns that show off the muscle.",
+    'Puck': "On top of all that, it's a **Puck**, a fey-touched courser bred from archers' mounts. Long ears, a curly protective coat, a braying voice and a mischievous streak.",
+    'Cavedweller': "On top of all that, it's a **Cavedweller**, descended from coursers buried with the kingdom. Generations in magical dark have left it hairless and eyeless, navigating by sound and taste.",
+    'Restored': "On top of all that, it's a **Restored**, a courser whose memory was nearly devoured and then painstakingly mended by the Archivist, held together with binding, leatherwork and aberrant magic. Alive, but forever changed.",
+};
+
+// The leopard-pattern names, so the translator knows which allTraits entries are
+// leopard spotting versus ordinary markings.
+const LEOPARD_PATTERN_NAMES = Object.keys(LEOPARD_DESC);
+
+// a vs an, for the odd spot where we need an article in front of a colour.
+function articleFor(word) {
+    return /^[aeiou]/i.test((word || '').trim()) ? 'an' : 'a';
+}
+
+// Oxford-comma list join: ['a'] -> 'a'; ['a','b'] -> 'a and b';
+// ['a','b','c'] -> 'a, b, and c'.
+function joinList(items) {
+    const list = (items || []).filter(Boolean);
+    if (list.length === 0) return '';
+    if (list.length === 1) return list[0];
+    if (list.length === 2) return list[0] + ' and ' + list[1];
+    return list.slice(0, -1).join(', ') + ', and ' + list[list.length - 1];
+}
+
+// Assemble the plain-English paragraph, in visual order:
+//   body colour (base + dilutions) -> shading/modifiers -> white/markings
+//   -> leopard spotting -> anomalies -> variant -> hidden carriers.
+// Returns text with the coat name wrapped in **bold**. `variant` is optional.
+function genotypeToPlainEnglish(genoString, variant) {
+    if (!genoString || !genoString.trim()) {
+        return "Give me a genotype and I'll tell you what the horse actually looks like. Right now you've given me nothing, which describes a lot of things but not a horse.";
+    }
+
+    const t = resolveTraits(genoString);
+
+    if (t.lethal) {
+        return "Oof. This one's a **lethal white**. Two copies of the wrong white genes (OO, OsOs, WW, or Overo stacked with Ossuary) and the foal doesn't survive to be a colour at all. There's no horse here to describe, just a hard lesson in why you don't double up on those. Sorry.";
+    }
+
+    const { baseCoat, dilutions, coatColor, allTraits, anomalies } = t;
+
+    // Bucket the loose traits by what section of the paragraph they belong in.
+    const modifiers = allTraits.filter(x => MODIFIER_DESC[x]);
+    const markings  = allTraits.filter(x => MARKING_DESC[x]);
+    const leopard   = allTraits.filter(x => LEOPARD_DESC[x]);
+    const carriers  = allTraits.filter(x => CARRIER_DESC[x]);
+
+    const paras = [];
+
+    // 1. Body colour — lead with the fancy coat name in bold, then explain it.
+    let body = `You're looking at ${articleFor(coatColor)} **${coatColor}**.`;
+    const baseDesc = COAT_BODY[baseCoat];
+    if (baseDesc) body += ' ' + baseDesc.charAt(0).toUpperCase() + baseDesc.slice(1) + '.';
+    dilutions.forEach(d => { if (DILUTION_DESC[d]) body += ' ' + DILUTION_DESC[d]; });
+    paras.push(body);
+
+    // 2. Shading / modifiers.
+    if (modifiers.length) {
+        paras.push(modifiers.map(m => MODIFIER_DESC[m]).join(' '));
+    }
+
+    // 3. White / markings.
+    if (markings.length) {
+        paras.push(markings.map(m => MARKING_DESC[m]).join(' '));
+    }
+
+    // 4. Leopard spotting.
+    if (leopard.length) {
+        paras.push(leopard.map(l => LEOPARD_DESC[l]).join(' '));
+    }
+
+    // 5. Anomalies — the weird 'with ...' extras.
+    if (anomalies.length) {
+        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a.toLowerCase()} (an anomaly I don't have notes on yet)`);
+        paras.push('Then there are the anomalies: ' + joinList(descs) + '.');
+    }
+
+    // 6. Variant — a whole-horse skin over everything above.
+    if (variant && variant !== 'Standard' && VARIANT_DESC[variant]) {
+        paras.push(VARIANT_DESC[variant]);
+    }
+
+    // 7. Hidden carriers — genes it quietly totes but doesn't show.
+    if (carriers.length) {
+        paras.push('Hiding in the bloodline, not visible on the horse: it carries ' +
+            joinList(carriers.map(c => CARRIER_DESC[c])) + '.');
+    }
+
+    return paras.join('\n\n');
+}
+
+// --- Translate tab UI handlers ---------------------------------------------
+
+// Escape HTML, then promote **bold** to <strong> and blank lines to paragraph
+// breaks. Deliberately tiny — the translator's text is the only input.
+function renderTranslateMarkup(text) {
+    const esc = String(text)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc
+        .split(/\n\n+/)
+        .map(p => '<p>' + p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') + '</p>')
+        .join('');
+}
+
+// Refresh the "pick from your collection" dropdown on the Translate tab.
+// Called on tab show and whenever the collection changes (e.g. CSV upload).
+function populateTranslateCollectionSelect() {
+    const sel = document.getElementById('translateFromColl');
+    if (!sel) return;
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Pick from collection…</option>' +
+        collection.map((h, i) =>
+            `<option value="${i}">${(h.name || 'Unnamed').replace(/</g, '&lt;')} (${(h.temperament || '—').replace(/</g, '&lt;')})</option>`
+        ).join('');
+    if (cur && Number(cur) < collection.length) sel.value = cur;
+    const row = document.getElementById('translateSourceRow');
+    if (row) row.style.display = collection.length ? '' : 'none';
+}
+
+// Drop a chosen collection horse into the genotype box + variant picker.
+function fillTranslateFromCollection(idx) {
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const h = collection[Number(idx)];
+    if (!h) return;
+    const ta = document.getElementById('translateGeno');
+    if (ta) ta.value = h.genotype || '';
+    const varSel = document.getElementById('translateVariant');
+    if (varSel) varSel.value = h.variant && h.variant !== 'Standard' ? h.variant : '';
+}
+
+// Run the translator and paint the result card.
+function translateGenotype() {
+    const ta = document.getElementById('translateGeno');
+    const varSel = document.getElementById('translateVariant');
+    const out = document.getElementById('translateResult');
+    if (!out) return;
+
+    const geno = ta ? ta.value.trim() : '';
+    const variant = varSel ? varSel.value : '';
+
+    if (!geno) {
+        out.style.display = 'block';
+        out.innerHTML = renderTranslateMarkup(
+            "You haven't given me a genotype yet. Paste one in, or pick a horse from your collection, and I'll tell you what it looks like."
+        );
+        return;
+    }
+
+    const prose = genotypeToPlainEnglish(geno, variant);
+    const pheno = genotypeToPhenotype(geno);
+
+    // Warn about anything the engine ignored, so a typo can't silently change
+    // the horse (e.g. `patn` should be `npatn`).
+    const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
+    let warnHtml = '';
+    if (unknownGenes.length || unknownAnomalies.length) {
+        const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const bits = [];
+        if (unknownGenes.length) bits.push((unknownGenes.length === 1 ? 'gene' : 'genes') + ' ' + unknownGenes.map(g => `<code>${esc(g)}</code>`).join(', '));
+        if (unknownAnomalies.length) bits.push((unknownAnomalies.length === 1 ? 'anomaly' : 'anomalies') + ' ' + unknownAnomalies.map(a => `<code>${esc(a)}</code>`).join(', '));
+        warnHtml =
+            `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${bits.join(' and ')}, ` +
+            `so ${unknownGenes.length + unknownAnomalies.length === 1 ? 'it was' : 'they were'} left out of the description below. ` +
+            `Check the spelling (one copy is usually written like <code>nLp</code>, two like <code>LpLp</code>).</div>`;
+    }
+
+    out.style.display = 'block';
+    out.innerHTML =
+        warnHtml +
+        `<div class="translate-pheno"><span class="translate-pheno-label">Short version:</span> ${String(pheno).replace(/</g, '&lt;')}</div>` +
+        `<div class="translate-prose">${renderTranslateMarkup(prose)}</div>`;
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function getGeneAlleles(gene) {
@@ -1000,6 +1399,16 @@ function generateFoals() {
             window.AppShell.toast(`Both parents are ${parent1.temperament} — they can't breed.`, 'error');
         }
         return;
+    }
+
+    // Non-blocking: warn if either parent's genotype carries tokens the engine
+    // will ignore, so a typo doesn't quietly skew the foals (getGeneAlleles
+    // would otherwise treat an unknown gene as a single always-inherited allele).
+    const u1 = findUnknownTokens(parent1.genotype);
+    const u2 = findUnknownTokens(parent2.genotype);
+    const stray = [...new Set([...u1.unknownGenes, ...u1.unknownAnomalies, ...u2.unknownGenes, ...u2.unknownAnomalies])];
+    if (stray.length && window.AppShell && window.AppShell.toast) {
+        window.AppShell.toast('Ignoring unrecognised token(s): ' + stray.join(', ') + '. Check for a typo.', 'error');
     }
 
     // Every breeding has a 5% chance of twins (handbook): two separate foals,
