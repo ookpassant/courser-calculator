@@ -851,6 +851,16 @@ const ANOMALY_DESC = {
     'Lantern': "Lantern is an eye anomaly: a coloured glow coming from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil.",
 };
 
+// Pennant is normally one colour per strand, root to tip — but with Flaxen,
+// Silver or Pangare in the coat, a single strand can now run through several
+// colours root to tip. Described from the horse's own traits, not as a rule.
+function describePennant(allTraits) {
+    const strandMods = ['Flaxen', 'Silver', 'Pangare'].filter(m => (allTraits || []).includes(m));
+    if (!strandMods.length) return ANOMALY_DESC['Pennant'];
+    return "Pennant recolours the mane and tail to any colour, or several, from a few streaks to the whole thing. And with " +
+        joinList(strandMods) + " in the coat, a single strand can run through multiple colours root to tip.";
+}
+
 // Variants — the four breed variants. These are a whole different physique the
 // colours above are painted onto, not a colour filter.
 const VARIANT_DESC = {
@@ -929,9 +939,13 @@ function genotypeToPlainEnglish(genoString, variant) {
     }
 
     // 5. Anomalies — the weird 'with ...' extras. Each names its own trait, so
-    //    they read as separate sentences rather than one comma-run list.
+    //    they read as separate sentences rather than one comma-run list. Pennant
+    //    depends on the rest of the horse, so it's described dynamically.
     if (anomalies.length) {
-        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a} is an anomaly I don't have notes on yet.`);
+        const descs = anomalies.map(a => {
+            if (a === 'Pennant') return describePennant(allTraits);
+            return ANOMALY_DESC[a] || `${a} is an anomaly I don't have notes on yet.`;
+        });
         paras.push(descs.join(' '));
     }
 
