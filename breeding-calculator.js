@@ -739,22 +739,22 @@ const CARRIER_DESC = {
 // Anomalies — the rare 'with ...' extras tacked onto a genotype, written from
 // the Trait Index and confirmed against the game.
 const ANOMALY_DESC = {
-    'Bend-or Spots': "scattered dark 'Bend-or' smudges, random patches a shade or two darker than the base coat",
-    'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life",
-    'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume",
-    'Chimera': "a chimera patch, a region that grew from a second genotype, so part of the horse is visibly a different colour",
-    'Geode': "an eye anomaly where the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
-    'Stained Glass': "an eye anomaly where the iris and/or pupil are recoloured to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (this also covers the old 'Ore' trait)",
-    'Ore': "an eye anomaly with a recoloured iris and/or pupil, a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
-    'Kintsugi': "metallic borders and 'cracks' traced onto the horse's white markings in a single colour, like they were mended with gold",
-    'Swarf': "metallic flecks and glitter scattered across the coat, spreading from the topline and hooves, never dense enough to hide the base colour",
-    'Vitiligo': "irregular patches of lost pigment, pale and untinted white, that tend to start on the face, elbows and groin and can spread over the horse's life, sometimes as streaks in the mane and tail",
-    'Oracle': "an eye anomaly where a black or white film is drawn evenly over the whole eyeball, from faint and translucent to fully opaque",
-    'Signet': "a hoof anomaly where the hooves are recoloured to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic",
-    'Pennant': "the mane and tail recoloured to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip)",
-    'Pastiche': "reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems",
-    'Fresco': "lets the crisp edges of the horse's Chimera and/or Somatic markings go soft, low-opacity, blurred, smoky or streaky",
-    'Lantern': "an eye anomaly where a coloured glow comes from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil",
+    'Bend-or Spots': "Bend-or Spots scatter dark smudges across the coat, random patches a shade or two darker than the base.",
+    'Birdcatcher Spots': "Birdcatcher Spots are small, random white flecks that can come and go over the horse's life.",
+    'Brindle': "Brindle lays faint vertical striping down the body, like a brindle dog wearing a horse costume.",
+    'Chimera': "Chimera gives it a patch that grew from a second genotype, so part of the horse is visibly a different colour.",
+    'Geode': "Geode is an eye anomaly: the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil.",
+    'Stained Glass': "Stained Glass recolours the iris and/or pupil to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (it also covers the old 'Ore' trait).",
+    'Ore': "Ore is an old name for a recoloured iris and/or pupil, now folded into Stained Glass.", // legacy alias, normalised to Stained Glass upstream
+    'Kintsugi': "Kintsugi traces metallic borders and 'cracks' onto the horse's white markings in a single colour, like they were mended with gold.",
+    'Swarf': "Swarf scatters metallic flecks and glitter across the coat, spreading from the topline and hooves, never dense enough to hide the base colour.",
+    'Vitiligo': "Vitiligo spreads irregular patches of lost pigment, pale untinted white, usually starting on the face, elbows and groin, sometimes streaking the mane and tail as it grows over the horse's life.",
+    'Oracle': "Oracle is an eye anomaly: a black or white film drawn evenly over the whole eyeball, anywhere from faint and translucent to fully opaque.",
+    'Signet': "Signet recolours the hooves to a colour unnatural for the horse, in vertical top-to-bottom sections, but never metallic.",
+    'Pennant': "Pennant recolours the mane and tail to any colour, or several, from a few streaks to the whole thing (each strand one colour root to tip).",
+    'Pastiche': "Pastiche reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems.",
+    'Fresco': "Fresco softens the crisp edges of the horse's Chimera and/or Somatic markings, letting them go low-opacity, blurred, smoky or streaky.",
+    'Lantern': "Lantern is an eye anomaly: a coloured glow coming from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil.",
 };
 
 // Variants — the four breed variants. These are a whole different physique the
@@ -832,10 +832,11 @@ function genotypeToPlainEnglish(genoString, variant) {
         paras.push(leopard.map(l => LEOPARD_DESC[l]).join(' '));
     }
 
-    // 5. Anomalies — the weird 'with ...' extras.
+    // 5. Anomalies — the weird 'with ...' extras. Each names its own trait, so
+    //    they read as separate sentences rather than one comma-run list.
     if (anomalies.length) {
-        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a.toLowerCase()} (an anomaly I don't have notes on yet)`);
-        paras.push('Then there are the anomalies: ' + joinList(descs) + '.');
+        const descs = anomalies.map(a => ANOMALY_DESC[a] || `${a} is an anomaly I don't have notes on yet.`);
+        paras.push(descs.join(' '));
     }
 
     // 6. Variant — a whole-horse skin over everything above.
