@@ -794,7 +794,7 @@ const MARKING_DESC = {
     'Splash': "Splash looks like the horse was dipped in white paint from below: white legs, a white belly, and a broad white face, all with clean crisp edges.",
     'Roan': "Roan mixes white hairs evenly through the body while the head and legs stay solid, giving a frosted, silvered look over the base colour.",
     'Sabino': "Sabino adds ragged, roaned white: tall stockings, a blazed face, jagged belly spots and flecking, all with soft, lacy edges.",
-    'Rabicano': "Rabicano frosts white at the flanks and tail base, the classic 'coon tail' barring, without touching the rest much.",
+    'Rabicano': "Rabicano frosts white rib-like markings near the flanks, without touching the rest much.",
     'Dominant White': "Dominant White covers most or all of the coat in white, spreading up from the horse's underside so some base colour may linger along the topline, with roaned, grainy edges like Sabino.",
     'Cuirass': "Cuirass is a solid, symmetrical white breastplate across the upper chest and part of the shoulders, like armour. It never touches the mane, crosses the topline, or reaches the belly.",
     'Crowned': "Crowned sets symmetrical white on the head, either a single marking or a tidy arrangement of simple stripes, spots and splotches.",
