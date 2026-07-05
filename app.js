@@ -171,6 +171,9 @@
     if (area === 'search') { renderRecentQueries(); refreshSearchGate(); }
     if (area === 'calculator') populateParentPickers();
     if (area === 'translate' && window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
+    // Privacy-first analytics: record which tool was opened, nothing else.
+    // No-op unless a PostHog key is set in index.html.
+    if (window.posthog) window.posthog.capture('tool_opened', { tool: area });
   }
 
   // Legacy shim the engine calls (fillParents -> 'foals', fillChimera -> 'chimera')
