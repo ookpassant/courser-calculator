@@ -65,6 +65,13 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '5 Jul 2026', items: [
+      'Genotype boxes now understand "patn" as one copy of the leopard pattern gene (same as "npatn"), instead of silently ignoring it and quietly changing the horse. Anything the engine still doesn\'t recognise is flagged now rather than dropped: the Translate tab warns you, and so does the live hint on the parent and collection boxes. Also fixed anomalies after a second "+" being dropped, so "Kintsugi + Swarf" keeps both.',
+      'Imports stopped silently swallowing bad data. A CSV row with no genotype is now shown as skipped instead of vanishing, a blank temperament is kept and flagged rather than dropping the whole row, and an unrecognised variant or genotype token is called out in the preview (and on bookmarklet imports). The Foal Generator warns too, if a parent\'s genotype has a token it doesn\'t recognise.'
+    ] },
+    { date: '4 Jul 2026', items: [
+      'New Translate tab: paste a genotype (or pick one from your collection) and get a plain-English description of what the horse actually looks like, from body colour through markings, anomalies and variant. It reads the same trait data the phenotype namer does, so the two can never disagree.'
+    ] },
     { date: '16 Jun 2026', items: [
       'Smart Search now finds pairs for Prism, Opal and Harlequin. They were never scored, so any search including one of them returned no matches even when your horses could make it. Reported by Criri.'
     ] },
@@ -144,6 +151,7 @@
     calculator: { label: 'Foal Generator', crumb: 'Foal Generator' },
     chimera: { label: 'Chimera Calculator', crumb: 'Chimera Calculator' },
     scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' },
+    translate: { label: 'Translate', crumb: 'Translate' },
     collection: { label: 'Collection', crumb: 'Collection' }
   };
 
@@ -162,6 +170,7 @@
     if (area === 'collection') renderCollection();
     if (area === 'search') { renderRecentQueries(); refreshSearchGate(); }
     if (area === 'calculator') populateParentPickers();
+    if (area === 'translate' && window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
   }
 
   // Legacy shim the engine calls (fillParents -> 'foals', fillChimera -> 'chimera')
@@ -193,6 +202,14 @@
     if (!hasE || !hasA) {
       return { ok: false, error: 'Expected a base coat: an E/e and an A/a pair (e.g. "Ee Aa…").' };
     }
+    // Base coat is fine; warn (don't block) about any token the engine would
+    // silently ignore, so a typo like `patn` doesn't pass as "valid".
+    const unknown = (typeof findUnknownTokens === 'function')
+      ? findUnknownTokens(s) : { unknownGenes: [], unknownAnomalies: [] };
+    const stray = unknown.unknownGenes.concat(unknown.unknownAnomalies);
+    if (stray.length) {
+      return { ok: true, warning: `Not recognised (ignored): ${stray.join(', ')}. Check for a typo.` };
+    }
     return { ok: true };
   }
 
@@ -202,10 +219,15 @@
     const run = () => {
       const v = validateGenotype(ta.value);
       if (!ta.value.trim()) { hint.textContent = ''; ta.classList.remove('invalid', 'valid'); return; }
-      hint.textContent = v.ok ? '✓ Looks like a valid genotype' : v.error;
-      hint.className = 'geno-hint ' + (v.ok ? 'ok' : 'bad');
+      if (v.ok && v.warning) {
+        hint.textContent = '⚠ ' + v.warning;
+        hint.className = 'geno-hint warn';
+      } else {
+        hint.textContent = v.ok ? '✓ Looks like a valid genotype' : v.error;
+        hint.className = 'geno-hint ' + (v.ok ? 'ok' : 'bad');
+      }
       ta.classList.toggle('invalid', !v.ok);
-      ta.classList.toggle('valid', v.ok);
+      ta.classList.toggle('valid', v.ok && !v.warning);
     };
     ta.addEventListener('input', run);
   }
@@ -342,45 +364,81 @@
     reader.readAsText(file);
   }
 
+  // Collect everything questionable about a row, so the preview can show it
+  // instead of importing it silently: bad/unrecognised genotype tokens, a
+  // missing or unknown temperament, and an unknown variant.
+  function rowIssues(h) {
+    const out = [];
+    const v = validateGenotype(h.genotype);
+    if (!v.ok) out.push(v.error);
+    else if (v.warning) out.push(v.warning);
+    if (!h.temperament) out.push('no temperament');
+    else if (typeof isKnownTemperament === 'function' && !isKnownTemperament(h.temperament)) {
+      out.push(`unknown temperament "${h.temperament}"`);
+    }
+    if (h.variant && typeof isKnownVariant === 'function' && !isKnownVariant(h.variant)) {
+      out.push(`unknown variant "${h.variant}" (imports as Standard)`);
+    }
+    return out;
+  }
+
   function previewCSV(text) {
-    const parsed = window.parseHorsesCSV ? window.parseHorsesCSV(text) : { horses: [], headerDetected: false };
+    const parsed = window.parseHorsesCSV ? window.parseHorsesCSV(text) : { horses: [], headerDetected: false, skipped: [] };
     const rows = parsed.horses;
-    // Validate each row's genotype for a friendly error list.
-    let bad = 0;
+    const skipped = parsed.skipped || [];
+    let flagged = 0;
     const preview = rows.map(h => {
-      const v = validateGenotype(h.genotype);
-      if (!v.ok) bad++;
-      return { h, v };
+      const issues = rowIssues(h);
+      if (issues.length) flagged++;
+      return { h, issues };
     });
-    wizardHorses = rows; // we still import all rows; invalid ones just flagged
+    wizardHorses = rows; // we still import all rows; flagged ones just noted
 
     $('#wizDetect').textContent = parsed.headerDetected
       ? 'Header row detected. Mapping by column name.'
       : 'No header row. Assuming order: ID, Name, Genotype, Temperament, Variant.';
     $('#wizCount').textContent = rows.length;
-    $('#wizBad').textContent = bad;
-    $('#wizBadWrap').style.display = bad ? 'block' : 'none';
+    $('#wizBad').textContent = flagged;
+    $('#wizBadWrap').style.display = flagged ? 'block' : 'none';
+    const skipWrap = $('#wizSkipWrap');
+    if (skipWrap) {
+      skipWrap.style.display = skipped.length ? 'block' : 'none';
+      const skipEl = $('#wizSkip'); if (skipEl) skipEl.textContent = skipped.length;
+    }
 
-    $('#wizPreview').innerHTML = preview.slice(0, 50).map(({ h, v }) => `
-      <tr class="${v.ok ? '' : 'row-bad'}">
+    $('#wizPreview').innerHTML = preview.slice(0, 50).map(({ h, issues }) => `
+      <tr class="${issues.length ? 'row-bad' : ''}">
         <td>${esc(h._row)}</td><td>${esc(h.name)}</td>
         <td><code>${esc(h.genotype)}</code></td>
-        <td>${esc(h.temperament)}</td>
-        <td>${v.ok ? '✓' : '⚠ ' + esc(v.error)}</td>
+        <td>${h.temperament ? esc(h.temperament) : '<span class="cell-missing">—</span>'}</td>
+        <td>${issues.length ? '⚠ ' + esc(issues.join('; ')) : '✓'}</td>
       </tr>`).join('');
 
-    if (!rows.length) { toast("Couldn't spot any horses in that file.", 'error'); return; }
+    if (!rows.length) {
+      toast(skipped.length
+        ? `No importable rows — ${skipped.length} row(s) had no genotype.`
+        : "Couldn't spot any horses in that file.", 'error');
+      return;
+    }
     gotoStep(2);
   }
 
   function confirmImport() {
+    // Normalise variant + temperament on the way in (a typo'd variant lands as
+    // Standard, an unknown temperament as blank) — now surfaced in the preview
+    // above, so it's a shown correction, not a silent one. Drop the _row helper.
+    const clean = wizardHorses.map(h => ({
+      id: h.id, name: h.name, genotype: h.genotype,
+      temperament: (typeof normalizeTemperament === 'function') ? normalizeTemperament(h.temperament) : (h.temperament || ''),
+      variant: (typeof normalizeVariant === 'function') ? normalizeVariant(h.variant) : (h.variant || 'Standard')
+    }));
     const mode = $('input[name="wizMode"]:checked');
     const replace = !mode || mode.value === 'replace';
-    if (replace) setCollection(wizardHorses);
-    else setCollection(collection.concat(wizardHorses));
-    $('#wizDone').textContent = `${wizardHorses.length} horse(s) ${replace ? 'imported' : 'added'}.`;
+    if (replace) setCollection(clean);
+    else setCollection(collection.concat(clean));
+    $('#wizDone').textContent = `${clean.length} horse(s) ${replace ? 'imported' : 'added'}.`;
     gotoStep(3);
-    toast(`${wizardHorses.length} horse(s) ${replace ? 'imported' : 'added'}.`, 'success');
+    toast(`${clean.length} horse(s) ${replace ? 'imported' : 'added'}.`, 'success');
   }
 
   function exportCSV() {
@@ -475,6 +533,12 @@
         const t = b.dataset.nav;
         if (t === 'landing') showView('landing'); else showArea(t);
       }));
+
+    // Translate tab: fill genotype/variant when a collection horse is picked
+    const tSel = $('#translateFromColl');
+    if (tSel) tSel.addEventListener('change', () => {
+      if (tSel.value !== '' && window.fillTranslateFromCollection) window.fillTranslateFromCollection(tSel.value);
+    });
 
     // Collection toolbar
     const cs = $('#collSearch'); if (cs) cs.addEventListener('input', renderCollection);
@@ -612,11 +676,15 @@
   //   ?add=1&name=...&geno=...&temp=...&variant=...&id=...
   //   ?p1geno=...&p1temp=...&p1variant=...&p1name=...  (and p2*)
   // =========================================================================
+  // Delegate to the engine's normalisers (single source of truth); the inline
+  // maps are only a fallback if breeding-calculator.js somehow didn't load.
   function normTemp(v) {
+    if (typeof normalizeTemperament === 'function') return normalizeTemperament(v);
     const m = { choleric: 'Choleric', melancholic: 'Melancholic', phlegmatic: 'Phlegmatic', sanguine: 'Sanguine' };
     return m[(v || '').trim().toLowerCase()] || '';
   }
   function normVariant(v) {
+    if (typeof normalizeVariant === 'function') return normalizeVariant(v);
     const m = { standard: 'Standard', heraldic: 'Heraldic', puck: 'Puck', cavedweller: 'Cavedweller', restored: 'Restored' };
     return m[(v || '').trim().toLowerCase()] || 'Standard';
   }
@@ -642,6 +710,17 @@
       collection.push(horse);
       setCollection(collection);
       toast('Imported ' + horse.name + ' to your stable.', 'success');
+      // Surface anything we quietly corrected or ignored, rather than letting a
+      // bad genotype/variant slip into the collection unnoticed.
+      const warns = [];
+      const uk = (typeof findUnknownTokens === 'function') ? findUnknownTokens(horse.genotype) : { unknownGenes: [], unknownAnomalies: [] };
+      const stray = uk.unknownGenes.concat(uk.unknownAnomalies);
+      if (stray.length) warns.push('unrecognised in the genotype: ' + stray.join(', '));
+      const rawVar = (q.get('variant') || '').trim();
+      if (rawVar && typeof isKnownVariant === 'function' && !isKnownVariant(rawVar)) warns.push(`variant "${rawVar}" wasn't recognised (set to Standard)`);
+      const rawTemp = (q.get('temp') || '').trim();
+      if (rawTemp && typeof isKnownTemperament === 'function' && !isKnownTemperament(rawTemp)) warns.push(`temperament "${rawTemp}" wasn't recognised`);
+      if (warns.length) toast('Heads up on ' + horse.name + ': ' + warns.join('; ') + '.', 'error');
       showArea('collection');
       acted = true;
     }
@@ -774,6 +853,7 @@
       if (!opts || opts.persist !== false) persistCollection();
       renderCollection();
       populateParentPickers();
+      if (window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
       refreshSearchGate();
     }
   };
