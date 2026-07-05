@@ -152,6 +152,7 @@
     chimera: { label: 'Chimera Calculator', crumb: 'Chimera Calculator' },
     scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' },
     translate: { label: 'Translate', crumb: 'Translate' },
+    layers: { label: 'Layers', crumb: 'Layers' },
     collection: { label: 'Collection', crumb: 'Collection' }
   };
 
@@ -171,6 +172,7 @@
     if (area === 'search') { renderRecentQueries(); refreshSearchGate(); }
     if (area === 'calculator') populateParentPickers();
     if (area === 'translate' && window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
+    if (area === 'layers' && window.populateLayersCollectionSelect) window.populateLayersCollectionSelect();
     // Privacy-first analytics: record which tool was opened, nothing else.
     // No-op unless a PostHog key is set in index.html.
     if (window.posthog) window.posthog.capture('tool_opened', { tool: area });
@@ -543,6 +545,12 @@
       if (tSel.value !== '' && window.fillTranslateFromCollection) window.fillTranslateFromCollection(tSel.value);
     });
 
+    // Layers tab: same, fill from the picked collection horse
+    const lSel = $('#layersFromColl');
+    if (lSel) lSel.addEventListener('change', () => {
+      if (lSel.value !== '' && window.fillLayersFromCollection) window.fillLayersFromCollection(lSel.value);
+    });
+
     // Collection toolbar
     const cs = $('#collSearch'); if (cs) cs.addEventListener('input', renderCollection);
     const cso = $('#collSort'); if (cso) cso.addEventListener('change', renderCollection);
@@ -857,6 +865,7 @@
       renderCollection();
       populateParentPickers();
       if (window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
+      if (window.populateLayersCollectionSelect) window.populateLayersCollectionSelect();
       refreshSearchGate();
     }
   };
