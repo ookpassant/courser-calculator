@@ -669,9 +669,9 @@ const DILUTION_DESC = {
     'Ether': "Ether is Dungeon Coursers' own dilution, the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray, silvery-blue along the topline and purple-pink under the barrel and face. The skin is gray, the eyes gray or brown.",
     'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown, or a warm grayish brown on a black base. The tone stays even, the skin pink, the eyes gray or green.",
     'Cream Pearl': "Cream and pearl together push the coat pale and luminous, a soft warm gold with pearl's shiny caramel sheen.",
-    'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It dyes the base coat a bold, saturated hue: the vivid reds, greens and blues of Madder, Woad and Weld.",
-    'Tapestry Cream': "Tapestry dyes the coat a bold, saturated hue, and a dose of cream then softens and lightens it.",
-    'Tapestry Pearl': "Tapestry dyes the coat a bold, saturated hue, with pearl's shiny warm sheen layered over the top.",
+    'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It paints the base coat one of three bold, saturated dyes: Madder red on a bay, Weld yellow on a chestnut, and Woad blue on a black. Stack another dilution on top and those shift, in places, into oranges, greens and purples.",
+    'Tapestry Cream': "Tapestry dyes the coat one of its three bold hues (Madder red, Weld yellow or Woad blue), and a dose of cream then softens and lightens it.",
+    'Tapestry Pearl': "Tapestry dyes the coat one of its three bold hues, and pearl pushes it further into the oranges, greens and purples: Madder red to Tyrian purple, Weld yellow to Ochre orange, Woad blue to Phthalo green.",
 };
 
 // Modifiers — the shading, sooting, greying and stranger DC treatments.
