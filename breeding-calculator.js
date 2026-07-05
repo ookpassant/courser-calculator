@@ -561,11 +561,10 @@ function genotypeToPhenotype(genoString) {
 // resolveTraits(), so a horse's description can never disagree with its
 // phenotype name.
 //
-// Confidence note: the coats, dilutions, modifiers, white/leopard markings,
-// the four variants, and most anomalies are written from the official Trait
-// Index (and the real-world genetics they're based on). Only four anomalies are
-// still best guesses, marked `// REVIEW`: Bend-or Spots, Birdcatcher Spots,
-// Brindle, and Chimera — they weren't in the Trait Index text on hand.
+// Confidence note: every description here is written from the official Trait
+// Index and the real-world genetics they're based on. Bend-or Spots,
+// Birdcatcher Spots, Brindle and Chimera weren't in the Trait Index text, so
+// they were confirmed with Ook directly.
 // ============================================================================
 
 // Base body colour — the canvas everything else paints onto.
@@ -651,14 +650,13 @@ const CARRIER_DESC = {
     'Carrying Lacquer': "lacquer (one copy, hidden)"
 };
 
-// Anomalies — the rare 'with ...' extras tacked onto a genotype. Most are now
-// written from the Trait Index; the four still marked // REVIEW weren't in the
-// text and need checking against the game.
+// Anomalies — the rare 'with ...' extras tacked onto a genotype, written from
+// the Trait Index and confirmed against the game.
 const ANOMALY_DESC = {
-    'Bend-or Spots': "scattered dark 'Bend-or' smudges, random patches a shade or two darker than the base coat", // REVIEW
-    'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life", // REVIEW
-    'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume", // REVIEW
-    'Chimera': "a chimera patch, a region that grew from a second genotype, so part of the horse is visibly a different colour", // REVIEW
+    'Bend-or Spots': "scattered dark 'Bend-or' smudges, random patches a shade or two darker than the base coat",
+    'Birdcatcher Spots': "small, random white flecks (Birdcatcher spots) that can come and go over the horse's life",
+    'Brindle': "faint vertical striping down the body, like a brindle dog wearing a horse costume",
+    'Chimera': "a chimera patch, a region that grew from a second genotype, so part of the horse is visibly a different colour",
     'Geode': "an eye anomaly where the sclera (the white of the eye) is recoloured to a single unnatural colour, sometimes with a reshaped pupil",
     'Stained Glass': "an eye anomaly where the iris and/or pupil are recoloured to shades unnatural for the horse, sometimes metallic, sometimes split into heterochromia (this also covers the old 'Ore' trait)",
     'Ore': "an eye anomaly with a recoloured iris and/or pupil, a legacy name that's now folded into Stained Glass", // legacy alias, normalised to Stained Glass upstream
