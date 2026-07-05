@@ -336,7 +336,7 @@
             posthog.init(POSTHOG_KEY, {
                 api_host: POSTHOG_HOST,
                 person_profiles: 'identified_only', /* no profiles for anonymous visitors */
-                persistence: 'memory',              /* cookieless: no persistent identifier stored */
+                persistence: 'localStorage',        /* cookieless (no cookies); anonymous device id in localStorage, like the saved collection */
                 autocapture: false,                 /* no automatic click/element capture */
                 capture_pageview: true,
                 capture_pageleave: false,
