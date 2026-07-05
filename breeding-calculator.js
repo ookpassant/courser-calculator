@@ -1109,10 +1109,37 @@ const TRAIT_PAGE_IDS = {
     'Somatic': 69, 'Dapple': 86
 };
 
-// Escape a trait name, and wrap it in a link to its trait page when one exists.
+// The specific fancy coats (Tyrian Pearl, Perlino, Amber Champagne, ...) don't
+// each get a trait page; they share the page for their dilution. Map that
+// dilution string to its page so a coat like Tyrian Pearl links to Tapestry
+// Pearl (which shows all three of its colours). Double Cream + X shares the
+// plain Cream + X page.
+const DILUTION_PAGE_ID = {
+    'Double Cream': 11, 'Pearl': 12, 'Champagne': 10, 'Ether': 19,
+    'Cream Pearl': 15, 'Tapestry Cream': 13, 'Tapestry Ether': 21, 'Pearl Ether': 22,
+    'Pearl Champagne': 16, 'Cream Champagne': 14, 'Double Cream Champagne': 14,
+    'Cream Ether': 20, 'Double Cream Ether': 20, 'Tapestry Champagne': 17,
+    'Cream Pearl Champagne': 23, 'Cream Pearl Ether': 24, 'Tapestry Cream Ether': 25,
+    'Tapestry Pearl': 18, 'Tapestry Pearl Champagne': 26, 'Tapestry Pearl Ether': 27,
+    'Tapestry Cream Champagne': 28
+};
+
+// Build coat name -> trait page id: a coat with its own page (Buckskin, Madder,
+// ...) keeps it; every other coat falls back to its dilution's page.
+const COAT_PAGE_IDS = {};
+Object.keys(SPECIAL_COAT_NAMES).forEach(key => {
+    const name = SPECIAL_COAT_NAMES[key];
+    if (COAT_PAGE_IDS[name]) return;
+    if (TRAIT_PAGE_IDS[name]) { COAT_PAGE_IDS[name] = TRAIT_PAGE_IDS[name]; return; }
+    const dilStr = key.slice(key.indexOf('_') + 1);
+    if (DILUTION_PAGE_ID[dilStr]) COAT_PAGE_IDS[name] = DILUTION_PAGE_ID[dilStr];
+});
+
+// Escape a trait or coat name, and wrap it in a link to its trait page when one
+// exists (trait pages first, then the coat-to-dilution fallback).
 function traitLink(name) {
     const esc = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const id = TRAIT_PAGE_IDS[name];
+    const id = TRAIT_PAGE_IDS[name] || COAT_PAGE_IDS[name];
     if (!id) return esc;
     return `<a class="layer-link" href="${TRAIT_PAGE_BASE}${id}" target="_blank" rel="noopener noreferrer">${esc}</a>`;
 }
