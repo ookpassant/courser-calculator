@@ -66,7 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '5 Jul 2026', items: [
-      'Genotype boxes now flag tokens they don\'t recognise instead of silently ignoring them. A typo like "patn" (it should be "npatn") used to just vanish and quietly change the horse. The Translate tab warns you, and the live hint on the parent and collection boxes does too. Also fixed anomalies after a second "+" being dropped, so "Kintsugi + Swarf" now keeps both.'
+      'Genotype boxes now understand "patn" as one copy of the leopard pattern gene (same as "npatn"), instead of silently ignoring it and quietly changing the horse. Anything the engine still doesn\'t recognise is flagged now rather than dropped: the Translate tab warns you, and so does the live hint on the parent and collection boxes. Also fixed anomalies after a second "+" being dropped, so "Kintsugi + Swarf" keeps both.'
     ] },
     { date: '4 Jul 2026', items: [
       'New Translate tab: paste a genotype (or pick one from your collection) and get a plain-English description of what the horse actually looks like, from body colour through markings, anomalies and variant. It reads the same trait data the phenotype namer does, so the two can never disagree.'
