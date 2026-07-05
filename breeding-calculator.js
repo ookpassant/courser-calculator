@@ -356,9 +356,18 @@ const WHITE_MARKING_NAMES = {
     'SbW': 'Sabino Dominant White', 'WSb': 'Sabino Dominant White'
 };
 
+// Gene tokens people write by hand that mean a canonical allele pair. `patn`
+// is the leopard pattern gene written bare; it means one copy, i.e. `npatn`.
+// Normalising here (not just in the phenotype namer) means breeding, lethal
+// checks and validation all agree on the same allele pair.
+const GENE_TOKEN_ALIASES = { 'patn': 'npatn' };
+function normalizeGeneToken(tok) {
+    return Object.prototype.hasOwnProperty.call(GENE_TOKEN_ALIASES, tok) ? GENE_TOKEN_ALIASES[tok] : tok;
+}
+
 function parseGenotype(genoString) {
     const parts = genoString.trim().split('+');
-    const genes = parts[0].trim().split(/\s+/);
+    const genes = parts[0].trim().split(/\s+/).filter(Boolean).map(normalizeGeneToken);
     // Everything after the first + is anomalies. Accept both separators so
     // "+ A, B" and "+ A + B" both parse instead of quietly dropping the rest.
     let anomalies = parts.length > 1
@@ -375,9 +384,9 @@ function parseGenotype(genoString) {
 
 // ---------------------------------------------------------------------------
 // Token validation. parseGenotype silently drops any token it doesn't know, so
-// a typo like `patn` (should be `npatn`) quietly changes the horse with no
-// warning. This checks tokens against the SAME name tables the engine reads
-// from, so "known" can never drift from "actually does something".
+// an unrecognised token quietly changes the horse with no warning. This checks
+// tokens (after alias normalisation) against the SAME name tables the engine
+// reads from, so "known" can never drift from "actually does something".
 // ---------------------------------------------------------------------------
 const KNOWN_GENE_TOKENS = new Set([
     ...Object.keys(DILUTION_NAMES),
@@ -403,7 +412,7 @@ function findUnknownTokens(genoString) {
     const s = (genoString || '').trim();
     if (!s) return { unknownGenes: [], unknownAnomalies: [] };
     const parts = s.split('+');
-    const geneTokens = parts[0].trim().split(/\s+/).filter(Boolean);
+    const geneTokens = parts[0].trim().split(/\s+/).filter(Boolean).map(normalizeGeneToken);
     // Everything after the first + is anomalies, separated by commas or pluses.
     const anomalyTokens = parts.slice(1).join(',').split(',').map(a => a.trim()).filter(Boolean);
 
@@ -884,7 +893,7 @@ function translateGenotype() {
         warnHtml =
             `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${bits.join(' and ')}, ` +
             `so ${unknownGenes.length + unknownAnomalies.length === 1 ? 'it was' : 'they were'} left out of the description below. ` +
-            `Check for a typo (for example, a single leopard pattern copy is <code>npatn</code>, not <code>patn</code>).</div>`;
+            `Check the spelling (one copy is usually written like <code>nLp</code>, two like <code>LpLp</code>).</div>`;
     }
 
     out.style.display = 'block';
