@@ -311,6 +311,28 @@
         .translate-warn strong { color: var(--dc-legendary); }
         .translate-warn code { background: rgba(200,144,46,0.14); padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
 
+        /* ---- Layers (visual hierarchy) ---- */
+        .layers-result { margin-top: 28px; }
+        .layers-empty { color: var(--dc-slate); font-size: 0.95rem; }
+        .layers-coat { color: var(--dc-ink); font-size: 0.95rem; margin: 0 0 18px; }
+        .layers-coat strong { color: var(--dc-mauve); font-weight: 700; }
+        .layer-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; align-items: start; }
+        .layer-col { background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius); box-shadow: var(--shadow-card); overflow: hidden; }
+        .layer-col-head { background: var(--dc-mauve-wash); border-bottom: 1px solid var(--dc-line); font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-mauve-deep); text-align: center; padding: 12px 10px; }
+        .layer-list { list-style: none; margin: 0; padding: 14px 16px; }
+        .layer-list > li { color: var(--dc-ink); font-size: 0.9rem; line-height: 1.5; padding-left: 16px; position: relative; margin-bottom: 8px; }
+        .layer-list > li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--dc-mauve-soft); }
+        .layer-group { list-style: none; }
+        .layer-group-label { font-weight: 700; color: var(--dc-mauve); }
+        .layer-group ul { list-style: none; margin: 6px 0 0; padding: 0 0 0 14px; }
+        .layer-group ul li { color: var(--dc-slate); font-size: 0.88rem; line-height: 1.5; padding-left: 14px; position: relative; margin-bottom: 4px; }
+        .layer-group ul li::before { content: '◦'; position: absolute; left: 0; top: -1px; color: var(--dc-mauve-soft); }
+        .layer-ref { font-style: italic; color: var(--dc-slate); }
+        .layer-base { font-weight: 700; }
+        .layer-base .layer-base-tag { display: inline-block; font-family: var(--font-stamp); font-size: 0.6rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); margin-right: 6px; font-weight: 400; }
+        .layers-note { margin-top: 16px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--dc-slate); font-size: 0.85rem; line-height: 1.5; }
+        @media (max-width: 700px) { .layer-cols { grid-template-columns: 1fr; } }
+
         /* ---- Responsive ---- */
         @media (max-width: 600px) {
             .parents-container { grid-template-columns: 1fr; }
@@ -358,6 +380,7 @@
             <button class="nav-link" data-area="chimera">Chimera</button>
             <button class="nav-link" data-area="scroll">Scroll Generator</button>
             <button class="nav-link" data-area="translate">Translate</button>
+            <button class="nav-link" data-area="layers">Layers</button>
             <button class="nav-link" data-area="search">Smart Search</button>
             <button class="nav-link" data-area="collection">Collection</button>
         </div>
@@ -400,6 +423,11 @@
                     <button class="tool-card" data-nav="translate">
                         <h3>Translate</h3>
                         <p>Paste a genotype and get a plain-English description of what the horse actually looks like.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="layers">
+                        <h3>Layers</h3>
+                        <p>Paste a genotype and lay its traits out in the visual hierarchy, in paint order from the base coat up.</p>
                         <span class="tool-open">Open →</span>
                     </button>
                     <button class="tool-card" data-nav="search">
@@ -655,6 +683,37 @@
                     <button class="generate-btn" onclick="translateGenotype()">Translate to Plain English</button>
 
                     <div class="translate-result" id="translateResult" style="display:none;"></div>
+                </section>
+
+                <!-- Area: Layers (genotype → visual hierarchy / paint order) -->
+                <section class="area" id="area-layers">
+                    <h1 class="page-title">Layers</h1>
+                    <p class="blurb">Paste a genotype (or pick one from your collection) and I'll lay its traits out in the official visual hierarchy, so you can design in layers from the base coat up.</p>
+
+                    <div class="info-box">
+                        <p><strong>How to read it:</strong> within each column the top layer covers the ones below it. Traits on the same line sit on the same level. Only the traits this horse actually has are shown, so it reads as a paint order.</p>
+                    </div>
+
+                    <div class="parent-source-row" id="layersSourceRow" style="display:none;">
+                        <label for="layersFromColl">From Collection:</label>
+                        <select id="layersFromColl"><option value="">Pick from collection…</option></select>
+                    </div>
+
+                    <label for="layersGeno">Genotype:</label>
+                    <textarea id="layersGeno" placeholder="Ee Aa nCr nT + Brindle"></textarea>
+
+                    <label for="layersVariant">Variant (Optional):</label>
+                    <select id="layersVariant">
+                        <option value="">Standard</option>
+                        <option value="Heraldic">Heraldic</option>
+                        <option value="Puck">Puck</option>
+                        <option value="Cavedweller">Cavedweller</option>
+                        <option value="Restored">Restored</option>
+                    </select>
+
+                    <button class="generate-btn" onclick="showLayers()">Lay out the layers</button>
+
+                    <div class="layers-result" id="layersResult" style="display:none;"></div>
                 </section>
 
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->

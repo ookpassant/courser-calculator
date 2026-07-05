@@ -1044,6 +1044,183 @@ function translateGenotype() {
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// ============================================================================
+// DESIGN LAYERS — the visual hierarchy
+// ----------------------------------------------------------------------------
+// Lays a horse's traits out in the official stacking order, so a designer can
+// paint from the base coat up. Each column is an ordered list of layers (top of
+// the list covers the layers below it). Rows with several traits sit on the same
+// level; `group` rows are the categorised buckets from the reference chart.
+// Trait names match what resolveTraits/parseGenotype produce. A few chart items
+// the engine doesn't model yet (Free White, Dapple, Somatic) simply never match.
+// ============================================================================
+
+const LAYER_COLORS_MARKINGS = [
+    { traits: ['Chimera', 'Vitiligo'], join: ' & ' },
+    { traits: ['Lacquer'] },
+    { traits: ['Swarf', 'Kintsugi'] },
+    { traits: ['Gray'] },
+    { group: 'White Modifiers', traits: ['Opal', 'Starfield', 'Vellum'] },
+    { group: 'White Markings', traits: ['Ossuary', 'Filigree', 'Shroud', 'Harlequin', 'Fewspot', 'Varnish Roan', 'Snowcap', 'Rabicano', 'Leopard', 'False Leopard', 'Blanched', 'Dominant White', 'Sabino', 'Overo', 'Collar', 'Cuirass', 'Crowned', 'Blanket', 'Girdle', 'Tobiano', 'Splash', 'Snowflake', 'Roan', 'Free White'] },
+    { group: 'Coat Anomalies', traits: ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle'] },
+    { traits: ['Prism'] },
+    { group: 'Mane/Tail Modifiers', traits: ['Silver', 'Flaxen', 'Pangare'] },
+    { group: 'Coat Modifiers', traits: ['Tabard', 'Dun', 'Sooty', 'Dapple'] },
+    { traits: ['Pennant'] },
+    { base: true }
+];
+
+const LAYER_EYES = [
+    { traits: ['Chimera'] },
+    { traits: ['Lantern'] },
+    { traits: ['Oracle'] },
+    { traits: ['Stained Glass'] },
+    { traits: ['Geode'] },
+    { base: true }
+];
+
+const LAYER_SKIN_HOOF = [
+    { traits: ['Chimera', 'Vitiligo'], join: ' & ' },
+    { traits: ['Signet'] },
+    { traits: ['Lacquer'] },
+    { traits: ['Gilt', 'Illuminated', 'Sepulchered'] },
+    { whiteMarkings: true },
+    { base: true }
+];
+
+// Every trait that lives in the White Markings bucket, for the "White Markings"
+// reference line in the Skin & Hoof column.
+const WHITE_MARKING_LAYER_SET = new Set(LAYER_COLORS_MARKINGS.find(r => r.group === 'White Markings').traits);
+
+// Filter one column definition down to the layers THIS horse actually has.
+function buildLayerColumn(def, has, coatColor, hasWhiteMarking) {
+    const rows = [];
+    def.forEach(entry => {
+        if (entry.base) { rows.push({ base: true, coat: coatColor }); return; }
+        if (entry.whiteMarkings) { if (hasWhiteMarking) rows.push({ items: ['White Markings'], ref: true }); return; }
+        const present = entry.traits.filter(t => has.has(t));
+        if (!present.length) return;
+        if (entry.group) rows.push({ group: entry.group, items: present });
+        else rows.push({ items: present, join: entry.join || ', ' });
+    });
+    return rows;
+}
+
+// Resolve a genotype into the three visual-hierarchy columns, keeping only the
+// layers this horse has (plus the base coat, which every horse has).
+function genotypeToLayers(genoString, variant) {
+    const t = resolveTraits(genoString);
+    if (t.lethal) return { lethal: true };
+
+    const { coatColor, allTraits, anomalies } = t;
+    // Visible traits only — hidden carriers ('Carries Pearl', 'Carrying Flaxen'
+    // and friends) aren't painted on the horse, so they don't belong in a layer.
+    const has = new Set([
+        ...allTraits.filter(x => !/^Carr(ies|ying) /.test(x)),
+        ...anomalies
+    ]);
+    const hasWhiteMarking = [...has].some(x => WHITE_MARKING_LAYER_SET.has(x));
+
+    return {
+        lethal: false,
+        coatColor,
+        variant: variant && variant !== 'Standard' ? variant : '',
+        columns: [
+            { title: 'Colors & Markings', rows: buildLayerColumn(LAYER_COLORS_MARKINGS, has, coatColor, hasWhiteMarking) },
+            { title: 'Eye Colors', rows: buildLayerColumn(LAYER_EYES, has, coatColor, hasWhiteMarking) },
+            { title: 'Skin & Hoof Colors', rows: buildLayerColumn(LAYER_SKIN_HOOF, has, coatColor, hasWhiteMarking) }
+        ],
+        // The Somatic note is only worth showing when a shaping anomaly is present.
+        somatic: has.has('Fresco') || has.has('Pastiche')
+    };
+}
+
+// --- Layers tab UI handlers -------------------------------------------------
+
+function populateLayersCollectionSelect() {
+    const sel = document.getElementById('layersFromColl');
+    if (!sel) return;
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Pick from collection…</option>' +
+        collection.map((h, i) =>
+            `<option value="${i}">${(h.name || 'Unnamed').replace(/</g, '&lt;')} (${(h.temperament || '—').replace(/</g, '&lt;')})</option>`
+        ).join('');
+    if (cur && Number(cur) < collection.length) sel.value = cur;
+    const row = document.getElementById('layersSourceRow');
+    if (row) row.style.display = collection.length ? '' : 'none';
+}
+
+function fillLayersFromCollection(idx) {
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const h = collection[Number(idx)];
+    if (!h) return;
+    const ta = document.getElementById('layersGeno');
+    if (ta) ta.value = h.genotype || '';
+    const varSel = document.getElementById('layersVariant');
+    if (varSel) varSel.value = h.variant && h.variant !== 'Standard' ? h.variant : '';
+}
+
+// Render one column's rows top-to-bottom (top covers the layers below).
+function renderLayerColumn(col) {
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const rowsHtml = col.rows.map(r => {
+        if (r.base) {
+            return `<li class="layer-base"><span class="layer-base-tag">Base Coat Color</span> ${esc(r.coat || '')}</li>`;
+        }
+        if (r.group) {
+            return `<li class="layer-group"><span class="layer-group-label">${esc(r.group)}</span>` +
+                `<ul>` + r.items.map(i => `<li>${esc(i)}</li>`).join('') + `</ul></li>`;
+        }
+        const cls = r.ref ? ' class="layer-ref"' : '';
+        return `<li${cls}>${esc(r.items.join(r.join || ', '))}</li>`;
+    }).join('');
+    return `<div class="layer-col"><div class="layer-col-head">${esc(col.title)}</div><ul class="layer-list">${rowsHtml}</ul></div>`;
+}
+
+function showLayers() {
+    const ta = document.getElementById('layersGeno');
+    const varSel = document.getElementById('layersVariant');
+    const out = document.getElementById('layersResult');
+    if (!out) return;
+
+    const geno = ta ? ta.value.trim() : '';
+    const variant = varSel ? varSel.value : '';
+
+    if (!geno) {
+        out.style.display = 'block';
+        out.innerHTML = '<p class="layers-empty">Paste a genotype, or pick a horse from your collection, and I\'ll lay its traits out in paint order.</p>';
+        return;
+    }
+
+    const data = genotypeToLayers(geno, variant);
+    out.style.display = 'block';
+
+    if (data.lethal) {
+        out.innerHTML = '<p class="layers-empty">This genotype is a lethal white, so there\'s no horse to lay out. Check the Translate tab for why.</p>';
+        return;
+    }
+
+    // Warn about tokens the engine ignored, same as Translate, so a typo can't
+    // quietly drop a layer.
+    const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
+    let warnHtml = '';
+    if (unknownGenes.length || unknownAnomalies.length) {
+        const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const stray = unknownGenes.concat(unknownAnomalies);
+        warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
+    }
+
+    const coatLine = `<p class="layers-coat">Painting <strong>${String(data.coatColor).replace(/</g, '&lt;')}</strong>${data.variant ? ' (' + String(data.variant).replace(/</g, '&lt;') + ')' : ''}, top layer covers the ones below. Work up from the base.</p>`;
+    const cols = data.columns.map(renderLayerColumn).join('');
+    const somatic = data.somatic
+        ? '<p class="layers-note">Somatic-shaping anomaly present (Fresco/Pastiche): a Somatic marking sits on whichever layer it affects, so its place shifts with the gene it targets.</p>'
+        : '';
+
+    out.innerHTML = warnHtml + coatLine + `<div class="layer-cols">${cols}</div>` + somatic;
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function getGeneAlleles(gene) {
     // Crack a gene open like a dungeon chest to see what alleles are inside
     if (gene === 'EE' || gene === 'Ee' || gene === 'ee') {
