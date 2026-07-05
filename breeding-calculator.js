@@ -647,10 +647,8 @@ function genotypeToPhenotype(genoString) {
 // resolveTraits(), so a horse's description can never disagree with its
 // phenotype name.
 //
-// Confidence note: every description here is written from the official Trait
-// Index and the real-world genetics they're based on. Bend-or Spots,
-// Birdcatcher Spots, Brindle and Chimera weren't in the Trait Index text, so
-// they were confirmed with Ook directly.
+// Every description here is drawn from the official Trait Index and the
+// real-world genetics the traits are based on.
 // ============================================================================
 
 // Base body colour — the canvas everything else paints onto.
@@ -663,10 +661,9 @@ const COAT_BODY = {
 // The total coat colour, keyed by the fancy coat NAME (coatColor). Read first,
 // before the base-and-dilution breakdown, so the description leads with what the
 // whole horse actually looks like. Plain base coats (Bay/Black/Chestnut) aren't
-// here — COAT_BODY already describes those in full.
-// Real-world coats and the Tapestry dyes (Madder red, Woad blue, Weld yellow;
-// with pearl: Tyrian purple, Phthalo green, Ochre orange) are solid; the exotic
-// multi-dilution composites are best-guess wording pending a look-over.
+// here — COAT_BODY already describes those in full. The Tapestry dyes are Madder
+// red, Woad blue and Weld yellow; with pearl they shift to Tyrian purple, Phthalo
+// green and Ochre orange.
 const COAT_DESC = {
     // Cream
     'Buckskin': "It's a golden tan body with black points, mane and tail.",
@@ -830,8 +827,8 @@ const CARRIER_DESC = {
     'Carrying Lacquer': "lacquer (one copy, hidden)"
 };
 
-// Anomalies — the rare 'with ...' extras tacked onto a genotype, written from
-// the Trait Index and confirmed against the game.
+// Anomalies — the rare 'with ...' extras tacked onto a genotype, drawn from the
+// Trait Index.
 const ANOMALY_DESC = {
     'Bend-or Spots': "Bend-or Spots scatter dark smudges across the coat, random patches a shade or two darker than the base.",
     'Birdcatcher Spots': "Birdcatcher Spots are small, random white flecks that can come and go over the horse's life.",
