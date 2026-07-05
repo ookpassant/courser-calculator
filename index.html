@@ -152,6 +152,7 @@
         .geno-hint { display: block; font-size: 0.78rem; margin: -8px 0 12px; min-height: 1em; }
         .geno-hint.ok { color: var(--dc-uncommon); }
         .geno-hint.bad { color: var(--dc-blood); }
+        .geno-hint.warn { color: var(--dc-legendary); }
 
         /* ---- Buttons ---- */
         .generate-btn, .dc-btn { width: 100%; padding: 12px 18px; border-radius: var(--radius-sm); font-family: var(--font-stamp); font-size: 0.85rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); cursor: pointer; line-height: 1.4; border: 1px solid var(--dc-moss); background: var(--dc-moss); color: var(--dc-white); transition: background var(--ease-default), transform var(--ease-snappy), box-shadow var(--ease-default); margin-bottom: 24px; }
@@ -305,6 +306,9 @@
         .translate-prose p { color: var(--dc-ink); font-size: 1rem; line-height: 1.65; margin: 0 0 14px; }
         .translate-prose p:last-child { margin-bottom: 0; }
         .translate-prose strong { color: var(--dc-mauve); font-weight: 700; }
+        .translate-warn { background: #fbf3e1; border: 1px solid var(--dc-legendary-edge); border-left: 4px solid var(--dc-legendary); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 18px; color: var(--dc-ink); font-size: 0.9rem; line-height: 1.5; }
+        .translate-warn strong { color: var(--dc-legendary); }
+        .translate-warn code { background: rgba(200,144,46,0.14); padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
 
         /* ---- Responsive ---- */
         @media (max-width: 600px) {

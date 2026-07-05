@@ -359,7 +359,11 @@ const WHITE_MARKING_NAMES = {
 function parseGenotype(genoString) {
     const parts = genoString.trim().split('+');
     const genes = parts[0].trim().split(/\s+/);
-    let anomalies = parts.length > 1 ? parts[1].trim().split(',').map(a => a.trim()).filter(Boolean) : [];
+    // Everything after the first + is anomalies. Accept both separators so
+    // "+ A, B" and "+ A + B" both parse instead of quietly dropping the rest.
+    let anomalies = parts.length > 1
+        ? parts.slice(1).join(',').split(',').map(a => a.trim()).filter(Boolean)
+        : [];
     // Stained Glass and Ore were merged into one trait, called "Stained Glass"
     // going forward. Older coursers may still list "Ore" (or both), so normalise
     // any "Ore" to "Stained Glass" and de-duplicate.
@@ -367,6 +371,47 @@ function parseGenotype(genoString) {
     anomalies = anomalies.filter((a, i) => anomalies.indexOf(a) === i);
 
     return { genes, anomalies };
+}
+
+// ---------------------------------------------------------------------------
+// Token validation. parseGenotype silently drops any token it doesn't know, so
+// a typo like `patn` (should be `npatn`) quietly changes the horse with no
+// warning. This checks tokens against the SAME name tables the engine reads
+// from, so "known" can never drift from "actually does something".
+// ---------------------------------------------------------------------------
+const KNOWN_GENE_TOKENS = new Set([
+    ...Object.keys(DILUTION_NAMES),
+    ...Object.keys(MODIFIER_NAMES),
+    ...Object.keys(WHITE_MARKING_NAMES),
+    // Leopard complex + the two recessive carriers the engine reads by hand;
+    // these don't live in any name table.
+    'nLp', 'LpLp', 'npatn', 'patnpatn', 'nprl', 'ner'
+]);
+
+// A base-coat allele pair at the E or A locus (Ee, EE, ee, Aa, aa, ...).
+function isBaseCoatToken(tok) {
+    return /^[Ee]{1,2}$/.test(tok) || /^[Aa]{1,2}$/.test(tok);
+}
+
+function isKnownGeneToken(tok) {
+    return isBaseCoatToken(tok) || KNOWN_GENE_TOKENS.has(tok);
+}
+
+// Report anything in a genotype the engine would silently ignore.
+// Returns { unknownGenes: [...], unknownAnomalies: [...] }.
+function findUnknownTokens(genoString) {
+    const s = (genoString || '').trim();
+    if (!s) return { unknownGenes: [], unknownAnomalies: [] };
+    const parts = s.split('+');
+    const geneTokens = parts[0].trim().split(/\s+/).filter(Boolean);
+    // Everything after the first + is anomalies, separated by commas or pluses.
+    const anomalyTokens = parts.slice(1).join(',').split(',').map(a => a.trim()).filter(Boolean);
+
+    const knownAnoms = new Set(ALL_ANOMALIES.map(a => a.toLowerCase()).concat('ore'));
+    return {
+        unknownGenes: geneTokens.filter(t => !isKnownGeneToken(t)),
+        unknownAnomalies: anomalyTokens.filter(t => !knownAnoms.has(t.toLowerCase()))
+    };
 }
 
 function isLethalWhite(genes) {
@@ -827,8 +872,24 @@ function translateGenotype() {
     const prose = genotypeToPlainEnglish(geno, variant);
     const pheno = genotypeToPhenotype(geno);
 
+    // Warn about anything the engine ignored, so a typo can't silently change
+    // the horse (e.g. `patn` should be `npatn`).
+    const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
+    let warnHtml = '';
+    if (unknownGenes.length || unknownAnomalies.length) {
+        const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const bits = [];
+        if (unknownGenes.length) bits.push((unknownGenes.length === 1 ? 'gene' : 'genes') + ' ' + unknownGenes.map(g => `<code>${esc(g)}</code>`).join(', '));
+        if (unknownAnomalies.length) bits.push((unknownAnomalies.length === 1 ? 'anomaly' : 'anomalies') + ' ' + unknownAnomalies.map(a => `<code>${esc(a)}</code>`).join(', '));
+        warnHtml =
+            `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${bits.join(' and ')}, ` +
+            `so ${unknownGenes.length + unknownAnomalies.length === 1 ? 'it was' : 'they were'} left out of the description below. ` +
+            `Check for a typo (for example, a single leopard pattern copy is <code>npatn</code>, not <code>patn</code>).</div>`;
+    }
+
     out.style.display = 'block';
     out.innerHTML =
+        warnHtml +
         `<div class="translate-pheno"><span class="translate-pheno-label">Short version:</span> ${String(pheno).replace(/</g, '&lt;')}</div>` +
         `<div class="translate-prose">${renderTranslateMarkup(prose)}</div>`;
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

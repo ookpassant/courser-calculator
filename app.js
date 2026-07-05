@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '5 Jul 2026', items: [
+      'Genotype boxes now flag tokens they don\'t recognise instead of silently ignoring them. A typo like "patn" (it should be "npatn") used to just vanish and quietly change the horse. The Translate tab warns you, and the live hint on the parent and collection boxes does too. Also fixed anomalies after a second "+" being dropped, so "Kintsugi + Swarf" now keeps both.'
+    ] },
     { date: '4 Jul 2026', items: [
       'New Translate tab: paste a genotype (or pick one from your collection) and get a plain-English description of what the horse actually looks like, from body colour through markings, anomalies and variant. It reads the same trait data the phenotype namer does, so the two can never disagree.'
     ] },
@@ -198,6 +201,14 @@
     if (!hasE || !hasA) {
       return { ok: false, error: 'Expected a base coat: an E/e and an A/a pair (e.g. "Ee Aa…").' };
     }
+    // Base coat is fine; warn (don't block) about any token the engine would
+    // silently ignore, so a typo like `patn` doesn't pass as "valid".
+    const unknown = (typeof findUnknownTokens === 'function')
+      ? findUnknownTokens(s) : { unknownGenes: [], unknownAnomalies: [] };
+    const stray = unknown.unknownGenes.concat(unknown.unknownAnomalies);
+    if (stray.length) {
+      return { ok: true, warning: `Not recognised (ignored): ${stray.join(', ')}. Check for a typo.` };
+    }
     return { ok: true };
   }
 
@@ -207,10 +218,15 @@
     const run = () => {
       const v = validateGenotype(ta.value);
       if (!ta.value.trim()) { hint.textContent = ''; ta.classList.remove('invalid', 'valid'); return; }
-      hint.textContent = v.ok ? '✓ Looks like a valid genotype' : v.error;
-      hint.className = 'geno-hint ' + (v.ok ? 'ok' : 'bad');
+      if (v.ok && v.warning) {
+        hint.textContent = '⚠ ' + v.warning;
+        hint.className = 'geno-hint warn';
+      } else {
+        hint.textContent = v.ok ? '✓ Looks like a valid genotype' : v.error;
+        hint.className = 'geno-hint ' + (v.ok ? 'ok' : 'bad');
+      }
       ta.classList.toggle('invalid', !v.ok);
-      ta.classList.toggle('valid', v.ok);
+      ta.classList.toggle('valid', v.ok && !v.warning);
     };
     ta.addEventListener('input', run);
   }
