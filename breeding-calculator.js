@@ -1092,6 +1092,31 @@ const LAYER_SKIN_HOOF = [
 // reference line in the Skin & Hoof column.
 const WHITE_MARKING_LAYER_SET = new Set(LAYER_COLORS_MARKINGS.find(r => r.group === 'White Markings').traits);
 
+// Trait Index page IDs (dungeon-coursers.com/world/traits?id=N), so each layer
+// links to its official trait page. Base coats: only the ones with their own
+// page are here (the fancier coats share a dilution's page and aren't 1:1).
+const TRAIT_PAGE_BASE = 'https://dungeon-coursers.com/world/traits?id=';
+const TRAIT_PAGE_IDS = {
+    // Base coats with their own page
+    'Bay': 1, 'Black': 2, 'Chestnut': 3, 'Palomino': 4, 'Smoky Black': 5, 'Buckskin': 6, 'Weld': 7, 'Woad': 8, 'Madder': 9,
+    // White markings
+    'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92,
+    // Modifiers
+    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97,
+    // Anomalies
+    'Bend-or Spots': 59, 'Birdcatcher Spots': 60, 'Brindle': 61, 'Chimera': 62, 'Geode': 63, 'Ore': 64, 'Stained Glass': 65, 'Kintsugi': 66, 'Swarf': 67, 'Vitiligo': 68, 'Oracle': 74, 'Signet': 75, 'Pennant': 76, 'Pastiche': 77, 'Fresco': 87, 'Lantern': 95,
+    // Free markings the engine doesn't model but may name
+    'Somatic': 69, 'Dapple': 86
+};
+
+// Escape a trait name, and wrap it in a link to its trait page when one exists.
+function traitLink(name) {
+    const esc = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const id = TRAIT_PAGE_IDS[name];
+    if (!id) return esc;
+    return `<a class="layer-link" href="${TRAIT_PAGE_BASE}${id}" target="_blank" rel="noopener noreferrer">${esc}</a>`;
+}
+
 // Filter one column definition down to the layers THIS horse actually has.
 function buildLayerColumn(def, has, coatColor, hasWhiteMarking) {
     const rows = [];
@@ -1166,14 +1191,14 @@ function renderLayerColumn(col) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const rowsHtml = col.rows.map(r => {
         if (r.base) {
-            return `<li class="layer-base"><span class="layer-base-tag">Base Coat Color</span> ${esc(r.coat || '')}</li>`;
+            return `<li class="layer-base"><span class="layer-base-tag">Base Coat Color</span> ${traitLink(r.coat || '')}</li>`;
         }
         if (r.group) {
             return `<li class="layer-group"><span class="layer-group-label">${esc(r.group)}</span>` +
-                `<ul>` + r.items.map(i => `<li>${esc(i)}</li>`).join('') + `</ul></li>`;
+                `<ul>` + r.items.map(i => `<li>${traitLink(i)}</li>`).join('') + `</ul></li>`;
         }
-        const cls = r.ref ? ' class="layer-ref"' : '';
-        return `<li${cls}>${esc(r.items.join(r.join || ', '))}</li>`;
+        if (r.ref) return `<li class="layer-ref">${esc(r.items.join(r.join || ', '))}</li>`;
+        return `<li>${r.items.map(traitLink).join(r.join || ', ')}</li>`;
     }).join('');
     return `<div class="layer-col"><div class="layer-col-head">${esc(col.title)}</div><ul class="layer-list">${rowsHtml}</ul></div>`;
 }
