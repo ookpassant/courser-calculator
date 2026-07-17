@@ -61,6 +61,12 @@
         .dc-navbar .nav-link { font-family: var(--font-stamp); font-size: 0.8rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-white); text-decoration: none; opacity: 0.78; border: none; background: none; border-bottom: 2px solid transparent; padding: 0 0 2px; cursor: pointer; transition: opacity var(--ease-default); }
         .dc-navbar .nav-link:hover { opacity: 1; }
         .dc-navbar .nav-link.active { opacity: 1; border-bottom-color: var(--dc-white); }
+        .nav-group { position: relative; }
+        .nav-group .nav-caret { font-size: 0.6rem; margin-left: 5px; opacity: 0.7; }
+        .nav-group.has-active > .nav-group-btn { opacity: 1; border-bottom-color: var(--dc-white); }
+        .nav-group.open > .nav-group-btn { opacity: 1; }
+        .nav-menu { display: none; position: absolute; top: calc(100% + 8px); left: -14px; min-width: 175px; background: var(--dc-mauve); border: 1px solid rgba(255,255,255,0.22); border-radius: var(--radius-sm); box-shadow: var(--shadow-nav); padding: 12px 14px; z-index: 900; flex-direction: column; align-items: flex-start; gap: 12px; }
+        .nav-group.open .nav-menu { display: flex; }
         .dc-navbar .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
         .offline-indicator { font-family: var(--font-stamp); font-size: 0.6rem; letter-spacing: var(--tracking-stamp); color: var(--dc-moss); }
         .offline-indicator.is-offline { color: #f0c674; }
@@ -299,6 +305,13 @@
         .toast-x { margin-left: auto; background: none; border: none; color: var(--dc-slate); font-size: 1.1rem; cursor: pointer; line-height: 1; }
 
         .panel-footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--dc-line); text-align: center; color: var(--dc-slate); font-size: 0.85rem; }
+        .panel-footer .privacy-note { margin-top: 8px; font-size: 0.9em; }
+        .panel-footer .privacy-note summary { cursor: pointer; display: inline-block; opacity: 0.85; list-style: none; }
+        .panel-footer .privacy-note summary::-webkit-details-marker { display: none; }
+        .panel-footer .privacy-note summary::before { content: '▸ '; font-size: 0.8em; }
+        .panel-footer .privacy-note[open] summary::before { content: '▾ '; }
+        .panel-footer .privacy-note summary:hover { opacity: 1; text-decoration: underline dotted; }
+        .panel-footer .privacy-note p { margin: 6px auto 0; max-width: 560px; }
 
         /* ---- Translate result card ---- */
         .translate-result { margin-top: 28px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-mauve); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-card); }
@@ -384,12 +397,22 @@
         <button class="brand" data-nav="landing">Bloodline</button>
         <span class="unofficial-badge" title="A fan-made tool, not affiliated with Dungeon Coursers">Unofficial</span>
         <div class="nav-links">
-            <button class="nav-link" data-area="calculator">Foal Generator</button>
-            <button class="nav-link" data-area="chimera">Chimera</button>
-            <button class="nav-link" data-area="scroll">Scroll Generator</button>
-            <button class="nav-link" data-area="translate">Translate</button>
-            <button class="nav-link" data-area="layers">Layers</button>
-            <button class="nav-link" data-area="search">Smart Search</button>
+            <div class="nav-group">
+                <button class="nav-link nav-group-btn" aria-haspopup="true" aria-expanded="false">Breeding<span class="nav-caret">▾</span></button>
+                <div class="nav-menu">
+                    <button class="nav-link" data-area="calculator">Foal Generator</button>
+                    <button class="nav-link" data-area="chimera">Chimera</button>
+                    <button class="nav-link" data-area="search">Smart Search</button>
+                </div>
+            </div>
+            <div class="nav-group">
+                <button class="nav-link nav-group-btn" aria-haspopup="true" aria-expanded="false">Design<span class="nav-caret">▾</span></button>
+                <div class="nav-menu">
+                    <button class="nav-link" data-area="translate">Translate</button>
+                    <button class="nav-link" data-area="layers">Layers</button>
+                    <button class="nav-link" data-area="scroll">Scroll Generator</button>
+                </div>
+            </div>
             <button class="nav-link" data-area="collection">Collection</button>
         </div>
         <div class="nav-right">
@@ -473,9 +496,11 @@
                 <div class="changelog" id="changelog"></div>
 
                 <div class="panel-footer">
-                    An unofficial fan tool for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> · Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths
-                    <br><span style="font-size:0.9em; color:var(--dc-slate);">Like this project? It's free forever, but Ook runs on <a href="https://ko-fi.com/ookpassant" target="_blank" rel="noopener">caffeine ☕</a>.</span>
-                    <br><span style="font-size:0.9em; color:var(--dc-slate);">Privacy-first analytics only: no cookies, no session recording, no personal data, and your genotypes never leave your browser. Anonymous counters record which tools get used — names only, never what you type. If a feedback prompt appears, only what you choose to write in it is sent. Do Not Track is respected.</span>
+                    An unofficial fan tool for <a href="https://dungeon-coursers.com" target="_blank" rel="noopener">Dungeon Coursers</a> · Built by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> because she can't maths · free forever, but Ook runs on <a href="https://ko-fi.com/ookpassant" target="_blank" rel="noopener">caffeine ☕</a>
+                    <details class="privacy-note">
+                        <summary>Privacy: no cookies, no accounts, and your genotypes never leave your browser</summary>
+                        <p>No session recording and no personal data. Anonymous counters record which tools get used — event names only, never what you type. If a feedback prompt appears, only what you choose to write in it is sent. Do Not Track is respected.</p>
+                    </details>
                 </div>
             </div>
         </div>

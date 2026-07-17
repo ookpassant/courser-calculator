@@ -65,6 +65,11 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '17 Jul 2026', items: [
+      'New Layers tab: paste a genotype (or pick a horse from your collection) and its traits are laid out in the official visual hierarchy — Colors & Markings, Eye Colors, and Skin & Hoof Colors columns, base coat at the bottom, each layer covering the ones below — so you can paint in order. Every trait links to its Trait Index page.',
+      'The header menu is sorted into Breeding and Design dropdowns, so it stays tidy as tools get added.',
+      'A small feedback prompt may appear once asking if anything is difficult or confusing. Totally optional, and it only sends what you type into it.'
+    ] },
     { date: '5 Jul 2026', items: [
       'Genotype boxes now understand "patn" as one copy of the leopard pattern gene (same as "npatn"), instead of silently ignoring it and quietly changing the horse. Anything the engine still doesn\'t recognise is flagged now rather than dropped: the Translate tab warns you, and so does the live hint on the parent and collection boxes. Also fixed anomalies after a second "+" being dropped, so "Kintsugi + Swarf" keeps both.',
       'Imports stopped silently swallowing bad data. A CSV row with no genotype is now shown as skipped instead of vanishing, a blank temperament is kept and flagged rather than dropping the whole row, and an unrecognised variant or genotype token is called out in the preview (and on bookmarklet imports). The Foal Generator warns too, if a parent\'s genotype has a token it doesn\'t recognise.'
@@ -200,8 +205,21 @@
       const section = $('#area-' + area);
       if (!on && section && section.classList.contains('active')) activeAreaHidden = true;
     });
+    // A dropdown group with every tool switched off disappears with them.
+    $$('.nav-group').forEach((g) => {
+      const anyVisible = $$('.nav-link[data-area]', g).some((el) => el.style.display !== 'none');
+      g.style.display = anyVisible ? '' : 'none';
+    });
     const inApp = $('#view-app') && $('#view-app').classList.contains('active');
     if (activeAreaHidden && inApp) showArea(firstEnabledArea());
+  }
+
+  function closeNavGroups() {
+    $$('.nav-group.open').forEach(g => {
+      g.classList.remove('open');
+      const b = $('.nav-group-btn', g);
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
   }
 
   function showView(view) {
@@ -214,6 +232,8 @@
     showView('app');
     $$('.area').forEach(a => a.classList.toggle('active', a.id === 'area-' + area));
     $$('.nav-link[data-area]').forEach(l => l.classList.toggle('active', l.dataset.area === area));
+    // Light up a dropdown's group button when the active tool lives inside it.
+    $$('.nav-group').forEach(g => g.classList.toggle('has-active', !!$('.nav-link.active', g)));
     const crumb = $('#breadcrumbCurrent');
     if (crumb) crumb.textContent = AREAS[area].crumb;
     if (area === 'collection') renderCollection();
@@ -583,7 +603,19 @@
   function wire() {
     // Nav
     $$('.nav-link[data-area]').forEach(l =>
-      l.addEventListener('click', (e) => { e.preventDefault(); showArea(l.dataset.area); }));
+      l.addEventListener('click', (e) => { e.preventDefault(); closeNavGroups(); showArea(l.dataset.area); }));
+
+    // Nav dropdown groups: click toggles, outside click or Escape closes.
+    $$('.nav-group-btn').forEach(btn =>
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const group = btn.parentElement;
+        const wasOpen = group.classList.contains('open');
+        closeNavGroups();
+        if (!wasOpen) { group.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+      }));
+    document.addEventListener('click', closeNavGroups);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNavGroups(); });
     $$('[data-nav]').forEach(b =>
       b.addEventListener('click', (e) => {
         e.preventDefault();
