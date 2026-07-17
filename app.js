@@ -156,13 +156,61 @@
     collection: { label: 'Collection', crumb: 'Collection' }
   };
 
+  // =========================================================================
+  // Per-tool feature flags (PostHog)
+  // -------------------------------------------------------------------------
+  // Each tool is gated by a PostHog feature flag, so a tool can be turned off
+  // for everyone (rollout 0%) or rolled out gradually without a deploy.
+  // Fails open: a tool only hides when its flag loads AND evaluates to false.
+  // No PostHog (ad-blocker, Do Not Track, blanked key) or no flag -> every
+  // tool stays visible.
+  // =========================================================================
+  const TOOL_FLAGS = {
+    calculator: 'tool-foal-generator',
+    chimera: 'tool-chimera',
+    scroll: 'tool-scroll-generator',
+    translate: 'tool-translate',
+    layers: 'tool-layers',
+    search: 'tool-smart-search',
+    collection: 'tool-collection'
+  };
+
+  function toolEnabled(area) {
+    const key = TOOL_FLAGS[area];
+    if (!key || !window.posthog || !posthog.getFeatureFlag) return true;
+    // send_event: false keeps the privacy promise — no $feature_flag_called
+    // events, the only events sent stay $pageview and tool_opened.
+    return posthog.getFeatureFlag(key, { send_event: false }) !== false;
+  }
+
+  function firstEnabledArea() {
+    if (toolEnabled('calculator')) return 'calculator';
+    const open = Object.keys(AREAS).find(toolEnabled);
+    return open || 'calculator';
+  }
+
+  // Hide/show each tool's nav link and landing card to match its flag, and
+  // bounce the user out if the tool they're on just got switched off.
+  function applyToolFlags() {
+    let activeAreaHidden = false;
+    Object.keys(TOOL_FLAGS).forEach((area) => {
+      const on = toolEnabled(area);
+      $$('.nav-link[data-area="' + area + '"], .tool-card[data-nav="' + area + '"]')
+        .forEach((el) => { el.style.display = on ? '' : 'none'; });
+      const section = $('#area-' + area);
+      if (!on && section && section.classList.contains('active')) activeAreaHidden = true;
+    });
+    const inApp = $('#view-app') && $('#view-app').classList.contains('active');
+    if (activeAreaHidden && inApp) showArea(firstEnabledArea());
+  }
+
   function showView(view) {
     $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function showArea(area) {
-    if (!AREAS[area]) area = 'calculator';
+    if (!AREAS[area] || !toolEnabled(area)) area = firstEnabledArea();
     showView('app');
     $$('.area').forEach(a => a.classList.toggle('active', a.id === 'area-' + area));
     $$('.nav-link[data-area]').forEach(l => l.classList.toggle('active', l.dataset.area === area));
@@ -825,6 +873,11 @@
     renderChangelog();
     refreshOnline();
     wire();
+
+    // Apply per-tool feature flags: once now (cached flags from the last
+    // visit apply instantly) and again whenever fresh flags arrive.
+    applyToolFlags();
+    if (window.posthog && posthog.onFeatureFlags) posthog.onFeatureFlags(applyToolFlags);
 
     // First-time visitors land on the landing page; returning users with a
     // stable go straight to the calculator.

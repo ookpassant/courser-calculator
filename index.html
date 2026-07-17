@@ -348,7 +348,10 @@
          cookies (memory persistence), no session recording, autocapture off, text
          inputs masked, and Do Not Track is respected. Only page views and a
          "tool_opened" event (which tab) are sent — never genotypes or any other
-         input. To turn analytics off entirely, blank out POSTHOG_KEY below. -->
+         input. PostHog also serves the per-tool feature flags (a config fetch,
+         not an event; see TOOL_FLAGS in app.js) — with analytics blocked or the
+         key blanked, every tool simply stays visible.
+         To turn analytics off entirely, blank out POSTHOG_KEY below. -->
     <script>
         (function () {
             var POSTHOG_KEY = 'phc_uikbxA9bSdL4d6BGHH3NsFNwBf8z5CfxP2Z5MVsoBHti';
