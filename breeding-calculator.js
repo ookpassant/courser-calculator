@@ -10,6 +10,14 @@ function switchTab(tabName) {
     }
 }
 
+// Privacy-first usage counter: sends the event name and nothing else — no
+// properties, no genotypes, no input. Counts how often a tool is actually used
+// (and where people hit friction), not just that its tab was opened.
+// No-op when PostHog is absent (ad-blocker, Do Not Track, blanked key).
+function trackUse(name) {
+    if (window.posthog && window.posthog.capture) window.posthog.capture(name);
+}
+
 // The stable: where all your precious pixel ponies live
 let horseCollection = [];
 
@@ -1018,6 +1026,7 @@ function translateGenotype() {
         return;
     }
 
+    trackUse('translate_run');
     const prose = genotypeToPlainEnglish(geno, variant);
     const pheno = genotypeToPhenotype(geno);
 
@@ -1026,6 +1035,7 @@ function translateGenotype() {
     const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
     let warnHtml = '';
     if (unknownGenes.length || unknownAnomalies.length) {
+        trackUse('translate_unknown_tokens');
         const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const bits = [];
         if (unknownGenes.length) bits.push((unknownGenes.length === 1 ? 'gene' : 'genes') + ' ' + unknownGenes.map(g => `<code>${esc(g)}</code>`).join(', '));
@@ -1245,6 +1255,7 @@ function showLayers() {
         return;
     }
 
+    trackUse('layers_run');
     const data = genotypeToLayers(geno, variant);
     out.style.display = 'block';
 
@@ -1258,6 +1269,7 @@ function showLayers() {
     const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
     let warnHtml = '';
     if (unknownGenes.length || unknownAnomalies.length) {
+        trackUse('layers_unknown_tokens');
         const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const stray = unknownGenes.concat(unknownAnomalies);
         warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
@@ -1735,6 +1747,7 @@ function generateFoals() {
         if (window.AppShell && window.AppShell.toast) {
             window.AppShell.toast(`Both parents are ${parent1.temperament} — they can't breed.`, 'error');
         }
+        trackUse('breeding_blocked_same_temperament');
         return;
     }
 
@@ -1744,8 +1757,11 @@ function generateFoals() {
     const u1 = findUnknownTokens(parent1.genotype);
     const u2 = findUnknownTokens(parent2.genotype);
     const stray = [...new Set([...u1.unknownGenes, ...u1.unknownAnomalies, ...u2.unknownGenes, ...u2.unknownAnomalies])];
-    if (stray.length && window.AppShell && window.AppShell.toast) {
-        window.AppShell.toast('Ignoring unrecognised token(s): ' + stray.join(', ') + '. Check for a typo.', 'error');
+    if (stray.length) {
+        if (window.AppShell && window.AppShell.toast) {
+            window.AppShell.toast('Ignoring unrecognised token(s): ' + stray.join(', ') + '. Check for a typo.', 'error');
+        }
+        trackUse('foal_unknown_tokens');
     }
 
     // Every breeding has a 5% chance of twins (handbook): two separate foals,
@@ -1755,6 +1771,7 @@ function generateFoals() {
 
     displayFoals(litters);
     displayFoalPossibilities(parent1, parent2);
+    trackUse('foal_generated');
 }
 
 // "Every possible foal" — the full Mendelian spread this pairing can produce,
@@ -2290,6 +2307,7 @@ function displayCustomScrollResult() {
 
     resultDiv.style.display = 'block';
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    trackUse('scroll_generated');
 }
 
 // Breeding Search — the matchmaking service for your pixel horses, swipe right on genetics
@@ -2311,6 +2329,7 @@ function searchBreeding() {
     }
     
     resultsContent.innerHTML = '';
+    trackUse('search_run');
 
     // Decode the breeder's desperate plea into actual searchable traits
     const targetTraits = extractTraitsFromQuery(query);
@@ -2318,6 +2337,8 @@ function searchBreeding() {
     if (targetTraits.length === 0) {
         resultsContent.innerHTML = '<p style="color: #6f6877;">Could not identify specific traits in your query. Try asking like: "How can I make Amber Champagne?" or "Who can breed for fewspot?"</p>';
         resultsDiv.style.display = 'block';
+        // Friction: the search didn't understand what they asked for.
+        trackUse('search_no_traits');
         return;
     }
 
@@ -2325,6 +2346,7 @@ function searchBreeding() {
     const matches = findBreedingMatches(targetTraits);
 
     if (matches.length === 0) {
+        trackUse('search_no_matches');
         resultsContent.innerHTML = `<p style="color: #6f6877;">No breeding pairs found in your collection that can produce: <strong style="color: #5d4b60;">${targetTraits.join(', ')}</strong></p>`;
     } else {
         // Stash these matches for the grand reveal in the modal
@@ -3520,6 +3542,7 @@ function calculateChimera() {
             return;
         }
         displayCreationChimera(foalGeno, generateCreationChimeraPossibilities(foalGeno));
+        trackUse('chimera_calculated');
         return;
     }
 
@@ -3535,6 +3558,7 @@ function calculateChimera() {
     const possibilities = generateChimeraPossibilities(foalGeno, parent1Geno, parent2Geno);
 
     displayChimeraPossibilities(foalGeno, possibilities);
+    trackUse('chimera_calculated');
 }
 
 // A Creation's Chimera patch: any base colour (e/a changes freely), plus any

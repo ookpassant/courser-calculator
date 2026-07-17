@@ -368,7 +368,7 @@
     const geno = $('#edGeno').value.trim();
     if (!name) { $('#editorHint').textContent = 'Name is required.'; return; }
     const v = validateGenotype(geno);
-    if (!v.ok) { $('#editorHint').textContent = v.error; return; }
+    if (!v.ok) { $('#editorHint').textContent = v.error; if (window.trackUse) trackUse('editor_genotype_invalid'); return; }
     const horse = {
       id: $('#edId').value.trim() || name,
       name,
@@ -377,7 +377,7 @@
       variant: $('#edVariant').value || 'Standard'
     };
     if (editIndex >= 0) { collection[editIndex] = horse; toast('Saved your changes.', 'success'); }
-    else { collection.push(horse); toast('Added to your stable.', 'success'); }
+    else { collection.push(horse); toast('Added to your stable.', 'success'); if (window.trackUse) trackUse('horse_added'); }
     setCollection(collection);
     closeEditor();
   }
@@ -467,10 +467,12 @@
         <td>${issues.length ? '⚠ ' + esc(issues.join('; ')) : '✓'}</td>
       </tr>`).join('');
 
+    if (skipped.length && window.trackUse) trackUse('csv_rows_skipped');
     if (!rows.length) {
       toast(skipped.length
         ? `No importable rows — ${skipped.length} row(s) had no genotype.`
         : "Couldn't spot any horses in that file.", 'error');
+      if (window.trackUse) trackUse('csv_no_rows');
       return;
     }
     gotoStep(2);
@@ -492,6 +494,7 @@
     $('#wizDone').textContent = `${clean.length} horse(s) ${replace ? 'imported' : 'added'}.`;
     gotoStep(3);
     toast(`${clean.length} horse(s) ${replace ? 'imported' : 'added'}.`, 'success');
+    if (window.trackUse) trackUse('csv_import_completed');
   }
 
   function exportCSV() {
@@ -507,6 +510,7 @@
     const a = document.createElement('a');
     a.href = url; a.download = 'bloodline-collection.csv';
     document.body.appendChild(a); a.click(); a.remove();
+    if (window.trackUse) trackUse('csv_exported');
     URL.revokeObjectURL(url);
     toast('Exported your stable as a CSV.', 'success');
   }
@@ -781,6 +785,7 @@
       if (rawTemp && typeof isKnownTemperament === 'function' && !isKnownTemperament(rawTemp)) warns.push(`temperament "${rawTemp}" wasn't recognised`);
       if (warns.length) toast('Heads up on ' + horse.name + ': ' + warns.join('; ') + '.', 'error');
       showArea('collection');
+      if (window.trackUse) trackUse('bookmarklet_import');
       acted = true;
     }
 
@@ -860,6 +865,7 @@
     setCollection(collection);
     toast('Imported ' + added + ' courser' + (added === 1 ? '' : 's') + (updated ? (', updated ' + updated) : '') + '.', 'success');
     showArea('collection');
+    if (window.trackUse) trackUse('bookmarklet_bulk_import');
     return true;
   }
 
