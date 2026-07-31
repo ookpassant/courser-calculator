@@ -41,9 +41,6 @@ leaves your machine.
 - The genotype never changes. Somatic switches a trait off in that area, it
   doesn't remove the gene: the horse still carries it, still passes it to foals,
   and still writes it in its genotype. So no altered genotype is ever shown.
-- White markings and leopard patterns only cover part of the horse to begin
-  with, so switching one off shows only where the patch and the marking overlap.
-  Those are flagged; whole-coat traits change anywhere the patch lands.
 - Enforces the handbook rules: one trait at a time, never a trait *and* a base
   change, the whole trait rather than one allele (Fewspot can't be knocked down
   to Leopard), Double Cream → Cream as the one documented exception, and no

@@ -4104,18 +4104,6 @@ const SOMATIC_BASE_GENES = {
 // colour. Same one-trait budget, different reach.
 const SOMATIC_SURFACE_TRAITS = ['Illuminated', 'Gilt'];
 
-// Traits that only cover part of the horse to begin with. A Somatic patch is an
-// area, not a switch on the whole horse, so hiding one of these only shows
-// where the patch and the marking actually overlap — the rest of the marking
-// stays exactly as it was. Whole-coat traits (dilutions, most modifiers, the
-// base colour) change everywhere the patch lands, so they don't need the note.
-const SOMATIC_LOCALISED = new Set([
-    'Tobiano', 'Overo', 'Splash', 'Roan', 'Sabino', 'Blanched', 'False Leopard',
-    'Harlequin', 'Shroud', 'Ossuary', 'Filigree', 'Crowned', 'Cuirass', 'Girdle',
-    'Collar', 'Rabicano', 'Dominant White',
-    'Snowflake', 'Blanket', 'Leopard', 'Snowcap', 'Varnish Roan', 'Fewspot'
-]);
-
 // Name what the patch looks like from a scratch gene list, dropping blanks left
 // by switched-off tokens. This is a naming device, not the horse's genotype.
 // Anomalies are deliberately left off — Somatic can't touch them, so they ride
@@ -4159,8 +4147,7 @@ function generateSomaticPossibilities(genoString) {
                 trait: entry.trait,
                 gene: token,
                 patchGenes: patchGenes.filter(Boolean).join(' '),
-                phenotype,
-                localised: SOMATIC_LOCALISED.has(entry.trait)
+                phenotype
             });
         });
     });
@@ -4179,7 +4166,6 @@ function generateSomaticPossibilities(genoString) {
                 gene: genes.filter(g => /^(nLp|LpLp|npatn|patnpatn)$/.test(g)).join(' '),
                 patchGenes: patchGenes.join(' '),
                 phenotype,
-                localised: true,
                 note: 'Leopard Complex is one trait across two genes, so Lp and patn both switch off together.'
             });
         }
@@ -4263,18 +4249,15 @@ function fillSomaticFromCollection(idx) {
 }
 
 // One row: the trait the patch hides, and what the horse reads as inside it.
-// Localised traits get a marker, because hiding one only shows where the patch
-// and the marking overlap.
 function renderSomaticOption(opt) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const partial = opt.localised ? '<span class="somatic-opt-partial">where they overlap</span>' : '';
     const note = opt.note ? `<p class="somatic-opt-note">${esc(opt.note)}</p>` : '';
     // Deliberately no genotype here. Somatic doesn't remove a gene, it stops one
     // being expressed inside the patch, so there is no second genotype to show —
     // printing the rewritten gene list would suggest the horse's own genotype
     // changes, which it never does.
     return `<li class="somatic-opt">
-        <div class="somatic-opt-head">${traitLink(opt.trait)}${partial}</div>
+        <div class="somatic-opt-head">${traitLink(opt.trait)}</div>
         <div class="somatic-opt-body"><strong>${esc(opt.phenotype)}</strong></div>
         ${note}
     </li>`;
@@ -4330,11 +4313,9 @@ function showSomatic() {
     const sections = [];
 
     if (data.traitOptions.length) {
-        const anyLocalised = data.traitOptions.some(o => o.localised);
         sections.push(`<div class="somatic-group">
             <h3 class="somatic-group-head">Hide a trait</h3>
             <ul class="somatic-list">${data.traitOptions.map(renderSomaticOption).join('')}</ul>
-            ${anyLocalised ? `<p class="somatic-group-blurb">Markings only cover part of the horse already, so those change only where the patch and the marking overlap. The rest of the marking stays.</p>` : ''}
         </div>`);
     }
 
