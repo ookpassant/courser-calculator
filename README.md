@@ -30,6 +30,23 @@ leaves your machine.
   recessive carrier logic.
 - Reachable on its own from the nav, or from a foal card.
 
+### Somatic Calculator
+- For the Somatic free marking, which hides one of a horse's own traits inside
+  irregular patches.
+- Takes **one genotype, no parents** — a Somatic patch can only ever show what
+  the horse already has, so unlike Chimera there is nothing to inherit.
+- Lists every trait Somatic could switch off, and what the patch reads as with
+  that trait gone, plus the alternative of showing different base colour genes
+  (E/A) with everything else left in place.
+- Enforces the handbook rules: one trait at a time, never a trait *and* a base
+  change, the whole trait rather than one allele (Fewspot can't be knocked down
+  to Leopard), Double Cream → Cream as the one documented exception, and no
+  touching anomalies, which aren't attached to genes.
+- Hidden carriers are never offered, since switching one off shows nothing.
+- Shows the skin/hoof-only option for Gilt and Illuminated, the interaction
+  rules for the traits this horse actually has (Chimera, Pastiche, Fresco,
+  Harlequin, Shroud, Kintsugi), and the drawing rules no genotype can decide.
+
 ### Scroll Generator
 - Rolls a random design for a custom scroll by rarity.
 - A coat colour at that rarity, one marking/modifier/carrier at that rarity or
@@ -96,6 +113,10 @@ inherit together):
 - **Lethal White** is flagged for OO, OsOs, WW, and nO + nOs.
 - Carrier traits are shown where appropriate (Carries Ether, Carries Patn,
   Carrying Flaxen, etc.).
+- **Free markings** (Somatic) are written after the `+` like an anomaly, but any
+  player can add one to any horse for nothing. They are deliberately kept out of
+  the anomaly pool, so they are never rolled, never inherited, and never scored
+  for rarity — they are only recognised, described and calculated.
 - Rarity is scored against the official Dungeon Coursers trait index.
 
 These rules are matched to the official breeding handbook.

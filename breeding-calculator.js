@@ -431,7 +431,9 @@ function findUnknownTokens(genoString) {
     // Everything after the first + is anomalies, separated by commas or pluses.
     const anomalyTokens = parts.slice(1).join(',').split(',').map(a => a.trim()).filter(Boolean);
 
-    const knownAnoms = new Set(ALL_ANOMALIES.map(a => a.toLowerCase()).concat('ore'));
+    const knownAnoms = new Set(
+        ALL_ANOMALIES.map(a => a.toLowerCase()).concat('ore', FREE_MARKINGS.map(m => m.toLowerCase()))
+    );
     return {
         unknownGenes: geneTokens.filter(t => !isKnownGeneToken(t)),
         unknownAnomalies: anomalyTokens.filter(t => !knownAnoms.has(t.toLowerCase()))
@@ -854,6 +856,9 @@ const ANOMALY_DESC = {
     'Pastiche': "Pastiche reshapes the horse's Chimera and/or Somatic markings into deliberate, symmetrical forms like stripes, skulls and emblems.",
     'Fresco': "Fresco softens the crisp edges of the horse's Chimera and/or Somatic markings, letting them go low-opacity, blurred, smoky or streaky.",
     'Lantern': "Lantern is an eye anomaly: a coloured glow coming from and around the eye, brighter than the eye itself, sometimes with a glowing bright pupil.",
+    // Free marking rather than an anomaly, but it's written after the `+` like
+    // one, so it's described here alongside them.
+    'Somatic': "Somatic hides one of the horse's own traits inside irregular patches, up to a quarter of the body, so that area shows what the horse would look like without it (or with a different E/A base). It only ever takes away — it can't add a trait the horse doesn't have. See the Somatic tab for what this one could switch off.",
 };
 
 // Pennant is normally one colour per strand, root to tip — but with Flaxen,
@@ -2190,6 +2195,14 @@ const ALL_ANOMALIES = [
     'Geode', 'Stained Glass', 'Kintsugi', 'Swarf', 'Vitiligo',
     'Oracle', 'Signet', 'Pennant', 'Pastiche', 'Fresco', 'Lantern'
 ];
+
+// Free markings: written in the genotype after the `+` like an anomaly, but any
+// player can add one to any horse for nothing. They're deliberately NOT in
+// ALL_ANOMALIES — that list is the random-roll pool, and a free marking is
+// never rolled, inherited or scored for rarity. This list exists so the parser
+// stops flagging a perfectly valid `+ Somatic` as an unknown token.
+// (Dapple belongs here too, once its rules are confirmed.)
+const FREE_MARKINGS = ['Somatic'];
 
 function getRandomElement(array) {
     return array[Math.floor(Math.random() * array.length)];
@@ -3915,4 +3928,396 @@ function rollChimeraPatch() {
         </div>
     `;
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ============================================================================
+// SOMATIC CALCULATOR
+// ----------------------------------------------------------------------------
+// Somatic is a free marking, not an anomaly — any horse can take it, and it
+// costs nothing. It hides ONE of the horse's own traits inside an irregular
+// patch, so unlike Chimera it never needs the parents: everything the patch can
+// show is already sitting in this horse's genotype.
+//
+// The engine works at gene-token level. Switching a trait off rewrites (or
+// drops) the token carrying it, then the patch is named by running the
+// rewritten gene list back through resolveTraits(). Naming the patch with the
+// same function that names the horse means the two can never disagree.
+//
+// Rules this encodes, from the Trait Index entry for Somatic:
+//   - exactly one trait at a time, and never a trait AND a base-colour change
+//   - the WHOLE trait goes, not one allele (Fewspot can't be knocked down to
+//     Leopard), with Double Cream -> Cream the single documented exception
+//   - anomalies aren't attached to genes, so Somatic can never touch them
+//   - Somatic only takes away; it can't add a trait or create white markings
+// ============================================================================
+
+// What one gene token becomes when Somatic switches one of its traits off.
+// `becomes: null` means the token goes entirely. Tokens carrying two traits at
+// a shared locus (TRn = Tobiano + Roan) get one entry per trait, each leaving
+// the other behind — that's still switching off a whole trait, not splitting
+// one trait's alleles.
+const SOMATIC_SWITCH_OFF = {
+    // --- Dilutions, locus 1 (Cr / Tp / prl) ---
+    'Cr':     [{ trait: 'Cream', becomes: null }],
+    'nCr':    [{ trait: 'Cream', becomes: null }],
+    // The one documented exception to "the whole trait goes": Double Cream and
+    // Cream are separate base coats in the index, so one Cr switches off and
+    // the patch keeps the other.
+    'CrCr':   [{ trait: 'Double Cream', becomes: 'nCr' }],
+    'Tp':     [{ trait: 'Tapestry', becomes: null }],
+    'nTp':    [{ trait: 'Tapestry', becomes: null }],
+    'TpTp':   [{ trait: 'Tapestry', becomes: null }],
+    'prlprl': [{ trait: 'Pearl', becomes: null }],
+    'Crprl':  [{ trait: 'Cream', becomes: 'nprl' }, { trait: 'Pearl', becomes: 'nCr' }],
+    'TpCr':   [{ trait: 'Tapestry', becomes: 'nCr' }, { trait: 'Cream', becomes: 'nTp' }],
+    'Tpprl':  [{ trait: 'Tapestry', becomes: 'nprl' }, { trait: 'Pearl', becomes: 'nTp' }],
+
+    // --- Dilutions, locus 2 (Ch / er) ---
+    'Ch':     [{ trait: 'Champagne', becomes: null }],
+    'nCh':    [{ trait: 'Champagne', becomes: null }],
+    'ChCh':   [{ trait: 'Champagne', becomes: null }],
+    'erer':   [{ trait: 'Ether', becomes: null }],
+    // Cher shows Champagne and carries Ether. Switch the Champagne off and the
+    // carrier stays behind, still showing nothing.
+    'Cher':   [{ trait: 'Champagne', becomes: 'ner' }],
+
+    // --- Modifiers ---
+    'nD':     [{ trait: 'Dun', becomes: null }],
+    'DD':     [{ trait: 'Dun', becomes: null }],
+    'nP':     [{ trait: 'Pangare', becomes: null }],
+    'PP':     [{ trait: 'Pangare', becomes: null }],
+    'nSty':   [{ trait: 'Sooty', becomes: null }],
+    'StySty': [{ trait: 'Sooty', becomes: null }],
+    'nG':     [{ trait: 'Gray', becomes: null }],
+    'GG':     [{ trait: 'Gray', becomes: null }],
+    'ff':     [{ trait: 'Flaxen', becomes: null }],
+    'nZ':     [{ trait: 'Silver', becomes: null }],
+    'ZZ':     [{ trait: 'Silver', becomes: null }],
+    'nLu':    [{ trait: 'Illuminated', becomes: null }],
+    'LuLu':   [{ trait: 'Illuminated', becomes: null }],
+    'spsp':   [{ trait: 'Sepulchered', becomes: null }],
+    'Lusp':   [{ trait: 'Illuminated', becomes: 'nsp' }],
+    'nTd':    [{ trait: 'Tabard', becomes: null }],
+    'TdTd':   [{ trait: 'Tabard', becomes: null }],
+    'nGl':    [{ trait: 'Gilt', becomes: null }],
+    'GlGl':   [{ trait: 'Gilt', becomes: null }],
+    'nV':     [{ trait: 'Vellum', becomes: null }],
+    'VV':     [{ trait: 'Vellum', becomes: null }],
+    'nOp':    [{ trait: 'Opal', becomes: null }],
+    'OpOp':   [{ trait: 'Opal', becomes: null }],
+    'nPr':    [{ trait: 'Prism', becomes: null }],
+    'PrPr':   [{ trait: 'Prism', becomes: null }],
+    'PrOp':   [{ trait: 'Prism', becomes: 'nOp' }, { trait: 'Opal', becomes: 'nPr' }],
+    'sfsf':   [{ trait: 'Starfield', becomes: null }],
+    'lrlr':   [{ trait: 'Lacquer', becomes: null }],
+
+    // --- White markings ---
+    'nSpl':   [{ trait: 'Splash', becomes: null }],
+    'SplSpl': [{ trait: 'Splash', becomes: null }],
+    'nRn':    [{ trait: 'Roan', becomes: null }],
+    'RnRn':   [{ trait: 'Roan', becomes: null }],
+    'nT':     [{ trait: 'Tobiano', becomes: null }],
+    'TT':     [{ trait: 'Tobiano', becomes: null }],
+    'nCu':    [{ trait: 'Cuirass', becomes: null }],
+    'CuCu':   [{ trait: 'Cuirass', becomes: null }],
+    'CuCw':   [{ trait: 'Cuirass', becomes: 'nCw' }, { trait: 'Crowned', becomes: 'nCu' }],
+    'nCw':    [{ trait: 'Crowned', becomes: null }],
+    'CwCw':   [{ trait: 'Crowned', becomes: null }],
+    'nO':     [{ trait: 'Overo', becomes: null }],
+    'OO':     [{ trait: 'Overo', becomes: null }],
+    'nSb':    [{ trait: 'Sabino', becomes: null }],
+    'SbSb':   [{ trait: 'Sabino', becomes: null }],
+    'nGi':    [{ trait: 'Girdle', becomes: null }],
+    'GiGi':   [{ trait: 'Girdle', becomes: null }],
+    'nCo':    [{ trait: 'Collar', becomes: null }],
+    'CoCo':   [{ trait: 'Collar', becomes: null }],
+    'GiCo':   [{ trait: 'Girdle', becomes: 'nCo' }, { trait: 'Collar', becomes: 'nGi' }],
+    'CoGi':   [{ trait: 'Girdle', becomes: 'nCo' }, { trait: 'Collar', becomes: 'nGi' }],
+    'nB':     [{ trait: 'Blanched', becomes: null }],
+    'BB':     [{ trait: 'Blanched', becomes: null }],
+    'BFl':    [{ trait: 'Blanched', becomes: 'nFl' }, { trait: 'False Leopard', becomes: 'nB' }],
+    'FlB':    [{ trait: 'Blanched', becomes: 'nFl' }, { trait: 'False Leopard', becomes: 'nB' }],
+    'nW':     [{ trait: 'Dominant White', becomes: null }],
+    'WW':     [{ trait: 'Dominant White', becomes: null }],
+    'nRb':    [{ trait: 'Rabicano', becomes: null }],
+    'RbRb':   [{ trait: 'Rabicano', becomes: null }],
+    'nFl':    [{ trait: 'False Leopard', becomes: null }],
+    'FlFl':   [{ trait: 'False Leopard', becomes: null }],
+    'nHq':    [{ trait: 'Harlequin', becomes: null }],
+    'HqHq':   [{ trait: 'Harlequin', becomes: null }],
+    'nSh':    [{ trait: 'Shroud', becomes: null }],
+    'ShSh':   [{ trait: 'Shroud', becomes: null }],
+    'fefe':   [{ trait: 'Filigree', becomes: null }],
+    'nOs':    [{ trait: 'Ossuary', becomes: null }],
+    'OsOs':   [{ trait: 'Ossuary', becomes: null }],
+    // KIT compounds, both orderings
+    'TRn':    [{ trait: 'Tobiano', becomes: 'nRn' }, { trait: 'Roan', becomes: 'nT' }],
+    'RnT':    [{ trait: 'Tobiano', becomes: 'nRn' }, { trait: 'Roan', becomes: 'nT' }],
+    'TSb':    [{ trait: 'Tobiano', becomes: 'nSb' }, { trait: 'Sabino', becomes: 'nT' }],
+    'SbT':    [{ trait: 'Tobiano', becomes: 'nSb' }, { trait: 'Sabino', becomes: 'nT' }],
+    'TW':     [{ trait: 'Tobiano', becomes: 'nW' }, { trait: 'Dominant White', becomes: 'nT' }],
+    'WT':     [{ trait: 'Tobiano', becomes: 'nW' }, { trait: 'Dominant White', becomes: 'nT' }],
+    'RnSb':   [{ trait: 'Roan', becomes: 'nSb' }, { trait: 'Sabino', becomes: 'nRn' }],
+    'SbRn':   [{ trait: 'Roan', becomes: 'nSb' }, { trait: 'Sabino', becomes: 'nRn' }],
+    'RnW':    [{ trait: 'Roan', becomes: 'nW' }, { trait: 'Dominant White', becomes: 'nRn' }],
+    'WRn':    [{ trait: 'Roan', becomes: 'nW' }, { trait: 'Dominant White', becomes: 'nRn' }],
+    'SbW':    [{ trait: 'Sabino', becomes: 'nW' }, { trait: 'Dominant White', becomes: 'nSb' }],
+    'WSb':    [{ trait: 'Sabino', becomes: 'nW' }, { trait: 'Dominant White', becomes: 'nSb' }]
+};
+
+// A canonical allele pair for each base coat, for the "different E/A genes"
+// option. Only these three bases exist, so a base swap is at most two choices.
+const SOMATIC_BASE_GENES = {
+    'Bay': ['EE', 'AA'],
+    'Black': ['EE', 'aa'],
+    'Chestnut': ['ee', 'aa']
+};
+
+// Illuminated and Gilt recolour skin and hooves as well as coat, and the
+// handbook lets Somatic switch off just those parts without touching the coat
+// colour. Same one-trait budget, different reach.
+const SOMATIC_SURFACE_TRAITS = ['Illuminated', 'Gilt'];
+
+// Rebuild a genotype string from a gene list, dropping blanks left by removed
+// tokens. Anomalies are deliberately left off — Somatic can't touch them, so
+// they ride along unchanged and don't belong in the patch's name.
+function somaticGenesToPhenotype(genes) {
+    return genotypeToPhenotype(genes.filter(Boolean).join(' '));
+}
+
+// Every Somatic a horse could wear. Own genotype only: no parents, ever.
+function generateSomaticPossibilities(genoString) {
+    const raw = (genoString || '').trim();
+    const resolved = resolveTraits(raw);
+    if (resolved.lethal) return { lethal: true };
+
+    const { genes, anomalies } = parseGenotype(raw);
+    // The horse minus its anomalies, so patch and horse are compared like for
+    // like (anomalies are unaffected either way).
+    const unaffected = somaticGenesToPhenotype(genes);
+
+    const traitOptions = [];
+
+    genes.forEach((token, i) => {
+        const entries = SOMATIC_SWITCH_OFF[token];
+        if (!entries) return;
+        entries.forEach(entry => {
+            const patchGenes = genes.slice();
+            patchGenes[i] = entry.becomes;
+            const phenotype = somaticGenesToPhenotype(patchGenes);
+            // A switch-off that reads identically isn't a Somatic — the marking
+            // has to show a colour change to exist at all.
+            if (phenotype === unaffected) return;
+            traitOptions.push({
+                trait: entry.trait,
+                gene: token,
+                patchGenes: patchGenes.filter(Boolean).join(' '),
+                phenotype
+            });
+        });
+    });
+
+    // Leopard complex is one trait spread over two genes (Lp + patn), and the
+    // handbook is explicit that the whole pattern goes: you can't drop an Lp
+    // off Fewspot to be left with Leopard.
+    const lpIdx = genes.findIndex(g => g === 'nLp' || g === 'LpLp');
+    if (lpIdx !== -1) {
+        const leopardTrait = resolved.allTraits.find(t => LEOPARD_PATTERN_NAMES.includes(t));
+        const patchGenes = genes.filter(g => !/^(nLp|LpLp|npatn|patnpatn)$/.test(g));
+        const phenotype = somaticGenesToPhenotype(patchGenes);
+        if (leopardTrait && phenotype !== unaffected) {
+            traitOptions.push({
+                trait: leopardTrait,
+                gene: genes.filter(g => /^(nLp|LpLp|npatn|patnpatn)$/.test(g)).join(' '),
+                patchGenes: patchGenes.join(' '),
+                phenotype,
+                note: 'Leopard Complex is one trait across two genes, so Lp and patn both switch off together.'
+            });
+        }
+    }
+
+    // Or, instead of any of that, the patch reads a different E/A base. The
+    // dilutions and everything else stay exactly as they are.
+    const baseOptions = [];
+    Object.keys(SOMATIC_BASE_GENES).forEach(baseName => {
+        if (baseName === resolved.baseCoat) return;
+        const [eGene, aGene] = SOMATIC_BASE_GENES[baseName];
+        const patchGenes = genes
+            .map(g => (/^[Ee]{1,2}$/.test(g) ? eGene : /^[Aa]{1,2}$/.test(g) ? aGene : g));
+        const phenotype = somaticGenesToPhenotype(patchGenes);
+        if (phenotype === unaffected) return;
+        baseOptions.push({ trait: baseName, patchGenes: patchGenes.join(' '), phenotype });
+    });
+
+    // Skin/hoof-only switch-offs, which leave the coat colour alone entirely.
+    const visible = new Set(resolved.allTraits);
+    const surfaceOptions = SOMATIC_SURFACE_TRAITS
+        .filter(t => visible.has(t))
+        .map(t => ({ trait: t }));
+
+    return {
+        lethal: false,
+        coatColor: resolved.coatColor,
+        // Somatic itself is a free marking, not something Somatic can't touch,
+        // so it doesn't belong in the "untouchable anomalies" note.
+        anomalies: anomalies.filter(a => !FREE_MARKINGS.includes(a)),
+        unaffected,
+        traitOptions,
+        baseOptions,
+        surfaceOptions,
+        // Interaction notes worth surfacing, but only for horses that have the
+        // trait in question — nobody needs the Shroud rule on a horse with no
+        // Shroud. Gene traits are matched against the resolved traits and
+        // anomalies against the anomaly list, so a stray token written on the
+        // wrong side of the `+` can't conjure up a rule.
+        interactions: SOMATIC_INTERACTIONS.filter(x => ALL_ANOMALIES.includes(x.trait)
+            ? anomalies.includes(x.trait)
+            : visible.has(x.trait))
+    };
+}
+
+// Trait-specific rules from the Somatic entry. Shown only when the horse
+// actually has the trait, so the panel stays short and relevant.
+const SOMATIC_INTERACTIONS = [
+    { trait: 'Chimera', text: 'Somatic and Chimera never interact. The Somatic marking may not overlap or touch the Chimera patch, and the two together still cannot put more than three base colours on the horse.' },
+    { trait: 'Pastiche', text: 'Pastiche extends Somatic: with it, the marking may be symmetrical, uniform or deliberate — stripes, skulls, patterns, symbols. Without it, none of those shapes are allowed.' },
+    { trait: 'Fresco', text: 'Fresco softens Somatic: with it, the edges may blur, gradient or change opacity. Without it, borders must stay crisp or jagged (mapping is fine either way).' },
+    { trait: 'Harlequin', text: 'Somatic can be used to fill the spaces between touching Harlequin diamonds.' },
+    { trait: 'Shroud', text: 'Somatic can be used to fill the cutouts in a Shroud design.' },
+    { trait: 'Kintsugi', text: 'Kintsugi appears on the edges of white markings affected by Somatic, where that marking is already Kintsugi-affected.' },
+    { trait: 'Gilt', text: 'Gilt recolours skin and hooves as well as coat, so Somatic can switch off the Gilt skin and/or hooves on their own, without touching the coat colour.' },
+    { trait: 'Illuminated', text: 'Illuminated recolours skin and hooves as well as coat, so Somatic can switch off the Illuminated skin and/or hooves on their own, without touching the coat colour.' }
+];
+
+// --- Somatic tab UI handlers ------------------------------------------------
+
+function populateSomaticCollectionSelect() {
+    const sel = document.getElementById('somaticFromColl');
+    if (!sel) return;
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Pick from collection…</option>' +
+        collection.map((h, i) =>
+            `<option value="${i}">${(h.name || 'Unnamed').replace(/</g, '&lt;')} (${(h.temperament || '—').replace(/</g, '&lt;')})</option>`
+        ).join('');
+    if (cur && Number(cur) < collection.length) sel.value = cur;
+    const row = document.getElementById('somaticSourceRow');
+    if (row) row.style.display = collection.length ? '' : 'none';
+}
+
+function fillSomaticFromCollection(idx) {
+    const collection = (window.getCollection && window.getCollection()) || [];
+    const h = collection[Number(idx)];
+    if (!h) return;
+    const ta = document.getElementById('somaticGeno');
+    if (ta) ta.value = h.genotype || '';
+}
+
+// One row: what the patch switches off, and what the horse reads as inside it.
+function renderSomaticOption(opt, kindLabel) {
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const note = opt.note ? `<p class="somatic-opt-note">${esc(opt.note)}</p>` : '';
+    return `<li class="somatic-opt">
+        <div class="somatic-opt-head"><span class="somatic-opt-tag">${esc(kindLabel)}</span> ${traitLink(opt.trait)}</div>
+        <div class="somatic-opt-body">
+            <span class="somatic-opt-label">Patch reads</span>
+            <strong>${esc(opt.phenotype)}</strong>
+            <code>${esc(opt.patchGenes)}</code>
+        </div>
+        ${note}
+    </li>`;
+}
+
+function showSomatic() {
+    const ta = document.getElementById('somaticGeno');
+    const out = document.getElementById('somaticResult');
+    if (!out) return;
+
+    const geno = ta ? ta.value.trim() : '';
+    out.style.display = 'block';
+
+    if (!geno) {
+        out.innerHTML = '<p class="somatic-empty">Paste a genotype, or pick a horse from your collection, and I\'ll show you every Somatic it could wear.</p>';
+        return;
+    }
+
+    trackUse('somatic_run');
+    const data = generateSomaticPossibilities(geno);
+
+    if (data.lethal) {
+        out.innerHTML = '<p class="somatic-empty">This genotype is a lethal white, so there\'s no horse to mark. Check the Translate tab for why.</p>';
+        return;
+    }
+
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Unknown tokens get the same warning Translate and Layers give, so a typo
+    // can't quietly drop an option from the list. "Somatic" itself is a known
+    // free marking, so pasting a genotype that already has it is fine.
+    const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
+    let warnHtml = '';
+    if (unknownGenes.length || unknownAnomalies.length) {
+        trackUse('somatic_unknown_tokens');
+        const stray = unknownGenes.concat(unknownAnomalies);
+        warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
+    }
+
+    const total = data.traitOptions.length + data.baseOptions.length;
+    const head = `<p class="somatic-coat">Unmarked, this horse reads <strong>${esc(data.unaffected)}</strong>. ` +
+        (total
+            ? `Somatic can take it <strong>${total}</strong> different way${total === 1 ? '' : 's'} — pick <em>one</em>.`
+            : `It has nothing Somatic can switch off and nowhere for its base colour to go, so there's no Somatic available here.`) +
+        `</p>`;
+
+    const sections = [];
+
+    if (data.traitOptions.length) {
+        sections.push(`<div class="somatic-group">
+            <h3 class="somatic-group-head">Switch off a trait (${data.traitOptions.length})</h3>
+            <ul class="somatic-list">${data.traitOptions.map(o => renderSomaticOption(o, 'Off')).join('')}</ul>
+        </div>`);
+    }
+
+    if (data.baseOptions.length) {
+        sections.push(`<div class="somatic-group">
+            <h3 class="somatic-group-head">Or show different base colour genes (${data.baseOptions.length})</h3>
+            <p class="somatic-group-blurb">Instead of switching a trait off, the patch reads a different E/A base. Everything else the horse has stays put.</p>
+            <ul class="somatic-list">${data.baseOptions.map(o => renderSomaticOption(o, 'Base')).join('')}</ul>
+        </div>`);
+    }
+
+    if (data.surfaceOptions.length) {
+        sections.push(`<div class="somatic-group">
+            <h3 class="somatic-group-head">Or switch off skin / hooves only</h3>
+            <p class="somatic-group-blurb">${data.surfaceOptions.map(o => traitLink(o.trait)).join(' and ')} recolour${data.surfaceOptions.length === 1 ? 's' : ''} skin and hooves as well as coat, so Somatic can switch off the skin and/or hooves on their own and leave the coat colour exactly as it is.</p>
+        </div>`);
+    }
+
+    if (data.anomalies.length) {
+        sections.push(`<p class="somatic-note">Anomalies aren't attached to genes, so Somatic can't touch ${joinList(data.anomalies.map(a => `<strong>${esc(a)}</strong>`))}. ${data.anomalies.length === 1 ? 'It reads' : 'They read'} the same inside the patch as out.</p>`);
+    }
+
+    const interactions = data.interactions.length
+        ? `<div class="somatic-group">
+            <h3 class="somatic-group-head">Rules for this horse</h3>
+            <ul class="somatic-rules">${data.interactions.map(x => `<li><strong>${esc(x.trait)}:</strong> ${esc(x.text)}</li>`).join('')}</ul>
+        </div>`
+        : '';
+
+    // The drawing rules, which no genotype can decide for you.
+    const drawing = `<div class="somatic-group">
+        <h3 class="somatic-group-head">Drawing it</h3>
+        <ul class="somatic-rules">
+            <li>Covers <strong>up to a quarter</strong> of the horse, in one or several patches.</li>
+            <li>Irregular blotches, strips or splatters — it must not read as any other marking, and must not be symmetrical, uniform or deliberate (without Pastiche).</li>
+            <li>Crisp, clear outlines or jagged, speckled edges. Mapping is fine; blurring, gradients and altered opacity are not (without Fresco).</li>
+            <li>Mane, tail, eyes and hooves change only where the patch touches them, and the patch must show a visible strip of changed coat colour at that edge.</li>
+            <li>Skin changes across the patch, and follows the switched trait if that trait recolours skin.</li>
+            <li>No more than <strong>three base colours</strong> on the horse, counting everything.</li>
+            <li>It can remove, never add: Somatic cannot create white markings or give the horse a trait it doesn't have.</li>
+        </ul>
+    </div>`;
+
+    out.innerHTML = warnHtml + head + sections.join('') + interactions + drawing;
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
