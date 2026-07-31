@@ -3943,6 +3943,11 @@ function rollChimeraPatch() {
 // rewritten gene list back through resolveTraits(). Naming the patch with the
 // same function that names the horse means the two can never disagree.
 //
+// That rewritten gene list is a scratch value for naming the patch and NOTHING
+// else. Somatic does not remove a gene: the horse keeps it, still passes it to
+// foals, and still writes it in its genotype — the gene just isn't expressed
+// inside the patch. So the rewritten list must never be shown as a genotype.
+//
 // Rules this encodes, from the Trait Index entry for Somatic:
 //   - exactly one trait at a time, and never a trait AND a base-colour change
 //   - the WHOLE trait goes, not one allele (Fewspot can't be knocked down to
@@ -4090,11 +4095,20 @@ const SOMATIC_LOCALISED = new Set([
     'Snowflake', 'Blanket', 'Leopard', 'Snowcap', 'Varnish Roan', 'Fewspot'
 ]);
 
-// Rebuild a genotype string from a gene list, dropping blanks left by removed
-// tokens. Anomalies are deliberately left off — Somatic can't touch them, so
-// they ride along unchanged and don't belong in the patch's name.
+// Name what the patch looks like from a scratch gene list, dropping blanks left
+// by switched-off tokens. This is a naming device, not the horse's genotype.
+// Anomalies are deliberately left off — Somatic can't touch them, so they ride
+// along unchanged and don't belong in the patch's name.
 function somaticGenesToPhenotype(genes) {
-    return genotypeToPhenotype(genes.filter(Boolean).join(' '));
+    const t = resolveTraits(genes.filter(Boolean).join(' '));
+    if (t.lethal) return 'Lethal white';
+    // Hidden carriers are left out too. They're not painted on the horse, and
+    // Somatic doesn't change what a horse carries, so listing them against a
+    // patch would imply exactly the thing that isn't happening.
+    const visible = t.allTraits.filter(x => !/^Carr(ies|ying) /.test(x));
+    const before = visible.filter(x => TRAITS_BEFORE_COAT.includes(x)).join(' ');
+    const after = visible.filter(x => TRAITS_AFTER_COAT.includes(x)).join(' ');
+    return [before, t.coatColor, after].filter(Boolean).join(' ').trim();
 }
 
 // Every Somatic a horse could wear. Own genotype only: no parents, ever.
@@ -4234,9 +4248,13 @@ function renderSomaticOption(opt) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const partial = opt.localised ? '<span class="somatic-opt-partial">where they overlap</span>' : '';
     const note = opt.note ? `<p class="somatic-opt-note">${esc(opt.note)}</p>` : '';
+    // Deliberately no genotype here. Somatic doesn't remove a gene, it stops one
+    // being expressed inside the patch, so there is no second genotype to show —
+    // printing the rewritten gene list would suggest the horse's own genotype
+    // changes, which it never does.
     return `<li class="somatic-opt">
         <div class="somatic-opt-head">${traitLink(opt.trait)}${partial}</div>
-        <div class="somatic-opt-body"><strong>${esc(opt.phenotype)}</strong><code>${esc(opt.patchGenes)}</code></div>
+        <div class="somatic-opt-body"><strong>${esc(opt.phenotype)}</strong></div>
         ${note}
     </li>`;
 }
@@ -4327,6 +4345,7 @@ function showSomatic() {
             <li>Skin changes across the patch, and follows the hidden trait if that trait recolours skin.</li>
             <li>No more than <strong>three base colours</strong> on the horse, counting everything.</li>
             <li>It can hide, never add: Somatic cannot create white markings or give the horse a trait it doesn't have.</li>
+            <li><strong>The genotype doesn't change.</strong> Somatic switches a trait off inside the patch, it doesn't remove the gene — the horse still carries it, still passes it to foals, and still writes it in its genotype.</li>
         </ul>
     </details>`;
 
