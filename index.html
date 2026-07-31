@@ -945,7 +945,16 @@
     <!-- Toasts -->
     <div id="toastContainer"></div>
 
-    <script src="breeding-calculator.js"></script>
-    <script src="app.js"></script>
+    <!-- Cache-busting version. BUMP THIS whenever breeding-calculator.js or
+         app.js changes. The site is served with no Cache-Control headers, so a
+         browser is free to keep an old copy of the JS while picking up a fresh
+         index.html — and a fresh page with a stale script is worse than either
+         being old on its own. That mismatch is what made a new tool's nav link
+         open the Foal Generator instead: the markup knew about the tab, the
+         cached app.js didn't, and showArea() fell back to the first tool.
+         A changed query string is a different URL, so the JS always comes down
+         with the markup that expects it. -->
+    <script src="breeding-calculator.js?v=20260731b"></script>
+    <script src="app.js?v=20260731b"></script>
 </body>
 </html>

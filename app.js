@@ -234,6 +234,15 @@
   }
 
   function showArea(area) {
+    // If the markup has a section for this area but this script has never heard
+    // of it, index.html is newer than the app.js running it — a stale cached
+    // bundle. Falling through to firstEnabledArea() is how that surfaced as
+    // "tapping Somatic opens the Foal Generator": silent, and it looks like a
+    // routing bug rather than a caching one. Say what's actually wrong instead.
+    if (!AREAS[area] && document.getElementById('area-' + area)) {
+      toast('That tool needs a fresh copy of the page — your browser is running an older version of the app. Reload to get it.', 'error');
+      return;
+    }
     if (!AREAS[area] || !toolEnabled(area)) area = firstEnabledArea();
     showView('app');
     $$('.area').forEach(a => a.classList.toggle('active', a.id === 'area-' + area));
