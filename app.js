@@ -65,6 +65,10 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '31 Jul 2026', items: [
+      'New Somatic tab: paste a genotype (or pick a horse from your collection) and it lists every trait Somatic could hide on that horse, with what the patch reads as once each one is switched off, plus the base-colour option and the drawing rules. No parents needed — a Somatic patch can only show what the horse already has.',
+      'Genotype boxes now recognise "+ Somatic" instead of flagging it as an unknown token, and the Translate tab describes it.'
+    ] },
     { date: '17 Jul 2026', items: [
       'New Layers tab: paste a genotype (or pick a horse from your collection) and its traits are laid out in the official visual hierarchy — Colors & Markings, Eye Colors, and Skin & Hoof Colors columns, base coat at the bottom, each layer covering the ones below — so you can paint in order. Every trait links to its Trait Index page.',
       'The header menu is sorted into Breeding and Design dropdowns, so it stays tidy as tools get added.',
@@ -158,6 +162,7 @@
     scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' },
     translate: { label: 'Translate', crumb: 'Translate' },
     layers: { label: 'Layers', crumb: 'Layers' },
+    somatic: { label: 'Somatic', crumb: 'Somatic' },
     collection: { label: 'Collection', crumb: 'Collection' }
   };
 
@@ -176,6 +181,7 @@
     scroll: 'tool-scroll-generator',
     translate: 'tool-translate',
     layers: 'tool-layers',
+    somatic: 'tool-somatic',
     search: 'tool-smart-search',
     collection: 'tool-collection'
   };
@@ -241,6 +247,7 @@
     if (area === 'calculator') populateParentPickers();
     if (area === 'translate' && window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
     if (area === 'layers' && window.populateLayersCollectionSelect) window.populateLayersCollectionSelect();
+    if (area === 'somatic' && window.populateSomaticCollectionSelect) window.populateSomaticCollectionSelect();
     // Privacy-first analytics: record which tool was opened, nothing else.
     // No-op unless a PostHog key is set in index.html.
     if (window.posthog) window.posthog.capture('tool_opened', { tool: area });
@@ -635,6 +642,12 @@
       if (lSel.value !== '' && window.fillLayersFromCollection) window.fillLayersFromCollection(lSel.value);
     });
 
+    // Somatic tab: same again
+    const soSel = $('#somaticFromColl');
+    if (soSel) soSel.addEventListener('change', () => {
+      if (soSel.value !== '' && window.fillSomaticFromCollection) window.fillSomaticFromCollection(soSel.value);
+    });
+
     // Collection toolbar
     const cs = $('#collSearch'); if (cs) cs.addEventListener('input', renderCollection);
     const cso = $('#collSort'); if (cso) cso.addEventListener('change', renderCollection);
@@ -957,6 +970,7 @@
       populateParentPickers();
       if (window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
       if (window.populateLayersCollectionSelect) window.populateLayersCollectionSelect();
+      if (window.populateSomaticCollectionSelect) window.populateSomaticCollectionSelect();
       refreshSearchGate();
     }
   };
