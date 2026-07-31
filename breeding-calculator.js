@@ -3575,16 +3575,35 @@ function calculateChimera() {
 }
 
 // A Creation's Chimera patch: any base colour (e/a changes freely), plus any
-// subset of the horse's OWN traits (genes can be removed, nothing new added).
+// subset of the horse's OWN visible traits. Nothing new can appear.
+//
+// This deliberately does NOT go through generateChimeraPossibilities. That
+// engine breeds two parents, so handing it the Creation as both "parents"
+// crossed the horse with itself and invented homozygous outcomes it doesn't
+// have: nCr came back as Double Cream, Tpprl as Pearl, Cher as Ether, a Blanket
+// as Fewspot, and carriers like nfe as full Filigree — every one of them a trait
+// the Creation doesn't show, which is exactly what the panel promises can't
+// happen. A Creation's patch is a subset of what the horse already is, and
+// that's what resolveTraits gives us directly.
 function generateCreationChimeraPossibilities(creationGeno) {
-    // Reuse the possibility engine with the horse as both "parents" to pull out
-    // its own dilutions / markings / modifiers / anomalies.
-    const own = generateChimeraPossibilities(creationGeno, creationGeno, creationGeno);
+    const t = resolveTraits(creationGeno);
+    const { genes, anomalies } = parseGenotype(creationGeno);
+
+    // Visible traits only — a carrier isn't painted on the horse, so the patch
+    // can't show it either.
+    const visible = t.lethal ? [] : t.allTraits.filter(x => !/^Carr(ies|ying) /.test(x));
+    const whiteMarkings = visible.filter(x => MARKING_DESC[x] || LEOPARD_DESC[x]);
+    const modifiers = visible.filter(x => MODIFIER_DESC[x]);
+
+    // At each dilution locus the patch either keeps this horse's own dilution or
+    // drops it. Same locus split resolveTraits uses, so a locus that only
+    // carries something recessive (nprl, ner) correctly offers nothing.
+    const locus1Gene = genes.find(g => /Cr|Tp|prl/.test(g) && !/(Ch|er)/.test(g));
+    const locus2Gene = genes.find(g => /Ch|er/.test(g) && !/(Cr|Tp|prl)/.test(g));
+    const l1 = !t.lethal && DILUTION_NAMES[locus1Gene] ? [DILUTION_NAMES[locus1Gene], 'none'] : ['none'];
+    const l2 = !t.lethal && DILUTION_NAMES[locus2Gene] ? [DILUTION_NAMES[locus2Gene], 'none'] : ['none'];
 
     const allBases = ['Bay', 'Black', 'Chestnut'];
-    // Dilution genes can always be removed, so every dilution locus may be empty.
-    const l1 = own.locusInfo.locus1Phenotypes.slice(); if (l1.indexOf('none') < 0) l1.push('none');
-    const l2 = own.locusInfo.locus2Phenotypes.slice(); if (l2.indexOf('none') < 0) l2.push('none');
     const dilCombos = [];
     l1.forEach(a => l2.forEach(b => {
         if (a === 'none' && b === 'none') { dilCombos.push('none'); return; }
@@ -3600,10 +3619,12 @@ function generateCreationChimeraPossibilities(creationGeno) {
         isCreation: true,
         baseCoats: allBases,
         fullCoatNames: Array.from(fullCoatNames).sort(),
-        dilutions: own.dilutions,
-        whiteMarkings: own.whiteMarkings,
-        modifiers: own.modifiers,
-        anomalies: own.anomalies
+        dilutions: t.lethal ? [] : t.dilutions.slice(),
+        whiteMarkings,
+        modifiers,
+        // Chimera itself isn't a patch trait, and Somatic never interacts with
+        // Chimera at all, so neither belongs in the list.
+        anomalies: anomalies.filter(a => a !== 'Chimera' && !FREE_MARKINGS.includes(a))
     };
 }
 
