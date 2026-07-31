@@ -35,9 +35,15 @@ leaves your machine.
   irregular patches.
 - Takes **one genotype, no parents** — a Somatic patch can only ever show what
   the horse already has, so unlike Chimera there is nothing to inherit.
-- Lists every trait Somatic could switch off, and what the patch reads as with
-  that trait gone, plus the alternative of showing different base colour genes
-  (E/A) with everything else left in place.
+- Lists every trait Somatic could switch off and what the horse reads as *inside
+  the patch*, plus the alternative of showing different base colour genes (E/A)
+  with everything else left in place.
+- The genotype never changes. Somatic switches a trait off in that area, it
+  doesn't remove the gene: the horse still carries it, still passes it to foals,
+  and still writes it in its genotype. So no altered genotype is ever shown.
+- White markings and leopard patterns only cover part of the horse to begin
+  with, so switching one off shows only where the patch and the marking overlap.
+  Those are flagged; whole-coat traits change anywhere the patch lands.
 - Enforces the handbook rules: one trait at a time, never a trait *and* a base
   change, the whole trait rather than one allele (Fewspot can't be knocked down
   to Leopard), Double Cream → Cream as the one documented exception, and no

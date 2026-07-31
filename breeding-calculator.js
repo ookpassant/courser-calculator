@@ -3943,6 +3943,11 @@ function rollChimeraPatch() {
 // rewritten gene list back through resolveTraits(). Naming the patch with the
 // same function that names the horse means the two can never disagree.
 //
+// That rewritten gene list is a scratch value for naming the patch and NOTHING
+// else. Somatic does not remove a gene: the horse keeps it, still passes it to
+// foals, and still writes it in its genotype — the gene just isn't expressed
+// inside the patch. So the rewritten list must never be shown as a genotype.
+//
 // Rules this encodes, from the Trait Index entry for Somatic:
 //   - exactly one trait at a time, and never a trait AND a base-colour change
 //   - the WHOLE trait goes, not one allele (Fewspot can't be knocked down to
@@ -4078,11 +4083,32 @@ const SOMATIC_BASE_GENES = {
 // colour. Same one-trait budget, different reach.
 const SOMATIC_SURFACE_TRAITS = ['Illuminated', 'Gilt'];
 
-// Rebuild a genotype string from a gene list, dropping blanks left by removed
-// tokens. Anomalies are deliberately left off — Somatic can't touch them, so
-// they ride along unchanged and don't belong in the patch's name.
+// Traits that only cover part of the horse to begin with. A Somatic patch is an
+// area, not a switch on the whole horse, so hiding one of these only shows
+// where the patch and the marking actually overlap — the rest of the marking
+// stays exactly as it was. Whole-coat traits (dilutions, most modifiers, the
+// base colour) change everywhere the patch lands, so they don't need the note.
+const SOMATIC_LOCALISED = new Set([
+    'Tobiano', 'Overo', 'Splash', 'Roan', 'Sabino', 'Blanched', 'False Leopard',
+    'Harlequin', 'Shroud', 'Ossuary', 'Filigree', 'Crowned', 'Cuirass', 'Girdle',
+    'Collar', 'Rabicano', 'Dominant White',
+    'Snowflake', 'Blanket', 'Leopard', 'Snowcap', 'Varnish Roan', 'Fewspot'
+]);
+
+// Name what the patch looks like from a scratch gene list, dropping blanks left
+// by switched-off tokens. This is a naming device, not the horse's genotype.
+// Anomalies are deliberately left off — Somatic can't touch them, so they ride
+// along unchanged and don't belong in the patch's name.
 function somaticGenesToPhenotype(genes) {
-    return genotypeToPhenotype(genes.filter(Boolean).join(' '));
+    const t = resolveTraits(genes.filter(Boolean).join(' '));
+    if (t.lethal) return 'Lethal white';
+    // Hidden carriers are left out too. They're not painted on the horse, and
+    // Somatic doesn't change what a horse carries, so listing them against a
+    // patch would imply exactly the thing that isn't happening.
+    const visible = t.allTraits.filter(x => !/^Carr(ies|ying) /.test(x));
+    const before = visible.filter(x => TRAITS_BEFORE_COAT.includes(x)).join(' ');
+    const after = visible.filter(x => TRAITS_AFTER_COAT.includes(x)).join(' ');
+    return [before, t.coatColor, after].filter(Boolean).join(' ').trim();
 }
 
 // Every Somatic a horse could wear. Own genotype only: no parents, ever.
@@ -4112,7 +4138,8 @@ function generateSomaticPossibilities(genoString) {
                 trait: entry.trait,
                 gene: token,
                 patchGenes: patchGenes.filter(Boolean).join(' '),
-                phenotype
+                phenotype,
+                localised: SOMATIC_LOCALISED.has(entry.trait)
             });
         });
     });
@@ -4131,6 +4158,7 @@ function generateSomaticPossibilities(genoString) {
                 gene: genes.filter(g => /^(nLp|LpLp|npatn|patnpatn)$/.test(g)).join(' '),
                 patchGenes: patchGenes.join(' '),
                 phenotype,
+                localised: true,
                 note: 'Leopard Complex is one trait across two genes, so Lp and patn both switch off together.'
             });
         }
@@ -4213,17 +4241,20 @@ function fillSomaticFromCollection(idx) {
     if (ta) ta.value = h.genotype || '';
 }
 
-// One row: what the patch switches off, and what the horse reads as inside it.
-function renderSomaticOption(opt, kindLabel) {
+// One row: the trait the patch hides, and what the horse reads as inside it.
+// Localised traits get a marker, because hiding one only shows where the patch
+// and the marking overlap.
+function renderSomaticOption(opt) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const partial = opt.localised ? '<span class="somatic-opt-partial">where they overlap</span>' : '';
     const note = opt.note ? `<p class="somatic-opt-note">${esc(opt.note)}</p>` : '';
+    // Deliberately no genotype here. Somatic doesn't remove a gene, it stops one
+    // being expressed inside the patch, so there is no second genotype to show —
+    // printing the rewritten gene list would suggest the horse's own genotype
+    // changes, which it never does.
     return `<li class="somatic-opt">
-        <div class="somatic-opt-head"><span class="somatic-opt-tag">${esc(kindLabel)}</span> ${traitLink(opt.trait)}</div>
-        <div class="somatic-opt-body">
-            <span class="somatic-opt-label">Patch reads</span>
-            <strong>${esc(opt.phenotype)}</strong>
-            <code>${esc(opt.patchGenes)}</code>
-        </div>
+        <div class="somatic-opt-head">${traitLink(opt.trait)}${partial}</div>
+        <div class="somatic-opt-body"><strong>${esc(opt.phenotype)}</strong></div>
         ${note}
     </li>`;
 }
@@ -4263,61 +4294,61 @@ function showSomatic() {
     }
 
     const total = data.traitOptions.length + data.baseOptions.length;
-    const head = `<p class="somatic-coat">Unmarked, this horse reads <strong>${esc(data.unaffected)}</strong>. ` +
-        (total
-            ? `Somatic can take it <strong>${total}</strong> different way${total === 1 ? '' : 's'} — pick <em>one</em>.`
-            : `It has nothing Somatic can switch off and nowhere for its base colour to go, so there's no Somatic available here.`) +
-        `</p>`;
+    if (!total) {
+        out.innerHTML = warnHtml + `<p class="somatic-empty">Unmarked, this horse reads <strong>${esc(data.unaffected)}</strong>, and it has nothing Somatic can hide and nowhere for its base colour to go.</p>`;
+        return;
+    }
+
+    // The patch is an AREA, not a switch on the whole horse. Everything below is
+    // "what you'd see inside the patch", which is the framing the whole tab
+    // hangs on, so it goes in one line at the top rather than on every card.
+    const head = `<p class="somatic-coat">This horse reads <strong>${esc(data.unaffected)}</strong>. ` +
+        `A Somatic patch covers up to a quarter of it and hides <em>one</em> trait in that area. ` +
+        `Pick one of the ${total} below — inside the patch, the horse would read:</p>`;
 
     const sections = [];
 
     if (data.traitOptions.length) {
+        const anyLocalised = data.traitOptions.some(o => o.localised);
         sections.push(`<div class="somatic-group">
-            <h3 class="somatic-group-head">Switch off a trait (${data.traitOptions.length})</h3>
-            <ul class="somatic-list">${data.traitOptions.map(o => renderSomaticOption(o, 'Off')).join('')}</ul>
+            <h3 class="somatic-group-head">Hide a trait</h3>
+            <ul class="somatic-list">${data.traitOptions.map(renderSomaticOption).join('')}</ul>
+            ${anyLocalised ? `<p class="somatic-group-blurb">Markings only cover part of the horse already, so those change only where the patch and the marking overlap. The rest of the marking stays.</p>` : ''}
         </div>`);
     }
 
     if (data.baseOptions.length) {
         sections.push(`<div class="somatic-group">
-            <h3 class="somatic-group-head">Or show different base colour genes (${data.baseOptions.length})</h3>
-            <p class="somatic-group-blurb">Instead of switching a trait off, the patch reads a different E/A base. Everything else the horse has stays put.</p>
-            <ul class="somatic-list">${data.baseOptions.map(o => renderSomaticOption(o, 'Base')).join('')}</ul>
+            <h3 class="somatic-group-head">Or show a different base colour</h3>
+            <ul class="somatic-list">${data.baseOptions.map(renderSomaticOption).join('')}</ul>
         </div>`);
     }
 
     if (data.surfaceOptions.length) {
-        sections.push(`<div class="somatic-group">
-            <h3 class="somatic-group-head">Or switch off skin / hooves only</h3>
-            <p class="somatic-group-blurb">${data.surfaceOptions.map(o => traitLink(o.trait)).join(' and ')} recolour${data.surfaceOptions.length === 1 ? 's' : ''} skin and hooves as well as coat, so Somatic can switch off the skin and/or hooves on their own and leave the coat colour exactly as it is.</p>
-        </div>`);
+        sections.push(`<p class="somatic-group-blurb"><strong>Or skin and hooves only:</strong> ${data.surfaceOptions.map(o => traitLink(o.trait)).join(' and ')} recolour${data.surfaceOptions.length === 1 ? 's' : ''} those too, so the patch can hide them there and leave the coat alone.</p>`);
     }
 
-    if (data.anomalies.length) {
-        sections.push(`<p class="somatic-note">Anomalies aren't attached to genes, so Somatic can't touch ${joinList(data.anomalies.map(a => `<strong>${esc(a)}</strong>`))}. ${data.anomalies.length === 1 ? 'It reads' : 'They read'} the same inside the patch as out.</p>`);
-    }
-
-    const interactions = data.interactions.length
-        ? `<div class="somatic-group">
-            <h3 class="somatic-group-head">Rules for this horse</h3>
-            <ul class="somatic-rules">${data.interactions.map(x => `<li><strong>${esc(x.trait)}:</strong> ${esc(x.text)}</li>`).join('')}</ul>
-        </div>`
+    // Everything below is reference: true for every Somatic, or a rule you can't
+    // act on until you're drawing. Folded away so the options stay the page.
+    const anomalyRule = data.anomalies.length
+        ? `<li>Anomalies aren't attached to genes, so Somatic can't touch ${joinList(data.anomalies.map(a => `<strong>${esc(a)}</strong>`))}.</li>`
         : '';
-
-    // The drawing rules, which no genotype can decide for you.
-    const drawing = `<div class="somatic-group">
-        <h3 class="somatic-group-head">Drawing it</h3>
+    const rules = `<details class="somatic-details">
+        <summary>Rules for drawing it${data.interactions.length ? ` (${data.interactions.length} specific to this horse)` : ''}</summary>
         <ul class="somatic-rules">
+            ${data.interactions.map(x => `<li><strong>${esc(x.trait)}:</strong> ${esc(x.text)}</li>`).join('')}
+            ${anomalyRule}
             <li>Covers <strong>up to a quarter</strong> of the horse, in one or several patches.</li>
             <li>Irregular blotches, strips or splatters — it must not read as any other marking, and must not be symmetrical, uniform or deliberate (without Pastiche).</li>
             <li>Crisp, clear outlines or jagged, speckled edges. Mapping is fine; blurring, gradients and altered opacity are not (without Fresco).</li>
             <li>Mane, tail, eyes and hooves change only where the patch touches them, and the patch must show a visible strip of changed coat colour at that edge.</li>
-            <li>Skin changes across the patch, and follows the switched trait if that trait recolours skin.</li>
+            <li>Skin changes across the patch, and follows the hidden trait if that trait recolours skin.</li>
             <li>No more than <strong>three base colours</strong> on the horse, counting everything.</li>
-            <li>It can remove, never add: Somatic cannot create white markings or give the horse a trait it doesn't have.</li>
+            <li>It can hide, never add: Somatic cannot create white markings or give the horse a trait it doesn't have.</li>
+            <li><strong>The genotype doesn't change.</strong> Somatic switches a trait off inside the patch, it doesn't remove the gene — the horse still carries it, still passes it to foals, and still writes it in its genotype.</li>
         </ul>
-    </div>`;
+    </details>`;
 
-    out.innerHTML = warnHtml + head + sections.join('') + interactions + drawing;
+    out.innerHTML = warnHtml + head + sections.join('') + rules;
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }

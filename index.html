@@ -359,11 +359,12 @@
         .somatic-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
         .somatic-opt { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve-soft); border-radius: var(--radius-sm); padding: 12px 14px; }
         .somatic-opt-head { font-size: 0.95rem; font-weight: 700; color: var(--dc-ink); margin-bottom: 6px; }
-        .somatic-opt-tag { display: inline-block; font-family: var(--font-stamp); font-size: 0.58rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); font-weight: 400; margin-right: 6px; }
+        .somatic-opt-partial { display: inline-block; font-family: var(--font-stamp); font-size: 0.55rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); font-weight: 400; margin-left: 7px; border: 1px solid var(--dc-line); border-radius: 2px; padding: 1px 5px; vertical-align: 2px; }
         .somatic-opt-body { font-size: 0.88rem; color: var(--dc-ink); line-height: 1.55; }
-        .somatic-opt-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); }
-        .somatic-opt-body code { display: block; margin-top: 5px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--dc-slate); word-break: break-word; }
         .somatic-opt-note { margin: 8px 0 0; font-size: 0.82rem; color: var(--dc-slate); line-height: 1.5; }
+        .somatic-details { border-top: 1px solid var(--dc-line); padding-top: 14px; margin-top: 4px; }
+        .somatic-details summary { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-mauve-deep); cursor: pointer; }
+        .somatic-details[open] summary { margin-bottom: 12px; }
         .somatic-rules { list-style: none; margin: 0; padding: 0; }
         .somatic-rules li { color: var(--dc-ink); font-size: 0.88rem; line-height: 1.55; padding-left: 16px; position: relative; margin-bottom: 8px; }
         .somatic-rules li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--dc-mauve-soft); }
@@ -780,11 +781,10 @@
 
                 <section class="area" id="area-somatic">
                     <h1 class="page-title">Somatic</h1>
-                    <p class="blurb">Somatic is a free marking: any horse can wear it, at no cost. Paste a genotype (or pick one from your collection) and I'll list every trait it could hide, and what the patch reads as with that trait switched off.</p>
+                    <p class="blurb">Somatic is a free marking: any horse can wear it, at no cost. It hides one trait inside irregular patches covering up to a quarter of the horse. Paste a genotype (or pick one from your collection) and I'll show you what those patches could look like.</p>
 
                     <div class="info-box">
-                        <p><strong>No parents needed.</strong> Unlike Chimera, a Somatic patch can only show what's already in this horse — it takes a trait away, it never adds one. So one genotype is the whole input.</p>
-                        <p><strong>Pick one.</strong> Only one trait may be affected at a time, and you can't switch a trait off <em>and</em> change the base colour genes. Every option below is an alternative to all the others.</p>
+                        <p><strong>No parents needed.</strong> A Somatic patch can only show what's already in this horse — it hides a trait, it never adds one. One genotype is the whole input.</p>
                     </div>
 
                     <div class="parent-source-row" id="somaticSourceRow" style="display:none;">
