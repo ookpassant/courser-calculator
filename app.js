@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '13 Aug 2026', items: [
+      'New "Made by friends" section on the front page, starting with Rev\'s Group Horse Roller: it picks two temperament-compatible group horses and flags the lethal white risk and breeding cost, so you can bring a valid pair straight back here.'
+    ] },
     { date: '31 Jul 2026', items: [
       'New Somatic tab: paste a genotype (or pick a horse from your collection) and it lists every trait Somatic could hide on that horse, with what the patch reads as once each one is switched off, plus the base-colour option and the drawing rules. No parents needed — a Somatic patch can only show what the horse already has.',
       'Genotype boxes now recognise "+ Somatic" instead of flagging it as an unknown token, and the Translate tab describes it.'

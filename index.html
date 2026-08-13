@@ -109,8 +109,11 @@
         .feature p { color: var(--dc-slate); font-size: 0.9rem; line-height: 1.5; }
         .section-head { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.5rem; margin: 28px 0 12px; }
         .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+        /* auto-fill keeps the empty tracks, so a short row's cards stay card-width instead of stretching. */
+        .tool-grid.sparse { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
         .tool-card { text-align: left; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 6px; font: inherit; cursor: pointer; transition: transform var(--ease-snappy), box-shadow var(--ease-default); }
-        button.tool-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raise); }
+        button.tool-card:hover, a.tool-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raise); }
+        a.tool-card { text-decoration: none; }
         .tool-card.static { cursor: default; border-left-color: var(--dc-moss); }
         .tool-card h3 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.25rem; }
         .tool-card p { color: var(--dc-slate); font-size: 0.9rem; line-height: 1.5; flex: 1; }
@@ -520,6 +523,16 @@
                         <p>Type a courser in yourself. Single-courser and Parent-slot bookmarklets live in the Collection tab too.</p>
                         <button class="dc-btn outline auto" id="landingAdd">Add a courser</button>
                     </div>
+                </div>
+
+                <h2 class="section-head">Made by friends</h2>
+                <p class="subtitle" style="margin-bottom:16px;">Other fan tools for Dungeon Coursers, built by other players and hosted on their own sites.</p>
+                <div class="tool-grid sparse">
+                    <a class="tool-card" href="https://revukan.neocities.org/code/tools/dcgrouphorse" target="_blank" rel="noopener">
+                        <h3>Group Horse Roller</h3>
+                        <p>Rolls you two temperament-compatible group horses, with the lethal white risk and the breeding cost up front. Bring the pair back here to see what they'd throw. By Rev.</p>
+                        <span class="tool-open">Visit ↗</span>
+                    </a>
                 </div>
 
                 <div class="changelog" id="changelog"></div>
