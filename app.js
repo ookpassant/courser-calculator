@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '19 Aug 2026', items: [
+      'New Recipe tab: the Foal Generator run backwards. Paste the foal you want and it works out what the two parents would have to be, locus by locus, with the odds that pairing actually throws it. It also tells you what can\'t be planned — anomalies only pass 25% of the time, and anything needing Overo, Ossuary or Dominant White is capped at 50% because two copies is lethal white.'
+    ] },
     { date: '13 Aug 2026', items: [
       'New "Made by friends" section on the front page, starting with Rev\'s Group Horse Roller: it picks two temperament-compatible group horses and flags the lethal white risk and breeding cost, so you can bring a valid pair straight back here.'
     ] },
@@ -161,6 +164,7 @@
   const AREAS = {
     search: { label: 'Smart Search', crumb: 'Smart Search' },
     calculator: { label: 'Foal Generator', crumb: 'Foal Generator' },
+    recipe: { label: 'Recipe', crumb: 'Recipe' },
     chimera: { label: 'Chimera Calculator', crumb: 'Chimera Calculator' },
     scroll: { label: 'Scroll Generator', crumb: 'Scroll Generator' },
     translate: { label: 'Translate', crumb: 'Translate' },
@@ -180,6 +184,7 @@
   // =========================================================================
   const TOOL_FLAGS = {
     calculator: 'tool-foal-generator',
+    recipe: 'tool-recipe',
     chimera: 'tool-chimera',
     scroll: 'tool-scroll-generator',
     translate: 'tool-translate',

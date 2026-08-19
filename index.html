@@ -374,6 +374,50 @@
         .somatic-note { background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--dc-slate); font-size: 0.85rem; line-height: 1.5; margin: 0 0 26px; }
         @media (max-width: 700px) { .somatic-list { grid-template-columns: 1fr; } }
 
+        /* ---- Recipe ---- */
+        .recipe-result { margin-top: 28px; }
+        .recipe-empty { color: var(--dc-slate); font-size: 0.95rem; }
+        .recipe-lead { color: var(--dc-ink); font-size: 0.95rem; line-height: 1.55; margin: 0 0 18px; }
+        .recipe-lead strong { color: var(--dc-mauve); font-weight: 700; }
+        .recipe-blocked { background: var(--dc-blood-bg); border: 1px solid var(--dc-blood-edge); border-left: 3px solid var(--dc-blood); border-radius: var(--radius-sm); padding: 14px 16px; color: var(--dc-ink); font-size: 0.92rem; line-height: 1.55; }
+        .recipe-blocked strong { color: var(--dc-blood); }
+        .recipe-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+        .recipe-parent { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve); border-radius: var(--radius-sm); padding: 14px 16px; }
+        .recipe-parent-head { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.7rem; text-transform: uppercase; color: var(--dc-mauve-deep); margin-bottom: 8px; }
+        .recipe-geno { font-family: var(--font-mono); font-size: 0.95rem; color: var(--dc-ink); word-break: break-word; }
+        .recipe-odds { font-size: 0.95rem; color: var(--dc-ink); margin: 0 0 10px; line-height: 1.55; }
+        .recipe-odds-good { color: var(--dc-uncommon); font-weight: 700; }
+        .recipe-odds-mid { color: var(--dc-legendary); font-weight: 700; }
+        .recipe-strict { font-size: 0.88rem; color: var(--dc-slate); line-height: 1.55; margin: 0 0 24px; }
+        .recipe-strict strong { color: var(--dc-ink); }
+        .recipe-head { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-mauve-deep); margin: 0 0 12px; font-weight: 400; }
+        .recipe-list { list-style: none; margin: 0 0 26px; padding: 0; }
+        .recipe-row { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve-soft); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; }
+        .recipe-row-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+        .recipe-row-head code { font-family: var(--font-mono); font-size: 0.95rem; color: var(--dc-mauve-deep); font-weight: 700; }
+        .recipe-row-label { font-size: 0.9rem; color: var(--dc-ink); }
+        .recipe-row-odds { margin-left: auto; font-family: var(--font-stamp); font-size: 0.68rem; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); }
+        .recipe-row-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.88rem; color: var(--dc-ink); line-height: 1.5; }
+        .recipe-row-body code { font-family: var(--font-mono); color: var(--dc-ink); }
+        .recipe-side { display: inline-block; font-family: var(--font-stamp); font-size: 0.62rem; letter-spacing: var(--tracking-stamp); color: var(--dc-white); background: var(--dc-mauve-soft); border-radius: 2px; padding: 1px 5px; margin-right: 4px; }
+        .recipe-alt { color: var(--dc-slate); font-size: 0.85em; }
+        .recipe-none { color: var(--dc-slate); font-style: italic; }
+        .recipe-cap { margin: 10px 0 0; font-size: 0.84rem; color: var(--dc-blood); line-height: 1.5; }
+        .recipe-extras { margin-bottom: 26px; }
+        .recipe-extras-blurb { color: var(--dc-slate); font-size: 0.88rem; line-height: 1.5; margin: 0 0 10px; }
+        .recipe-extras-list { list-style: none; margin: 0; padding: 0; }
+        .recipe-extras-list li { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-legendary); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.55; }
+        .recipe-note { background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--dc-slate); font-size: 0.85rem; line-height: 1.5; margin: 0 0 24px; }
+        .recipe-details { border-top: 1px solid var(--dc-line); padding-top: 14px; }
+        .recipe-details summary { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-mauve-deep); cursor: pointer; }
+        .recipe-details[open] summary { margin-bottom: 12px; }
+        .recipe-rules { list-style: none; margin: 0; padding: 0; }
+        .recipe-rules li { color: var(--dc-ink); font-size: 0.88rem; line-height: 1.55; padding-left: 16px; position: relative; margin-bottom: 8px; }
+        .recipe-rules li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--dc-mauve-soft); }
+        .recipe-rules strong { color: var(--dc-mauve-deep); }
+        .recipe-rules code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
+        @media (max-width: 700px) { .recipe-pair, .recipe-row-body { grid-template-columns: 1fr; } }
+
         /* ---- Responsive ---- */
         @media (max-width: 600px) {
             .parents-container { grid-template-columns: 1fr; }
@@ -427,6 +471,7 @@
                 <button class="nav-link nav-group-btn" aria-haspopup="true" aria-expanded="false">Breeding<span class="nav-caret">▾</span></button>
                 <div class="nav-menu">
                     <button class="nav-link" data-area="calculator">Foal Generator</button>
+                    <button class="nav-link" data-area="recipe">Recipe</button>
                     <button class="nav-link" data-area="chimera">Chimera</button>
                     <button class="nav-link" data-area="search">Smart Search</button>
                 </div>
@@ -466,6 +511,11 @@
                     <button class="tool-card" data-nav="calculator">
                         <h3>Foal Generator</h3>
                         <p>Pick two parents and see the foals they could throw, plus every possible outcome.</p>
+                        <span class="tool-open">Open →</span>
+                    </button>
+                    <button class="tool-card" data-nav="recipe">
+                        <h3>Recipe</h3>
+                        <p>The Foal Generator backwards. Describe the foal you want and see what its parents would have to be.</p>
                         <span class="tool-open">Open →</span>
                     </button>
                     <button class="tool-card" data-nav="chimera">
@@ -810,6 +860,24 @@
                     <button class="generate-btn" onclick="showSomatic()">Show what Somatic can hide</button>
 
                     <div class="somatic-result" id="somaticResult" style="display:none;"></div>
+                </section>
+
+                <!-- Area: Recipe (standalone — works backwards from a target foal) -->
+                <section class="area" id="area-recipe">
+                    <h1 class="page-title">Recipe</h1>
+                    <p class="blurb">The Foal Generator run backwards. Paste the foal you want and I'll work out what its parents would have to be, and how often that pairing would actually throw it.</p>
+
+                    <div class="info-box">
+                        <p><strong>One allele from each parent.</strong> Every pair in a genotype has one side from each parent, so a recipe is really a list of who has to carry what. Nothing here needs your collection — it's what the parents would have to be, whoever owns them.</p>
+                        <p><strong>Exact genotype.</strong> The pair below is aimed at this genotype precisely, so the parents carry nothing else. Anything extra they have can land in the foal too.</p>
+                    </div>
+
+                    <label for="recipeGeno">Foal you want:</label>
+                    <textarea id="recipeGeno" placeholder="Ee Aa nCr nT"></textarea>
+
+                    <button class="generate-btn" onclick="showRecipe()">Work out the parents</button>
+
+                    <div class="recipe-result" id="recipeResult" style="display:none;"></div>
                 </section>
 
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->

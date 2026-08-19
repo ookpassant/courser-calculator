@@ -4354,3 +4354,375 @@ function showSomatic() {
     out.innerHTML = warnHtml + head + sections.join('') + rules;
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+// ===========================================================================
+// Recipe — the Foal Generator run backwards
+// ---------------------------------------------------------------------------
+// Given a foal you want, work out what its parents would have to be.
+//
+// generateFoal treats every locus on its own: getGeneAlleles cracks each parent
+// gene into two alleles, one is taken at random from each side, and
+// combineAlleles fuses them. Nothing crosses between loci. So the inverse
+// decomposes the same way — for a target allele pair {X, Y} at one locus:
+//
+//     one parent must carry X, the other must carry Y.
+//
+// That's the whole rule, which makes this an exact calculation over ~25 loci
+// rather than a search over parent genotypes.
+// ===========================================================================
+
+// Every allele pair the engine knows, read from the same tables it breeds from
+// so the recipe can't drift away from what generateFoal actually does.
+const RECIPE_TOKENS = [
+    ...Object.keys(DILUTION_NAMES),
+    ...Object.keys(MODIFIER_NAMES),
+    ...Object.keys(WHITE_MARKING_NAMES),
+    'nLp', 'LpLp', 'npatn', 'patnpatn', 'nprl', 'ner',
+    'EE', 'Ee', 'ee', 'AA', 'Aa', 'aa'
+]
+    .filter(tok => getGeneAlleles(tok).length === 2)
+    // The name tables list compounds under both orderings (TRn and RnT are one
+    // pair), so keep only the spelling combineAlleles itself produces.
+    .filter(tok => combineAlleles(getGeneAlleles(tok)[0], getGeneAlleles(tok)[1]) === tok);
+
+// Homozygous pairs that kill the foal, so a parent can never be one of these
+// and an allele here can only ever be passed by a carrier — at 50%, never 100%.
+const RECIPE_LETHAL_HOM = ['O', 'Os', 'W'];
+
+// The 5% wild anomaly roll picks from this list, so these can turn up in a foal
+// neither parent carries. Kept in step with generateFoal.
+const RECIPE_WILD_ANOMALIES = ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle', 'Chimera',
+    'Geode', 'Stained Glass', 'Kintsugi', 'Swarf', 'Vitiligo',
+    'Oracle', 'Signet', 'Pennant', 'Pastiche', 'Fresco', 'Lantern'];
+
+// Which alleles share a locus, worked out by co-occurrence rather than hardcoded:
+// if any known pair holds both (Crprl proves Cr and prl are roommates), they sit
+// at one locus and a parent can only ever pass one of them.
+const RECIPE_LOCUS_OF = (function () {
+    const up = {};
+    const add = (a) => { if (!(a in up)) up[a] = a; };
+    const find = (a) => { while (up[a] !== a) { up[a] = up[up[a]]; a = up[a]; } return a; };
+    const union = (a, b) => { add(a); add(b); const ra = find(a), rb = find(b); if (ra !== rb) up[ra] = rb; };
+
+    RECIPE_TOKENS.forEach((tok) => {
+        const alleles = getGeneAlleles(tok).filter(a => a !== 'n');
+        alleles.forEach(add);
+        for (let i = 1; i < alleles.length; i++) union(alleles[0], alleles[i]);
+    });
+
+    const out = {};
+    Object.keys(up).forEach(a => { out[a] = find(a); });
+    return out;
+})();
+
+// Every pair a parent could sit at a given locus, so the recipe can list real
+// alternatives ("Cr comes from any of nCr, CrCr, Crprl, TpCr") instead of only
+// naming the ideal one.
+const RECIPE_LOCUS_TOKENS = (function () {
+    const byLocus = {};
+    RECIPE_TOKENS.forEach((tok) => {
+        const real = getGeneAlleles(tok).filter(a => a !== 'n');
+        if (!real.length) return;
+        const locus = RECIPE_LOCUS_OF[real[0]];
+        byLocus[locus] = byLocus[locus] || [];
+        if (byLocus[locus].indexOf(tok) === -1) byLocus[locus].push(tok);
+    });
+    return byLocus;
+})();
+
+// Pairs at this locus that can pass the given allele, best (most reliable) first.
+function recipeCarriersOf(allele) {
+    const locus = RECIPE_LOCUS_OF[allele];
+    const pairs = RECIPE_LOCUS_TOKENS[locus] || [];
+    return pairs
+        .filter(tok => getGeneAlleles(tok).indexOf(allele) !== -1)
+        .filter(tok => !recipeIsLethalPair(tok))
+        .sort((a, b) => recipePassChance(b, allele) - recipePassChance(a, allele));
+}
+
+function recipeIsLethalPair(tok) {
+    const alleles = getGeneAlleles(tok);
+    return alleles[0] === alleles[1] && RECIPE_LETHAL_HOM.indexOf(alleles[0]) !== -1;
+}
+
+// How often a parent sitting at this pair hands the allele down: both copies is
+// every time, one copy is half the time.
+function recipePassChance(tok, allele) {
+    const alleles = getGeneAlleles(tok);
+    return alleles.filter(a => a === allele).length / 2;
+}
+
+// The best a parent can do for one allele. Two copies where that's survivable,
+// one copy where doubling up would be lethal white.
+function recipeBestCarrier(allele) {
+    if (allele === 'n') return null;           // "carries nothing here" — see below
+    const carriers = recipeCarriersOf(allele);
+    return carriers.length ? carriers[0] : null;
+}
+
+// Work out the two parents for one target pair. Returns the role each parent
+// plays, the ideal pair for it, and the odds that ideal pair delivers.
+function recipeForToken(token) {
+    const alleles = getGeneAlleles(token);
+    if (alleles.length !== 2) return null;     // unknown token; flagged separately
+
+    const [x, y] = alleles;
+    const locus = RECIPE_LOCUS_OF[x === 'n' ? y : x];
+
+    function side(allele) {
+        if (allele === 'n') {
+            // "Passes nothing at this locus" — a parent with no pair here at all
+            // is clean every time, so this side is free.
+            return { allele: 'n', ideal: null, chance: 1, carriers: [] };
+        }
+        const ideal = recipeBestCarrier(allele);
+        return {
+            allele,
+            ideal,
+            chance: ideal ? recipePassChance(ideal, allele) : 0,
+            carriers: recipeCarriersOf(allele)
+        };
+    }
+
+    const a = side(x);
+    const b = side(y);
+
+    return {
+        token,
+        locus,
+        label: recipeTokenLabel(token),
+        a, b,
+        // Each parent hands down its side independently, so the pair's odds are
+        // just the two multiplied.
+        chance: a.chance * b.chance,
+        cappedBy: [x, y].filter(al => RECIPE_LETHAL_HOM.indexOf(al) !== -1)
+    };
+}
+
+// The trait name the engine already uses for a pair, so Recipe never invents
+// its own vocabulary.
+function recipeTokenLabel(token) {
+    if (DILUTION_NAMES[token]) return DILUTION_NAMES[token];
+    if (MODIFIER_NAMES[token]) return MODIFIER_NAMES[token];
+    if (WHITE_MARKING_NAMES[token]) return WHITE_MARKING_NAMES[token];
+    if (token === 'nLp') return 'Carries Leopard';
+    if (token === 'LpLp') return 'Leopard complex';
+    if (token === 'npatn' || token === 'patnpatn') return 'Carries Patn';
+    if (token === 'nprl') return 'Carries Pearl';
+    if (token === 'ner') return 'Carries Ether';
+    if (/^[Ee]{2}$/.test(token) || /^[Aa]{2}$/.test(token)) return 'Base coat';
+    return token;
+}
+
+// Odds a specific anomaly shows up when both parents carry it: each parent
+// passes it 25% of the time, and the 5% wild roll can also land on it.
+function recipeAnomalyChance(name) {
+    const fromParents = 1 - Math.pow(0.75, 2);
+    const wild = RECIPE_WILD_ANOMALIES.indexOf(name) !== -1 ? 0.05 / RECIPE_WILD_ANOMALIES.length : 0;
+    return fromParents + (1 - fromParents) * wild;
+}
+
+function computeRecipe(genoString) {
+    const parsed = parseGenotype(genoString);
+    const result = {
+        loci: [], anomalies: [], free: [],
+        parent1: [], parent2: [],
+        geneChance: 1, blocked: null, notes: []
+    };
+
+    // A foal you can't have is not a foal you can plan for.
+    if (isLethalWhite(parsed.genes)) {
+        result.blocked = 'This genotype is a lethal white, so there is no foal to breed for. ' +
+            'Two copies of Overo, Ossuary or Dominant White is fatal, and so is one Overo alongside one Ossuary.';
+        return result;
+    }
+
+    const hasE = parsed.genes.some(g => /^[Ee]{2}$/.test(g));
+    const hasA = parsed.genes.some(g => /^[Aa]{2}$/.test(g));
+    if (!hasE || !hasA) {
+        result.notes.push('Every foal is born with a base coat, so add ' +
+            (!hasE && !hasA ? 'an E and an A pair' : !hasE ? 'an E pair' : 'an A pair') +
+            ' to the target (like Ee Aa) or the recipe can only cover part of the horse.');
+    }
+
+    // One entry per locus in the target. A token the engine doesn't know still
+    // splits into two alleles (nZZZ looks like n + ZZZ), so it has to be dropped
+    // here as well or it would drag the odds to zero after being reported as
+    // left out.
+    parsed.genes.forEach((token) => {
+        if (!isKnownGeneToken(token)) return;
+        const entry = recipeForToken(token);
+        if (!entry) return;
+        result.loci.push(entry);
+        result.geneChance *= entry.chance;
+    });
+
+    // Spread the load: whichever parent is carrying less so far takes the next
+    // side. Any split works — the rule is only that the two sides go to
+    // different parents — but an even one is far easier to actually find.
+    result.loci.forEach((entry) => {
+        // A side asking for nothing costs a parent nothing, so only the sides
+        // that need a real pair count towards the balance.
+        const aNeeds = entry.a.ideal ? 1 : 0;
+        const bNeeds = entry.b.ideal ? 1 : 0;
+        const p1Lighter = result.parent1.length <= result.parent2.length;
+        const flip = aNeeds === bNeeds
+            ? result.parent1.length > result.parent2.length
+            : (aNeeds > bNeeds ? !p1Lighter : p1Lighter);
+
+        entry.p1 = flip ? entry.b : entry.a;
+        entry.p2 = flip ? entry.a : entry.b;
+        if (entry.p1.ideal) result.parent1.push(entry.p1.ideal);
+        if (entry.p2.ideal) result.parent2.push(entry.p2.ideal);
+    });
+
+    parsed.anomalies.forEach((name) => {
+        if (FREE_MARKINGS.indexOf(name) !== -1) {
+            result.free.push(name);
+            return;
+        }
+        result.anomalies.push({ name: name, chance: recipeAnomalyChance(name) });
+    });
+
+    return result;
+}
+
+function recipePercent(p) {
+    if (p >= 1) return '100%';
+    if (p <= 0) return 'never';
+    const pct = p * 100;
+    return (pct < 1 ? pct.toFixed(2) : pct < 10 ? pct.toFixed(1) : Math.round(pct)) + '%';
+}
+
+// "1 in 8" reads better than "12.5%" when you're planning breedings.
+function recipeOneIn(p) {
+    if (p >= 1 || p <= 0) return '';
+    const n = 1 / p;
+    return 'about 1 foal in ' + (n < 10 ? (Math.round(n * 10) / 10) : Math.round(n));
+}
+
+function showRecipe() {
+    const ta = document.getElementById('recipeGeno');
+    const out = document.getElementById('recipeResult');
+    if (!out) return;
+
+    const geno = ta ? ta.value.trim() : '';
+    out.style.display = 'block';
+
+    if (!geno) {
+        out.innerHTML = '<p class="recipe-empty">Paste the foal you want and I\'ll work out what its parents would have to be.</p>';
+        return;
+    }
+
+    trackUse('recipe_run');
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const data = computeRecipe(geno);
+
+    // Same unknown-token warning Translate, Layers and Somatic give, so a typo
+    // can't quietly drop a trait out of the recipe.
+    const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
+    let warnHtml = '';
+    if (unknownGenes.length || unknownAnomalies.length) {
+        trackUse('recipe_unknown_tokens');
+        const stray = unknownGenes.concat(unknownAnomalies);
+        warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out of the recipe.</div>`;
+    }
+
+    if (data.blocked) {
+        trackUse('recipe_blocked');
+        out.innerHTML = warnHtml + `<div class="recipe-blocked"><strong>No recipe for this one.</strong> ${esc(data.blocked)}</div>`;
+        out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+
+    if (!data.loci.length) {
+        out.innerHTML = warnHtml + '<p class="recipe-empty">There are no genes in that target for me to work backwards from. Try something like <code>Ee Aa nCr</code>.</p>';
+        return;
+    }
+
+    const looks = genotypeToPhenotype(geno);
+    const p1 = data.parent1.join(' ') || 'no genes at all';
+    const p2 = data.parent2.join(' ') || 'no genes at all';
+
+    const head = `<p class="recipe-lead">To breed <strong>${esc(looks)}</strong>, you need two parents who between them can hand down every pair below. ` +
+        `Each parent gives one allele per locus, so the two sides of every pair have to come from <em>different</em> parents.</p>`;
+
+    // The headline pair: what to aim for, and what it's worth.
+    const odds = data.geneChance >= 1
+        ? `<span class="recipe-odds-good">Every foal</span> from this pair matches the target genes.`
+        : data.geneChance <= 0
+            ? `<span class="recipe-odds-mid">No pairing</span> can produce these genes.`
+            : `<span class="recipe-odds-mid">${recipePercent(data.geneChance)}</span> of foals from this pair match the target genes — ${recipeOneIn(data.geneChance)}.`;
+
+    const pair = `<div class="recipe-pair">
+            <div class="recipe-parent">
+                <div class="recipe-parent-head">Parent A</div>
+                <code class="recipe-geno">${esc(p1)}</code>
+            </div>
+            <div class="recipe-parent">
+                <div class="recipe-parent-head">Parent B</div>
+                <code class="recipe-geno">${esc(p2)}</code>
+            </div>
+        </div>
+        <p class="recipe-odds">${odds}</p>
+        <p class="recipe-strict">Those two carry <strong>nothing else</strong>. Any extra gene either parent has can land in the foal too, and then it isn't this exact genotype any more. Their temperaments only need to differ from each other.</p>`;
+
+    // Per-locus breakdown: the requirement, and every pair that satisfies it.
+    const rows = data.loci.map((e) => {
+        const sideText = (s) => s.allele === 'n'
+            ? '<span class="recipe-none">nothing at this locus</span>'
+            : `<code>${esc(s.ideal)}</code>`;
+        const alts = (s) => {
+            if (s.allele === 'n') return 'any horse with no pair here';
+            const others = s.carriers.filter(t => t !== s.ideal);
+            if (!others.length) return `only <code>${esc(s.ideal)}</code> carries it`;
+            return 'or ' + others.map(t => `<code>${esc(t)}</code>`).join(', ') + ' at lower odds';
+        };
+        const capNote = e.cappedBy.length
+            ? `<p class="recipe-cap">Two copies of ${e.cappedBy.map(a => esc(recipeTokenLabel('n' + a))).join(' and ')} is lethal white, so a parent can only ever carry one — this pair can never be better than ${recipePercent(e.chance)}.</p>`
+            : '';
+        return `<li class="recipe-row">
+                <div class="recipe-row-head"><code>${esc(e.token)}</code> <span class="recipe-row-label">${esc(e.label)}</span> <span class="recipe-row-odds">${recipePercent(e.chance)}</span></div>
+                <div class="recipe-row-body">
+                    <div><span class="recipe-side">A</span> ${sideText(e.p1)} <span class="recipe-alt">(${alts(e.p1)})</span></div>
+                    <div><span class="recipe-side">B</span> ${sideText(e.p2)} <span class="recipe-alt">(${alts(e.p2)})</span></div>
+                </div>
+                ${capNote}
+            </li>`;
+    }).join('');
+
+    const lociBlock = `<h3 class="recipe-head">Locus by locus</h3><ul class="recipe-list">${rows}</ul>`;
+
+    // Anomalies and free markings can't be planned the way genes can.
+    let extras = '';
+    if (data.anomalies.length) {
+        const items = data.anomalies.map(a =>
+            `<li><strong>${esc(a.name)}</strong> — best case <strong>${recipePercent(a.chance)}</strong>, and only if <em>both</em> parents already have it.</li>`
+        ).join('');
+        extras += `<div class="recipe-extras"><h3 class="recipe-head">Anomalies aren't inherited like genes</h3>
+            <p class="recipe-extras-blurb">Each parent's anomaly has a flat 25% chance of passing, so no pairing can promise one. There's also a 5% roll that can add a wild anomaly neither parent carries.</p>
+            <ul class="recipe-extras-list">${items}</ul></div>`;
+    }
+    if (data.free.length) {
+        extras += `<div class="recipe-extras"><h3 class="recipe-head">Free markings</h3>
+            <p class="recipe-extras-blurb">${data.free.map(esc).join(' and ')} costs nothing and any horse can wear it, so there's no breeding to do — see the Somatic tab.</p></div>`;
+    }
+
+    const notes = data.notes.length
+        ? `<div class="recipe-note">${data.notes.map(n => `<p>${esc(n)}</p>`).join('')}</div>`
+        : '';
+
+    const how = `<details class="recipe-details">
+        <summary>How this is worked out</summary>
+        <ul class="recipe-rules">
+            <li>A foal takes <strong>one allele from each parent</strong> at every locus, so a pair like <code>nCr</code> means one parent handed over <code>Cr</code> and the other handed over nothing.</li>
+            <li>A parent with <strong>two copies</strong> passes that allele every time; with <strong>one copy</strong>, half the time. That's why the ideal parents above are doubled up wherever it's survivable.</li>
+            <li>Some alleles <strong>share a locus</strong> and a parent can only pass one of them: Cream, Tapestry and Pearl sit together, as do Tobiano, Roan, Sabino and Dominant White.</li>
+            <li><strong>Overo, Ossuary and Dominant White can't be doubled</strong> — two copies is lethal white — so anything needing one is capped at 50% per parent.</li>
+            <li>Temperament runs backwards: a foal's temperament is one <strong>neither parent has</strong>, so two parents rule out two of the four. Variants pass at 25% each, unless both parents share one, which is guaranteed.</li>
+        </ul>
+    </details>`;
+
+    out.innerHTML = warnHtml + head + pair + notes + lociBlock + extras + how;
+    out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
