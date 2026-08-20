@@ -4514,6 +4514,13 @@ function recipeTokenLabel(token) {
     return token;
 }
 
+// Name a single allele. Base coat alleles have no pair name of their own, so
+// "nE" would be nonsense on screen.
+function recipeAlleleLabel(allele) {
+    if (/^[EeAa]$/.test(allele)) return 'base coat ' + allele;
+    return recipeTokenLabel('n' + allele);
+}
+
 // Odds a specific anomaly shows up when both parents carry it: each parent
 // passes it 25% of the time, and the 5% wild roll can also land on it.
 function recipeAnomalyChance(name) {
@@ -4767,7 +4774,63 @@ function showRecipe() {
         </ul>
     </details>`;
 
-    out.innerHTML = warnHtml + head + pair + notes + planBlock + lociBlock + extras + how;
+    // Which of your own horses could actually stand in each role.
+    const collection = (typeof window !== 'undefined' && window.getCollection) ? window.getCollection() : [];
+    const stable = computeRecipeStable(data, collection);
+    let stableBlock = '';
+
+    if (!stable.size) {
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
+            <p class="recipe-stable-empty">Your stable is empty, so there is nothing to match against yet. Import your coursers in the <strong>Collection</strong> tab and this will fill in with the pairs you can actually field.</p></div>`;
+    } else if (stable.pairs.length) {
+        const rows = stable.pairs.map((p) => {
+            const cost = p.coin === 0
+                ? '<span class="recipe-fit-free">no items needed</span>'
+                : `<span class="recipe-fit-coin">${p.coin} coin</span> in roots`;
+            const odds = p.chance >= 1
+                ? 'every foal option matches'
+                : `${recipePercent(recipeChanceInRoll(p.chance, RECIPE_OPTIONS_PER_ROLL))} of rolls without items`;
+            const itemList = p.items.length
+                ? `<ul class="recipe-fit-items">${p.items.map(it =>
+                    `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${it.item.coin} coin</span></li>`).join('')}</ul>`
+                : '';
+            return `<li class="recipe-fit">
+                    <div class="recipe-fit-head">
+                        <strong>${esc(p.a.name || p.a.id || 'Unnamed')}</strong> <span class="recipe-fit-temp">${esc(p.a.temperament || '?')}</span>
+                        <span class="recipe-fit-x">with</span>
+                        <strong>${esc(p.b.name || p.b.id || 'Unnamed')}</strong> <span class="recipe-fit-temp">${esc(p.b.temperament || '?')}</span>
+                    </div>
+                    <div class="recipe-fit-meta">${cost}, ${odds}</div>
+                    ${itemList}
+                </li>`;
+        }).join('');
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
+            <p class="recipe-stable-blurb">Pairs from your ${stable.size} coursers that can supply every allele the target needs, cheapest first. A root can force an allele a horse carries but never create one, so anything listed here is genuinely reachable.</p>
+            <ul class="recipe-fit-list">${rows}</ul></div>`;
+    } else if (stable.nearMisses.length) {
+        const rows = stable.nearMisses.map(m =>
+            `<li><strong>${esc(m.horse.name || m.horse.id || 'Unnamed')}</strong> <span class="recipe-fit-temp">${esc(m.horse.temperament || '?')}</span>
+                <span class="recipe-fit-miss">could be Parent ${esc(m.side)} but carries no ${m.missing.map(a => `<code>${esc(a)}</code> (${esc(recipeAlleleLabel(a))})`).join(' or ')}</span></li>`
+        ).join('');
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
+            <p class="recipe-stable-blurb">No pair in your ${stable.size} coursers can cover this target on its own. These come closest, and what each one is missing is what you would need to bring in.</p>
+            <ul class="recipe-near-list">${rows}</ul></div>`;
+    } else {
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
+            <p class="recipe-stable-blurb">Nothing in your ${stable.size} coursers carries enough of this target to build it. Roots can force an allele a horse already has, but they cannot add one, so this needs a horse from outside your stable.</p></div>`;
+    }
+
+    // An Unusual Root can only force an anomaly a parent already carries.
+    if (stable.size && stable.anomalyCarriers.length) {
+        const lines = stable.anomalyCarriers.map(a => a.count
+            ? `<li><strong>${esc(a.name)}</strong>: ${a.carriers.map(h => esc(h.name || h.id)).join(', ')}${a.count > a.carriers.length ? ' and ' + (a.count - a.carriers.length) + ' more' : ''}</li>`
+            : `<li><strong>${esc(a.name)}</strong>: none of your coursers have it, so it cannot be forced with an Unusual Root.</li>`
+        ).join('');
+        stableBlock += `<div class="recipe-stable"><h3 class="recipe-head">Who carries the anomaly</h3>
+            <ul class="recipe-near-list">${lines}</ul></div>`;
+    }
+
+    out.innerHTML = warnHtml + head + pair + notes + planBlock + stableBlock + lociBlock + extras + how;
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -4834,7 +4897,7 @@ function computeRecipePlan(recipe) {
                 item: RECIPE_ITEMS[key],
                 allele: side.allele,
                 parent: i === 0 ? 'A' : 'B',
-                trait: recipeTokenLabel('n' + side.allele),
+                trait: recipeAlleleLabel(side.allele),
                 token: entry.token
             });
             plan.rootCoin += RECIPE_ITEMS[key].coin;
@@ -4868,4 +4931,156 @@ function computeRecipePlan(recipe) {
     plan.perRollGrapes = recipeChanceInRoll(plan.perFoal, RECIPE_OPTIONS_WITH_GRAPES);
 
     return plan;
+}
+
+// ===========================================================================
+// Recipe: matching against your own stable
+// ---------------------------------------------------------------------------
+// The ideal parents are a description, not a shopping list, so the useful
+// question is which horses you already own could play each side.
+//
+// A root can force an allele a parent carries, but it can never invent one, so
+// carrying every allele the role needs is the hard line between "usable" and
+// "no". Everything past that line is money: a single copy where two were wanted
+// costs a root to force, and anything the horse carries that the target does
+// not want costs a root to block. Ranking by that coin total is what makes
+// "close" a real answer instead of a vague one.
+// ===========================================================================
+
+function recipeLocusOfToken(token) {
+    const real = getGeneAlleles(token).filter(a => a !== 'n');
+    return real.length ? RECIPE_LOCUS_OF[real[0]] : null;
+}
+
+// locus -> the pair this horse sits at
+function recipeHorseLoci(genoString) {
+    const out = {};
+    parseGenotype(genoString || '').genes.forEach((token) => {
+        if (!isKnownGeneToken(token)) return;
+        const locus = recipeLocusOfToken(token);
+        if (locus) out[locus] = token;
+    });
+    return out;
+}
+
+// What one horse would cost to stand in a given role.
+function recipeEvaluateHorse(horse, roleReq) {
+    const mine = recipeHorseLoci(horse.genotype);
+    const res = { horse, feasible: true, missing: [], items: [], coin: 0, chance: 1, blocks: 0, forces: 0 };
+
+    // Every locus the role asks for, plus every locus this horse carries that
+    // the target never mentioned (those can leak into the foal).
+    const loci = {};
+    Object.keys(roleReq).forEach(l => { loci[l] = roleReq[l]; });
+    Object.keys(mine).forEach(l => { if (!(l in loci)) loci[l] = 'n'; });
+
+    Object.keys(loci).forEach((locus) => {
+        const want = loci[locus];
+        const token = mine[locus];
+
+        if (want === 'n') {
+            // Must hand down nothing here. No pair at this locus is already clean.
+            if (!token) return;
+            const alleles = getGeneAlleles(token);
+            const nCount = alleles.filter(a => a === 'n').length;
+            const stray = alleles.find(a => a !== 'n');
+            const key = recipeRootFor(stray);
+            res.items.push({
+                item: RECIPE_ITEMS[key], mode: 'block', allele: stray,
+                trait: recipeAlleleLabel(stray), token
+            });
+            res.coin += RECIPE_ITEMS[key].coin;
+            res.blocks++;
+            res.chance *= nCount / 2;      // 0 if homozygous, so only a root saves it
+            return;
+        }
+
+        // Must hand down this allele, and no item can create one it lacks.
+        if (!token) { res.feasible = false; res.missing.push(want); return; }
+        const copies = getGeneAlleles(token).filter(a => a === want).length;
+        if (!copies) { res.feasible = false; res.missing.push(want); return; }
+        res.chance *= copies / 2;
+        if (copies < 2) {
+            const key = recipeRootFor(want);
+            res.items.push({
+                item: RECIPE_ITEMS[key], mode: 'force', allele: want,
+                trait: recipeAlleleLabel(want), token
+            });
+            res.coin += RECIPE_ITEMS[key].coin;
+            res.forces++;
+        }
+    });
+
+    return res;
+}
+
+// Rank the pairings your stable can actually field.
+function computeRecipeStable(recipe, collection) {
+    const out = { pairs: [], nearMisses: [], size: (collection || []).length, anomalyCarriers: [] };
+    if (!out.size || !recipe.loci.length) return out;
+
+    // The two sides, as locus -> required allele.
+    const reqA = {}, reqB = {};
+    recipe.loci.forEach((e) => {
+        const locus = e.locus;
+        if (e.p1) reqA[locus] = e.p1.allele;
+        if (e.p2) reqB[locus] = e.p2.allele;
+    });
+
+    const asA = collection.map(h => recipeEvaluateHorse(h, reqA));
+    const asB = collection.map(h => recipeEvaluateHorse(h, reqB));
+
+    // Parents still have to be two different horses with different temperaments.
+    for (let i = 0; i < collection.length; i++) {
+        for (let j = 0; j < collection.length; j++) {
+            if (i === j) continue;
+            const a = asA[i], b = asB[j];
+            if (!a.feasible || !b.feasible) continue;
+            const t1 = (collection[i].temperament || '').trim();
+            const t2 = (collection[j].temperament || '').trim();
+            if (t1 && t2 && t1 === t2) continue;
+            const coin = a.coin + b.coin;
+            const chance = a.chance * b.chance;
+            out.pairs.push({
+                a: collection[i], b: collection[j], evalA: a, evalB: b,
+                coin, chance,
+                items: a.items.concat(b.items),
+                key: [collection[i].id || collection[i].name, collection[j].id || collection[j].name].join('|')
+            });
+        }
+    }
+
+    // Cheapest first, then whichever needs the least luck.
+    out.pairs.sort((x, y) => (x.coin - y.coin) || (y.chance - x.chance));
+
+    // Drop mirrored duplicates of the same two horses.
+    const seen = {};
+    out.pairs = out.pairs.filter((p) => {
+        const k = [p.a.id || p.a.name, p.b.id || p.b.name].sort().join('|');
+        if (seen[k]) return false;
+        seen[k] = true;
+        return true;
+    }).slice(0, 5);
+
+    // Horses that would work but for one or two alleles they simply lack.
+    if (!out.pairs.length) {
+        const best = {};
+        collection.forEach((h, i) => {
+            [['A', asA[i]], ['B', asB[i]]].forEach(([side, ev]) => {
+                if (ev.feasible || !ev.missing.length || ev.missing.length > 2) return;
+                const k = (h.id || h.name) + side;
+                best[k] = { horse: h, side, missing: ev.missing };
+            });
+        });
+        out.nearMisses = Object.keys(best).map(k => best[k])
+            .sort((x, y) => x.missing.length - y.missing.length).slice(0, 6);
+    }
+
+    // An Unusual Root can only force an anomaly a parent already has.
+    recipe.anomalies.forEach((an) => {
+        const carriers = collection.filter(h => parseGenotype(h.genotype || '').anomalies.indexOf(an.name) !== -1);
+        out.anomalyCarriers.push({ name: an.name, carriers: carriers.slice(0, 4), count: carriers.length });
+    });
+
+    return out;
 }

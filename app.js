@@ -66,6 +66,9 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '20 Aug 2026', items: [
+      'Recipe now matches against your own stable. It ranks the pairs you could actually field, cheapest first, and prices what each one would cost in roots: forcing an allele a horse only carries one copy of, and blocking anything it carries that the target does not want. A root can force an allele a horse has but never create one, so a horse missing the allele outright is listed separately as a near miss with exactly what it lacks. It also names which of your coursers carry a target anomaly, since an Unusual Root can only force one a parent already has.'
+    ] },
+    { date: '20 Aug 2026', items: [
       'Recipe now costs the job out in Breeding Roll Add-Ons. It works out the cheapest set of items that guarantees the foal, choosing a Cave Root or a Strong Root by the rarity of the allele being forced, adding an Unusual Root for an anomaly, and comparing that total against a Tome of Imperfect Creation so you are pointed at whichever is cheaper. Two anomalies can only be forced by the Tome, since one Unusual Root is the limit per breeding.',
       'Odds are now given per breeding roll rather than per foal option, because a roll offers two options and only one of them has to match. A Bunch of Grapes adds a third, and Recipe shows what that is worth before you spend on it.'
     ] },
