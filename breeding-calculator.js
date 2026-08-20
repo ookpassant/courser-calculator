@@ -4647,12 +4647,16 @@ function showRecipe() {
     const head = `<p class="recipe-lead">To breed <strong>${esc(looks)}</strong>, you need two parents who between them can hand down every pair below. ` +
         `Each parent gives one allele per locus, so the two sides of every pair have to come from <em>different</em> parents.</p>`;
 
-    // The headline pair: what to aim for, and what it's worth.
-    const odds = data.geneChance >= 1
-        ? `<span class="recipe-odds-good">Every foal</span> from this pair matches the target genes.`
-        : data.geneChance <= 0
-            ? `<span class="recipe-odds-mid">No pairing</span> can produce these genes.`
-            : `<span class="recipe-odds-mid">${recipePercent(data.geneChance)}</span> of foals from this pair match the target genes — ${recipeOneIn(data.geneChance)}.`;
+    // The headline pair: what to aim for, and what it's worth. A roll gives two
+    // foal options and only one of them has to match, so the per roll number is
+    // the one worth leading with.
+    const plan = computeRecipePlan(data);
+    const odds = plan.perFoal >= 1
+        ? `<span class="recipe-odds-good">Every foal option</span> from this pair matches the target.`
+        : plan.perFoal <= 0
+            ? `<span class="recipe-odds-mid">No pairing</span> can produce this.`
+            : `<span class="recipe-odds-mid">${recipePercent(plan.perRoll)}</span> of breeding rolls give you at least one matching foal option, ` +
+              `since a roll offers two and only one has to match. Per option it's ${recipePercent(plan.perFoal)}, ${recipeOneIn(plan.perFoal)}.`;
 
     const pair = `<div class="recipe-pair">
             <div class="recipe-parent">
@@ -4679,7 +4683,7 @@ function showRecipe() {
             return 'or ' + others.map(t => `<code>${esc(t)}</code>`).join(', ') + ' at lower odds';
         };
         const capNote = e.cappedBy.length
-            ? `<p class="recipe-cap">Two copies of ${e.cappedBy.map(a => esc(recipeTokenLabel('n' + a))).join(' and ')} is lethal white, so a parent can only ever carry one — this pair can never be better than ${recipePercent(e.chance)}.</p>`
+            ? `<p class="recipe-cap">Two copies of ${e.cappedBy.map(a => esc(recipeTokenLabel('n' + a))).join(' and ')} is lethal white, so a parent can only ever carry one. This pair can never be better than ${recipePercent(e.chance)}.</p>`
             : '';
         return `<li class="recipe-row">
                 <div class="recipe-row-head"><code>${esc(e.token)}</code> <span class="recipe-row-label">${esc(e.label)}</span> <span class="recipe-row-odds">${recipePercent(e.chance)}</span></div>
@@ -4693,11 +4697,48 @@ function showRecipe() {
 
     const lociBlock = `<h3 class="recipe-head">Locus by locus</h3><ul class="recipe-list">${rows}</ul>`;
 
+    // The cheapest way to stop gambling, costed in listed resale value so the
+    // two routes can be compared.
+    let planBlock = '';
+    if (plan.freeAlready) {
+        planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Items needed</h3>
+            <p class="recipe-plan-free"><strong>None.</strong> These two parents throw the target on every foal option, so there is nothing worth spending on.</p></div>`;
+    } else {
+        const rootItems = plan.roots.map(r =>
+            `<li><strong>${esc(r.item.name)}</strong> <span class="recipe-coin">${r.item.coin} coin</span><br>
+                <span class="recipe-plan-why">Force <code>${esc(r.allele)}</code> (${esc(r.trait)}) from Parent ${esc(r.parent)}. ${esc(r.item.note)}.</span></li>`
+        ).join('') + plan.anomalyRoots.map(a =>
+            `<li><strong>${esc(a.item.name)}</strong> <span class="recipe-coin">${a.item.coin} coin</span><br>
+                <span class="recipe-plan-why">Force ${esc(a.name)} from a parent that has it. Only one per breeding.</span></li>`
+        ).join('');
+
+        const tomeItem = `<li><strong>${esc(RECIPE_ITEMS.tome.name)}</strong> <span class="recipe-coin">${RECIPE_ITEMS.tome.coin} coin</span><br>
+                <span class="recipe-plan-why">Picks every gene and anomaly at once. Blocks all other add-ons, cannot roll twins, and cannot choose temperament.</span></li>`;
+
+        const chosen = plan.useTome
+            ? `<ul class="recipe-plan-list">${tomeItem}</ul>`
+            : `<ul class="recipe-plan-list">${rootItems}</ul>`;
+
+        const alt = plan.useTome
+            ? (plan.guaranteedByRoots
+                ? `<p class="recipe-plan-alt">Roots would come to ${plan.rootCoin} coin for ${plan.itemCount} item${plan.itemCount === 1 ? '' : 's'}, so the Tome is cheaper here.</p>`
+                : `<p class="recipe-plan-alt">${plan.notes.map(esc).join(' ')} The Tome is the only route that forces all of them.</p>`)
+            : `<p class="recipe-plan-alt">A Tome of Imperfect Creation would also do it in one item, but costs ${RECIPE_ITEMS.tome.coin} coin against ${plan.rootCoin} here.</p>`;
+
+        const gamble = plan.perFoal > 0
+            ? `<p class="recipe-plan-gamble">Or spend nothing: ${recipePercent(plan.perRoll)} of rolls already give you a match, and a Bunch of Grapes (${RECIPE_ITEMS.grapes.coin} coin) adds a third option to take that to ${recipePercent(plan.perRollGrapes)}.</p>`
+            : '';
+
+        planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Cheapest way to guarantee it</h3>
+            <p class="recipe-plan-total"><strong>${plan.cheapestCoin} coin</strong> in Breeding Roll Add-Ons.</p>
+            ${chosen}${alt}${gamble}</div>`;
+    }
+
     // Anomalies and free markings can't be planned the way genes can.
     let extras = '';
     if (data.anomalies.length) {
         const items = data.anomalies.map(a =>
-            `<li><strong>${esc(a.name)}</strong> — best case <strong>${recipePercent(a.chance)}</strong>, and only if <em>both</em> parents already have it.</li>`
+            `<li><strong>${esc(a.name)}</strong>, best case <strong>${recipePercent(a.chance)}</strong>, and only if <em>both</em> parents already have it.</li>`
         ).join('');
         extras += `<div class="recipe-extras"><h3 class="recipe-head">Anomalies aren't inherited like genes</h3>
             <p class="recipe-extras-blurb">Each parent's anomaly has a flat 25% chance of passing, so no pairing can promise one. There's also a 5% roll that can add a wild anomaly neither parent carries.</p>
@@ -4705,7 +4746,7 @@ function showRecipe() {
     }
     if (data.free.length) {
         extras += `<div class="recipe-extras"><h3 class="recipe-head">Free markings</h3>
-            <p class="recipe-extras-blurb">${data.free.map(esc).join(' and ')} costs nothing and any horse can wear it, so there's no breeding to do — see the Somatic tab.</p></div>`;
+            <p class="recipe-extras-blurb">${data.free.map(esc).join(' and ')} costs nothing and any horse can wear it, so there's no breeding to do. See the Somatic tab.</p></div>`;
     }
 
     const notes = data.notes.length
@@ -4718,11 +4759,113 @@ function showRecipe() {
             <li>A foal takes <strong>one allele from each parent</strong> at every locus, so a pair like <code>nCr</code> means one parent handed over <code>Cr</code> and the other handed over nothing.</li>
             <li>A parent with <strong>two copies</strong> passes that allele every time; with <strong>one copy</strong>, half the time. That's why the ideal parents above are doubled up wherever it's survivable.</li>
             <li>Some alleles <strong>share a locus</strong> and a parent can only pass one of them: Cream, Tapestry and Pearl sit together, as do Tobiano, Roan, Sabino and Dominant White.</li>
-            <li><strong>Overo, Ossuary and Dominant White can't be doubled</strong> — two copies is lethal white — so anything needing one is capped at 50% per parent.</li>
-            <li>Temperament runs backwards: a foal's temperament is one <strong>neither parent has</strong>, so two parents rule out two of the four. Variants pass at 25% each, unless both parents share one, which is guaranteed.</li>
+            <li><strong>Overo, Ossuary and Dominant White can't be doubled</strong>, because two copies is lethal white, so anything needing one is capped at 50% per parent.</li>
+            <li>Temperament runs backwards: a foal's temperament is one <strong>neither parent has</strong>, so two parents rule out two of the four. A <strong>Mushroom Skewer</strong> overrides that and lets you pick. Variants pass at 25% each, unless both parents share one, which is guaranteed.</li>
+            <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
+            <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
+            <li>Coin figures are listed <strong>resale values</strong>, used as a stand in so two plans can be compared. What you actually pay depends on where the item came from.</li>
         </ul>
     </details>`;
 
-    out.innerHTML = warnHtml + head + pair + notes + lociBlock + extras + how;
+    out.innerHTML = warnHtml + head + pair + notes + planBlock + lociBlock + extras + how;
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ===========================================================================
+// Recipe: Breeding Roll Add-Ons
+// ---------------------------------------------------------------------------
+// Items can force a locus that chance alone cannot. The roots pick one allele
+// from one parent and make it pass (or not pass) on every foal option, and they
+// split by rarity: Cave Root covers Common through Rare, Strong Root covers
+// Epic and Legendary. Anomalies need an Unusual Root, and only one of those may
+// be used per breeding.
+//
+// Coin figures are the listed resale values, used here as a stand in for cost
+// so two plans can be compared. What you actually pay depends on where you got
+// the item.
+// ===========================================================================
+
+const RECIPE_ITEMS = {
+    caveRoot:    { name: 'Cave Root', coin: 50, note: 'Common to Rare allele' },
+    strongRoot:  { name: 'Strong Root', coin: 75, note: 'Epic or Legendary allele' },
+    unusualRoot: { name: 'Unusual Root', coin: 75, note: 'one Anomaly, one per breeding' },
+    grapes:      { name: 'Bunch of Grapes', coin: 150, note: 'adds a third foal option' },
+    tome:        { name: 'Tome of Imperfect Creation', coin: 500, note: 'every gene and anomaly at once' }
+};
+
+// A breeding roll gives two foal options, three with a Bunch of Grapes, and it
+// counts as a win if any one of them matches.
+const RECIPE_OPTIONS_PER_ROLL = 2;
+const RECIPE_OPTIONS_WITH_GRAPES = 3;
+
+// Rarity is stored per allele pair, so look the allele up in both the carrier
+// and the doubled spelling before falling back to Common.
+function recipeAlleleRarity(allele) {
+    if (Object.prototype.hasOwnProperty.call(GENE_RARITY, 'n' + allele)) return GENE_RARITY['n' + allele];
+    if (Object.prototype.hasOwnProperty.call(GENE_RARITY, allele + allele)) return GENE_RARITY[allele + allele];
+    return 0;
+}
+
+// Cave Root and Strong Root partition the rarity range between them.
+function recipeRootFor(allele) {
+    return recipeAlleleRarity(allele) >= TIER_EPIC ? 'strongRoot' : 'caveRoot';
+}
+
+// Chance that at least one option out of n matches, given a per foal chance.
+function recipeChanceInRoll(perFoal, options) {
+    if (perFoal >= 1) return 1;
+    if (perFoal <= 0) return 0;
+    return 1 - Math.pow(1 - perFoal, options);
+}
+
+// Work out the cheapest way to land the target, and what it costs to leave it
+// to chance instead.
+function computeRecipePlan(recipe) {
+    const plan = { roots: [], rootCoin: 0, anomalyRoots: [], guaranteedByRoots: true, notes: [] };
+
+    // Any side of a locus the ideal parent cannot pass every time needs a root.
+    // With ideal parents that only happens where doubling up would be lethal
+    // white, so these are the Overo, Ossuary and Dominant White cases.
+    recipe.loci.forEach((entry) => {
+        [entry.p1, entry.p2].forEach((side, i) => {
+            if (!side || side.allele === 'n' || side.chance >= 1) return;
+            const key = recipeRootFor(side.allele);
+            plan.roots.push({
+                item: RECIPE_ITEMS[key],
+                allele: side.allele,
+                parent: i === 0 ? 'A' : 'B',
+                trait: recipeTokenLabel('n' + side.allele),
+                token: entry.token
+            });
+            plan.rootCoin += RECIPE_ITEMS[key].coin;
+        });
+    });
+
+    // Only one Unusual Root per breeding, so a target wanting two anomalies
+    // cannot be fully forced by roots at all.
+    if (recipe.anomalies.length === 1) {
+        plan.anomalyRoots.push({ item: RECIPE_ITEMS.unusualRoot, name: recipe.anomalies[0].name });
+        plan.rootCoin += RECIPE_ITEMS.unusualRoot.coin;
+    } else if (recipe.anomalies.length > 1) {
+        plan.guaranteedByRoots = false;
+        plan.notes.push('Only one Unusual Root can be used per breeding, so ' +
+            recipe.anomalies.length + ' anomalies cannot all be forced with roots.');
+    }
+
+    // The Tome does every gene and anomaly in one go, but it locks out every
+    // other add-on and cannot pick temperament.
+    plan.tomeCoin = RECIPE_ITEMS.tome.coin;
+
+    const rootsWork = plan.guaranteedByRoots;
+    plan.cheapestCoin = rootsWork ? Math.min(plan.rootCoin, plan.tomeCoin) : plan.tomeCoin;
+    plan.useTome = !rootsWork || plan.rootCoin > plan.tomeCoin;
+    plan.itemCount = plan.roots.length + plan.anomalyRoots.length;
+    plan.freeAlready = rootsWork && plan.rootCoin === 0;
+
+    // What the same pairing is worth with no items at all.
+    plan.perFoal = recipe.geneChance * recipe.anomalies.reduce((acc, a) => acc * a.chance, 1);
+    plan.perRoll = recipeChanceInRoll(plan.perFoal, RECIPE_OPTIONS_PER_ROLL);
+    plan.perRollGrapes = recipeChanceInRoll(plan.perFoal, RECIPE_OPTIONS_WITH_GRAPES);
+
+    return plan;
 }

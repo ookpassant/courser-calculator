@@ -408,6 +408,17 @@
         .recipe-extras-list { list-style: none; margin: 0; padding: 0; }
         .recipe-extras-list li { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-legendary); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.55; }
         .recipe-note { background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--dc-slate); font-size: 0.85rem; line-height: 1.5; margin: 0 0 24px; }
+        .recipe-plan { margin-bottom: 26px; }
+        .recipe-plan-free { font-size: 0.92rem; color: var(--dc-ink); line-height: 1.55; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-uncommon); border-radius: var(--radius-sm); padding: 12px 14px; }
+        .recipe-plan-free strong { color: var(--dc-uncommon); }
+        .recipe-plan-total { font-size: 1.05rem; color: var(--dc-ink); margin: 0 0 12px; }
+        .recipe-plan-total strong { color: var(--dc-legendary); }
+        .recipe-plan-list { list-style: none; margin: 0 0 12px; padding: 0; }
+        .recipe-plan-list li { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-legendary); border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 8px; font-size: 0.92rem; line-height: 1.55; }
+        .recipe-plan-list code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
+        .recipe-coin { font-family: var(--font-stamp); font-size: 0.62rem; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); margin-left: 6px; }
+        .recipe-plan-why { color: var(--dc-slate); font-size: 0.88rem; }
+        .recipe-plan-alt, .recipe-plan-gamble { font-size: 0.88rem; color: var(--dc-slate); line-height: 1.55; margin: 0 0 8px; }
         .recipe-details { border-top: 1px solid var(--dc-line); padding-top: 14px; }
         .recipe-details summary { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-mauve-deep); cursor: pointer; }
         .recipe-details[open] summary { margin-bottom: 12px; }
@@ -868,7 +879,7 @@
                     <p class="blurb">The Foal Generator run backwards. Paste the foal you want and I'll work out what its parents would have to be, and how often that pairing would actually throw it.</p>
 
                     <div class="info-box">
-                        <p><strong>One allele from each parent.</strong> Every pair in a genotype has one side from each parent, so a recipe is really a list of who has to carry what. Nothing here needs your collection — it's what the parents would have to be, whoever owns them.</p>
+                        <p><strong>One allele from each parent.</strong> Every pair in a genotype has one side from each parent, so a recipe is really a list of who has to carry what. Nothing here needs your collection. It's what the parents would have to be, whoever owns them.</p>
                         <p><strong>Exact genotype.</strong> The pair below is aimed at this genotype precisely, so the parents carry nothing else. Anything extra they have can land in the foal too.</p>
                     </div>
 

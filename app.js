@@ -65,8 +65,12 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '20 Aug 2026', items: [
+      'Recipe now costs the job out in Breeding Roll Add-Ons. It works out the cheapest set of items that guarantees the foal, choosing a Cave Root or a Strong Root by the rarity of the allele being forced, adding an Unusual Root for an anomaly, and comparing that total against a Tome of Imperfect Creation so you are pointed at whichever is cheaper. Two anomalies can only be forced by the Tome, since one Unusual Root is the limit per breeding.',
+      'Odds are now given per breeding roll rather than per foal option, because a roll offers two options and only one of them has to match. A Bunch of Grapes adds a third, and Recipe shows what that is worth before you spend on it.'
+    ] },
     { date: '19 Aug 2026', items: [
-      'New Recipe tab: the Foal Generator run backwards. Paste the foal you want and it works out what the two parents would have to be, locus by locus, with the odds that pairing actually throws it. It also tells you what can\'t be planned — anomalies only pass 25% of the time, and anything needing Overo, Ossuary or Dominant White is capped at 50% because two copies is lethal white.'
+      'New Recipe tab: the Foal Generator run backwards. Paste the foal you want and it works out what the two parents would have to be, locus by locus, with the odds that pairing actually throws it. It also tells you what can\'t be planned: anomalies only pass 25% of the time, and anything needing Overo, Ossuary or Dominant White is capped at 50% because two copies is lethal white.'
     ] },
     { date: '13 Aug 2026', items: [
       'New "Made by friends" section on the front page, starting with Rev\'s Group Horse Roller: it picks two temperament-compatible group horses and flags the lethal white risk and breeding cost, so you can bring a valid pair straight back here.'
