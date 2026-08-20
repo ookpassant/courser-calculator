@@ -1034,7 +1034,10 @@
          cached app.js didn't, and showArea() fell back to the first tool.
          A changed query string is a different URL, so the JS always comes down
          with the markup that expects it. -->
-    <script src="breeding-calculator.js?v=20260731c"></script>
-    <script src="app.js?v=20260731c"></script>
+    <!-- ?v= busts the browser cache when the scripts change. The deploy
+         workflow rewrites it to the commit SHA on every deploy, so this value
+         is only what local checkouts see — no need to bump it by hand. -->
+    <script src="breeding-calculator.js?v=20260820a"></script>
+    <script src="app.js?v=20260820a"></script>
 </body>
 </html>

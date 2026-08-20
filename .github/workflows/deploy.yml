@@ -40,4 +40,30 @@ jobs:
             cd "$DEPLOY_PATH"
             git fetch --prune origin
             git reset --hard origin/main
-            echo "Deployed $(git rev-parse --short HEAD) - $(git log -1 --pretty=%s)"
+
+            # Stamp the script URLs with the commit SHA.
+            #
+            # index.html and the two script files are cached independently by
+            # the browser, so a visitor can end up running a fresh index.html
+            # against a stale app.js — the markup knows about a new tab, the old
+            # script doesn't, and its buttons quietly do nothing. The ?v= query
+            # string is what stops that, but only if it actually changes, and
+            # bumping it by hand is easy to forget (it was).
+            #
+            # Doing it here means the stamp can never be stale: it always
+            # matches the commit being served. The edit leaves the tree dirty,
+            # which is fine — the git reset above wipes it before the next
+            # stamping.
+            SHA="$(git rev-parse --short HEAD)"
+            sed -i -E "s#(src=\"(app|breeding-calculator)\.js)\?v=[^\"]*\"#\1?v=${SHA}\"#g" index.html
+
+            # Fail loudly rather than silently serving an unstamped page.
+            STAMPED="$(grep -c "\.js?v=${SHA}\"" index.html || true)"
+            if [ "$STAMPED" -ne 2 ]; then
+              echo "Expected 2 stamped script tags, found ${STAMPED}." >&2
+              grep -n '<script src=' index.html >&2 || true
+              exit 1
+            fi
+
+            echo "Deployed $SHA - $(git log -1 --pretty=%s)"
+            echo "Scripts stamped ?v=$SHA"
