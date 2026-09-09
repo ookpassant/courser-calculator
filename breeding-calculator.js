@@ -315,13 +315,17 @@ const MODIFIER_NAMES = {
     'nPr': 'Prism', 'PrPr': 'Prism',
     'PrOp': 'Prism Opal',
     'nsf': 'Starfield', 'sfsf': 'Starfield',
-    'nlr': 'Lacquer', 'lrlr': 'Lacquer'
+    'nlr': 'Lacquer', 'lrlr': 'Lacquer',
+    // Pitch shares Gray's locus: Gray whitens with age, Pitch blackens, and a
+    // horse carrying both settles somewhere in the middle.
+    'nPt': 'Pitch', 'PtPt': 'Pitch',
+    'GPt': 'Gray Pitch', 'PtG': 'Gray Pitch'
 };
 
 // Traits that swagger in BEFORE the coat color, like heralds announcing the king
 const TRAITS_BEFORE_COAT = [
     'Dominant White', 'Crowned', 'Flaxen', 'Carrying Flaxen', 'Pangare',
-    'Sooty', 'Gray', 'Silver', 'Illuminated', 'Gilt', 'Opal', 'Prism',
+    'Sooty', 'Gray', 'Pitch', 'Silver', 'Illuminated', 'Gilt', 'Opal', 'Prism',
     'Starfield', 'Carrying Starfield', 'Vellum', 'Lacquer', 'Carrying Lacquer'
 ];
 
@@ -332,7 +336,7 @@ const TRAITS_AFTER_COAT = [
     'Tobiano', 'Overo', 'Splash', 'Roan', 'Sabino', 'Blanket', 'Snowcap',
     'Varnish Roan', 'Leopard', 'Fewspot', 'Snowflake', 'Ossuary',
     'Shroud', 'Filigree', 'Carrying Filigree', 'Harlequin', 'Rabicano', 'False Leopard',
-    'Girdle', 'Collar', 'Blanched',
+    'Girdle', 'Collar', 'Apron', 'Greaves', 'Blanched',
     // KIT compound phenotypes — when one white pattern wasn't dramatic enough
     'Tobiano Roan', 'Tobiano Sabino', 'Tobiano Dominant White',
     'Roan Sabino', 'Roan Dominant White', 'Sabino Dominant White',
@@ -340,6 +344,8 @@ const TRAITS_AFTER_COAT = [
     'Blanched False Leopard',
     // Gi/Co compound — accessorized from both ends
     'Girdle Collar',
+    // Gr/Ap compound
+    'Greaves Apron',
     // Carrier traits — the "I swear it's in my bloodline" genes
     'Carries Ether', 'Carries Patn', 'Carries Pearl'
 ];
@@ -362,6 +368,9 @@ const WHITE_MARKING_NAMES = {
     'nSh': 'Shroud', 'ShSh': 'Shroud',
     'nfe': 'Filigree', 'fefe': 'Filigree',
     'nOs': 'Ossuary', 'OsOs': 'Ossuary',
+    // Gr/Ap locus: Greaves up the front of the legs, Apron under the belly
+    'nAp': 'Apron', 'ApAp': 'Apron',
+    'nGr': 'Greaves', 'GrGr': 'Greaves', 'GrAp': 'Greaves Apron', 'ApGr': 'Greaves Apron',
     // KIT locus compounds (both orderings, because alleles can't agree who goes first)
     'TRn': 'Tobiano Roan', 'RnT': 'Tobiano Roan',
     'TSb': 'Tobiano Sabino', 'SbT': 'Tobiano Sabino',
@@ -568,6 +577,9 @@ function resolveTraits(genoString) {
             } else if (gene === 'GiCo' || gene === 'CoGi') {
                 allTraits.push('Girdle');
                 allTraits.push('Collar');
+            } else if (gene === 'GrAp' || gene === 'ApGr') {
+                allTraits.push('Greaves');
+                allTraits.push('Apron');
             } else {
                 allTraits.push(WHITE_MARKING_NAMES[gene]);
             }
@@ -603,6 +615,9 @@ function resolveTraits(genoString) {
             } else if (gene === 'Lusp') {
                 allTraits.push('Illuminated');
                 allTraits.push('Carrying Sepulchered');
+            } else if (gene === 'GPt' || gene === 'PtG') {
+                allTraits.push('Gray');
+                allTraits.push('Pitch');
             } else if (gene === 'nf') {
                 allTraits.push('Carrying Flaxen');
             } else if (gene === 'nsp') {
@@ -781,6 +796,7 @@ const MODIFIER_DESC = {
     'Pangare': "Pangare (mealy) lightens the soft parts to a paler shade: the muzzle, eyes, belly, flanks and inner legs.",
     'Sooty': "Sooty throws a smudge of darker hairs over the top, heaviest along the back and shoulders, like it's been dusted with charcoal.",
     'Gray': "Gray is progressive: the horse is born its base colour and then steadily silvers out with age, eventually toward white.",
+    'Pitch': "Pitch is progressive like Gray but runs the other way: the horse is born its base colour and steadily blackens with age, fading smoothly into the coat, mane and tail with no hard edges. Dapples and tiny flea bites of base colour showing through are fine. With Gray as well, the two meet in a true mid gray instead of whitening or darkening.",
     'Flaxen': "Flaxen lightens the mane and tail to blonde or near-white while the body keeps its colour (only really visible on a red base).",
     'Silver': "Silver dilutes black pigment specifically: a chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
     'Illuminated': "Illuminated pales the skin and hooves to a uniform, washed-out light colour, whatever the coat is doing. The coat itself is left alone.",
@@ -807,6 +823,8 @@ const MARKING_DESC = {
     'Crowned': "Crowned sets symmetrical white on the head, either a single marking or a tidy arrangement of simple stripes, spots and splotches.",
     'Girdle': "Girdle wraps a single, even band of white all the way around the barrel, with crisp, smooth edges.",
     'Collar': "Collar wraps a single, even band of white all the way around the neck, with crisp, smooth edges.",
+    'Apron': "Apron is a single connected patch of opaque white along the underside: part of the chest and belly at its smallest, the whole underbelly, throat and underside of the head at its largest. Crisp, smooth edges, no holes, and pink skin beneath.",
+    'Greaves': "Greaves runs a strip of white up the front of the legs, always in a matching pair on both front or both back legs, never wrapping fully round the leg. Crisp edges, pink skin beneath, and cream hooves where the white reaches them.",
     'Blanched': "Blanched lightens the coat on the face and legs, the inverse of Roan, blending gradually from a subtle paling to bold white.",
     'False Leopard': "False Leopard lightens the barrel, shoulders, chest and hindquarters like Roan, but with round spots 'cut out' of it. Think leopard-style spotting without the real leopard complex.",
     'Harlequin': "Harlequin scatters opaque white diamonds that radiate out in rings from a single point, usually the poll or croup.",
@@ -1074,9 +1092,9 @@ const LAYER_COLORS_MARKINGS = [
     { traits: ['Chimera', 'Vitiligo'], join: ' & ' },
     { traits: ['Lacquer'] },
     { traits: ['Swarf', 'Kintsugi'] },
-    { traits: ['Gray'] },
+    { traits: ['Gray', 'Pitch'] },
     { group: 'White Modifiers', traits: ['Opal', 'Starfield', 'Vellum'] },
-    { group: 'White Markings', traits: ['Ossuary', 'Filigree', 'Shroud', 'Harlequin', 'Fewspot', 'Varnish Roan', 'Snowcap', 'Rabicano', 'Leopard', 'False Leopard', 'Blanched', 'Dominant White', 'Sabino', 'Overo', 'Collar', 'Cuirass', 'Crowned', 'Blanket', 'Girdle', 'Tobiano', 'Splash', 'Snowflake', 'Roan', 'Free White'] },
+    { group: 'White Markings', traits: ['Ossuary', 'Filigree', 'Shroud', 'Harlequin', 'Fewspot', 'Varnish Roan', 'Snowcap', 'Rabicano', 'Leopard', 'False Leopard', 'Blanched', 'Dominant White', 'Sabino', 'Overo', 'Collar', 'Cuirass', 'Crowned', 'Blanket', 'Girdle', 'Apron', 'Greaves', 'Tobiano', 'Splash', 'Snowflake', 'Roan', 'Free White'] },
     { group: 'Coat Anomalies', traits: ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle'] },
     { traits: ['Prism'] },
     { group: 'Mane/Tail Modifiers', traits: ['Silver', 'Flaxen', 'Pangare'] },
@@ -1115,9 +1133,9 @@ const TRAIT_PAGE_IDS = {
     // Base coats with their own page
     'Bay': 1, 'Black': 2, 'Chestnut': 3, 'Palomino': 4, 'Smoky Black': 5, 'Buckskin': 6, 'Weld': 7, 'Woad': 8, 'Madder': 9,
     // White markings
-    'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92,
+    'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92, 'Apron': 99, 'Greaves': 100,
     // Modifiers
-    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97,
+    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101,
     // Anomalies
     'Bend-or Spots': 59, 'Birdcatcher Spots': 60, 'Brindle': 61, 'Chimera': 62, 'Geode': 63, 'Ore': 64, 'Stained Glass': 65, 'Kintsugi': 66, 'Swarf': 67, 'Vitiligo': 68, 'Oracle': 74, 'Signet': 75, 'Pennant': 76, 'Pastiche': 77, 'Fresco': 87, 'Lantern': 95,
     // Free markings the engine doesn't model but may name
@@ -1364,6 +1382,11 @@ function getGeneAlleles(gene) {
     if (gene === 'PrPr') return ['Pr', 'Pr'];
     if (gene === 'OpOp') return ['Op', 'Op'];
     // Compound heterozygous genes — the odd couples of the genetic world
+    if (gene === 'PtPt') return ['Pt', 'Pt'];
+    if (gene === 'ApAp') return ['Ap', 'Ap'];
+    if (gene === 'GrGr') return ['Gr', 'Gr'];
+    if (gene === 'GPt' || gene === 'PtG') return ['G', 'Pt'];
+    if (gene === 'GrAp' || gene === 'ApGr') return ['Gr', 'Ap'];
     if (gene === 'Lusp') return ['Lu', 'sp'];
     if (gene === 'PrOp') return ['Pr', 'Op'];
     if (gene === 'CuCw') return ['Cu', 'Cw'];
@@ -1441,6 +1464,9 @@ function combineAlleles(allele1, allele2) {
         if (allele1 === 'Lu') return 'LuLu';
         if (allele1 === 'Pr') return 'PrPr';
         if (allele1 === 'Op') return 'OpOp';
+        if (allele1 === 'Pt') return 'PtPt';
+        if (allele1 === 'Ap') return 'ApAp';
+        if (allele1 === 'Gr') return 'GrGr';
 
         return allele1 + allele1;
     }
@@ -1463,6 +1489,8 @@ function combineAlleles(allele1, allele2) {
     if ((allele1 === 'Gi' && allele2 === 'Co') || (allele1 === 'Co' && allele2 === 'Gi')) return 'GiCo';
     if ((allele1 === 'Lu' && allele2 === 'sp') || (allele1 === 'sp' && allele2 === 'Lu')) return 'Lusp';
     if ((allele1 === 'Pr' && allele2 === 'Op') || (allele1 === 'Op' && allele2 === 'Pr')) return 'PrOp';
+    if ((allele1 === 'G' && allele2 === 'Pt') || (allele1 === 'Pt' && allele2 === 'G')) return 'GPt';
+    if ((allele1 === 'Gr' && allele2 === 'Ap') || (allele1 === 'Ap' && allele2 === 'Gr')) return 'GrAp';
     // KIT locus — four alleles crammed into one locus like clowns in a tiny carriage
     if ((allele1 === 'T' && allele2 === 'Rn') || (allele1 === 'Rn' && allele2 === 'T')) return 'TRn';
     if ((allele1 === 'T' && allele2 === 'Sb') || (allele1 === 'Sb' && allele2 === 'T')) return 'TSb';
@@ -1600,6 +1628,17 @@ function generateFoal(parent1, parent2, variation) {
         }
     }
 
+    // Gr/Ap locus: Greaves and Apron share an address, so a parent passes one or the other
+    const grApPattern = /^(nGr|GrGr|nAp|ApAp|GrAp|ApGr)$/;
+    const p1GrAp = findGene(p1.genes, grApPattern);
+    const p2GrAp = findGene(p2.genes, grApPattern);
+    if (p1GrAp || p2GrAp) {
+        const inherited = inheritGene(p1GrAp || 'nn', p2GrAp || 'nn');
+        if (inherited !== 'nn' && inherited !== 'n' && !foalGenes.includes(inherited)) {
+            foalGenes.push(inherited);
+        }
+    }
+
     // These markings each get their own private suite — solo locus vibes
     const independentMarkings = ['O', 'Spl', 'Rb', 'Hq', 'Sh', 'Os'];
     independentMarkings.forEach(name => {
@@ -1637,12 +1676,22 @@ function generateFoal(parent1, parent2, variation) {
         }
     }
 
+    // G/Pt locus: Gray whitens, Pitch blackens, and they sit at the same address
+    const gPtPattern = /^(nG|GG|nPt|PtPt|GPt|PtG)$/;
+    const p1GPt = findGene(p1.genes, gPtPattern);
+    const p2GPt = findGene(p2.genes, gPtPattern);
+    if (p1GPt || p2GPt) {
+        const inherited = inheritGene(p1GPt || 'nn', p2GPt || 'nn');
+        if (inherited !== 'nn' && inherited !== 'n' && !foalGenes.includes(inherited)) {
+            foalGenes.push(inherited);
+        }
+    }
+
     // These modifiers each live alone — independent loci for independent genes
     const independentModifiers = [
         { pattern: /^(nD|DD)$/, name: 'D' },
         { pattern: /^(nP|PP)$/, name: 'P' },
         { pattern: /^(nSty|StySty)$/, name: 'Sty' },
-        { pattern: /^(nG|GG)$/, name: 'G' },
         { pattern: /^(nf|ff)$/, name: 'f' },
         { pattern: /^(nZ|ZZ)$/, name: 'Z' },
         { pattern: /^(nTd|TdTd)$/, name: 'Td' },
@@ -1981,7 +2030,7 @@ const TIER_UNCOMMON = 10, TIER_RARE = 25, TIER_EPIC = 50, TIER_LEGENDARY = 100;
 // mistaken for nfe). Coats and the leopard complex depend on combinations
 // across loci, so they're scored separately below.
 const GENE_RARITY = {
-    // --- Markings --- (Splash, Roan, Tobiano, Snowflake are common = 0)
+    // --- Markings --- (Splash, Roan, Tobiano, Snowflake, Apron, Greaves are common = 0)
     'nCu': TIER_UNCOMMON, 'CuCu': TIER_UNCOMMON, 'CuCw': TIER_UNCOMMON,
     'nCw': TIER_UNCOMMON, 'CwCw': TIER_UNCOMMON,
     'nO': TIER_UNCOMMON, 'OO': TIER_UNCOMMON,
@@ -2003,6 +2052,7 @@ const GENE_RARITY = {
     'RnW': TIER_RARE, 'WRn': TIER_RARE,
     'SbW': TIER_RARE, 'WSb': TIER_RARE,
     // --- Modifiers --- (Dun, Pangare, Sooty, Gray are common = 0)
+    'nPt': TIER_RARE, 'PtPt': TIER_RARE, 'GPt': TIER_RARE, 'PtG': TIER_RARE,
     'ff': TIER_UNCOMMON,
     'nZ': TIER_UNCOMMON, 'ZZ': TIER_UNCOMMON,
     'nLu': TIER_UNCOMMON, 'LuLu': TIER_UNCOMMON, 'Lusp': TIER_UNCOMMON,
@@ -2161,7 +2211,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'erer'] } // Cold Ether
         ],
         markings: ['nB', 'nLp patnpatn', 'LpLp patn', 'LpLp', 'nW', 'nRb', 'nFl'],
-        modifiers: ['nTd', 'nGl', 'nV']
+        modifiers: ['nTd', 'nGl', 'nV', 'nPt']
     },
     uncommon: {
         coatColors: [
@@ -2183,7 +2233,7 @@ const RARITY_GENES = {
             { baseCoat: 'Black', genes: ['Ee', 'aa'] },
             { baseCoat: 'Chestnut', genes: ['ee', 'AA'] }
         ],
-        markings: ['nSpl', 'nRn', 'nT', 'nLp'],
+        markings: ['nSpl', 'nRn', 'nT', 'nLp', 'nAp', 'nGr'],
         modifiers: ['nD', 'nP', 'nSty', 'nG']
     }
 };
@@ -2545,6 +2595,9 @@ function extractTraitsFromQuery(query) {
     if (workingQuery.includes('pangare')) traits.push('Pangare');
     if (workingQuery.includes('sooty')) traits.push('Sooty');
     if (workingQuery.includes('blanched')) traits.push('Blanched');
+    if (workingQuery.includes('pitch')) traits.push('Pitch');
+    if (workingQuery.includes('apron')) traits.push('Apron');
+    if (workingQuery.includes('greaves')) traits.push('Greaves');
     if (workingQuery.includes('collar')) traits.push('Collar');
     if (workingQuery.includes('girdle')) traits.push('Girdle');
     if (workingQuery.includes('cuirass')) traits.push('Cuirass');
@@ -3020,7 +3073,9 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         } else if (traitLower === 'roan') {
             if (/\bnrn\b|\brnrn\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'gray' || traitLower === 'grey') {
-            if (/\bng\b|\bgg\b/.test(combinedGeno)) traitsScores.push(80);
+            if (/\bng\b|\bgg\b|\bgpt\b|\bptg\b/.test(combinedGeno)) traitsScores.push(80);
+        } else if (traitLower === 'pitch') {
+            if (/\bnpt\b|\bptpt\b|\bgpt\b|\bptg\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'tobiano') {
             if (/\bnt\b|\btt\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'overo') {
@@ -3062,6 +3117,10 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (/\bnco\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'girdle') {
             if (/\bngi\b/.test(combinedGeno)) traitsScores.push(80);
+        } else if (traitLower === 'apron') {
+            if (/\bnap\b|\bapap\b|\bgrap\b|\bapgr\b/.test(combinedGeno)) traitsScores.push(80);
+        } else if (traitLower === 'greaves') {
+            if (/\bngr\b|\bgrgr\b|\bgrap\b|\bapgr\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'cuirass') {
             if (/\bncu\b|\bcucw\b/.test(combinedGeno)) traitsScores.push(80);
         } else if (traitLower === 'crowned') {
@@ -3294,7 +3353,6 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         { pattern: /^(nD|DD)$/, allele: 'D', name: 'Dun' },
         { pattern: /^(nP|PP)$/, allele: 'P', name: 'Pangare' },
         { pattern: /^(nSty|StySty)$/, allele: 'Sty', name: 'Sooty' },
-        { pattern: /^(nG|GG)$/, allele: 'G', name: 'Gray' },
         { pattern: /^(nZ|ZZ)$/, allele: 'Z', name: 'Silver' },
         { pattern: /^(nTd|TdTd)$/, allele: 'Td', name: 'Tabard' },
         { pattern: /^(nGl|GlGl)$/, allele: 'Gl', name: 'Gilt' },
@@ -3335,6 +3393,17 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         else if (alleles.includes('sp') && !alleles.includes('Lu')) modifiers.add('Carrying Sepulchered');
         // Lusp: Lu dominates (Illuminated shows), sp skulks in the shadows (carried)
         if (g === 'Lusp') modifiers.add('Carrying Sepulchered');
+    });
+
+    // G/Pt shared locus: Gray whitens, Pitch blackens, both dominant, and a horse
+    // carrying both goes a true mid gray.
+    const gPtPattern = /^(nG|GG|nPt|PtPt|GPt|PtG)$/;
+    const gPtGenotypes = possibleGenotypes(p1.genes, p2.genes, gPtPattern);
+    gPtGenotypes.forEach(g => {
+        if (g === 'nn') return;
+        const alleles = getGeneAlleles(g);
+        if (alleles.includes('G')) modifiers.add('Gray');
+        if (alleles.includes('Pt')) modifiers.add('Pitch');
     });
 
     // ── Pr/Op shared locus — both dominant, both sparkly, best friends forever ──
@@ -3395,6 +3464,16 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         alleles.forEach(a => { if (giCoAlleleNames[a]) whiteMarkings.add(giCoAlleleNames[a]); });
     });
 
+    // Gr/Ap shared locus: Greaves and Apron
+    const grApPattern = /^(nGr|GrGr|nAp|ApAp|GrAp|ApGr)$/;
+    const grApAlleleNames = { 'Gr': 'Greaves', 'Ap': 'Apron' };
+    const grApGenotypes = possibleGenotypes(p1.genes, p2.genes, grApPattern);
+    grApGenotypes.forEach(g => {
+        if (g === 'nn') return;
+        const alleles = getGeneAlleles(g);
+        alleles.forEach(a => { if (grApAlleleNames[a]) whiteMarkings.add(grApAlleleNames[a]); });
+    });
+
     // Compute valid combinations for shared loci from actual possible genotypes
     const locusCombos = {};
     [
@@ -3402,6 +3481,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         { key: 'bFl', genotypes: bFlGenotypes },
         { key: 'cuCw', genotypes: cuCwGenotypes },
         { key: 'giCo', genotypes: giCoGenotypes },
+        { key: 'grAp', genotypes: grApGenotypes },
     ].forEach(({ key, genotypes }) => {
         const comboSet = new Set();
         genotypes.forEach(g => {
@@ -3462,6 +3542,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         bFl: /^(nB|BB|nFl|FlFl|BFl|FlB)$/,
         cuCw: /^(nCu|CuCu|nCw|CwCw|CuCw)$/,
         giCo: /^(nGi|GiGi|nCo|CoCo|GiCo|CoGi)$/,
+        grAp: /^(nGr|GrGr|nAp|ApAp|GrAp|ApGr)$/,
         lp: /^(nLp|LpLp)$/,
         O: /^(nO|OO)$/,
         Spl: /^(nSpl|SplSpl)$/,
@@ -3478,6 +3559,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         { key: 'bFl', name: 'B/Fl', traits: ['Blanched', 'False Leopard', 'Blanched False Leopard'], dominant: true },
         { key: 'cuCw', name: 'Cu/Cw', traits: ['Cuirass', 'Crowned'], dominant: true },
         { key: 'giCo', name: 'Gi/Co', traits: ['Girdle', 'Collar'], dominant: true },
+        { key: 'grAp', name: 'Gr/Ap', traits: ['Greaves', 'Apron'], dominant: true },
         { key: 'lp', name: 'Leopard Complex', traits: ['Snowflake', 'Blanket', 'Leopard', 'Varnish Roan', 'Snowcap', 'Fewspot', 'Carries Patn'], dominant: true },
         { key: 'O', name: 'Overo', traits: ['Overo'], dominant: true },
         { key: 'Spl', name: 'Splash', traits: ['Splash'], dominant: true },
@@ -4016,6 +4098,10 @@ const SOMATIC_SWITCH_OFF = {
     'StySty': [{ trait: 'Sooty', becomes: null }],
     'nG':     [{ trait: 'Gray', becomes: null }],
     'GG':     [{ trait: 'Gray', becomes: null }],
+    'nPt':    [{ trait: 'Pitch', becomes: null }],
+    'PtPt':   [{ trait: 'Pitch', becomes: null }],
+    'GPt':    [{ trait: 'Gray', becomes: 'nPt' }, { trait: 'Pitch', becomes: 'nG' }],
+    'PtG':    [{ trait: 'Gray', becomes: 'nPt' }, { trait: 'Pitch', becomes: 'nG' }],
     'ff':     [{ trait: 'Flaxen', becomes: null }],
     'nZ':     [{ trait: 'Silver', becomes: null }],
     'ZZ':     [{ trait: 'Silver', becomes: null }],
@@ -4059,6 +4145,12 @@ const SOMATIC_SWITCH_OFF = {
     'CoCo':   [{ trait: 'Collar', becomes: null }],
     'GiCo':   [{ trait: 'Girdle', becomes: 'nCo' }, { trait: 'Collar', becomes: 'nGi' }],
     'CoGi':   [{ trait: 'Girdle', becomes: 'nCo' }, { trait: 'Collar', becomes: 'nGi' }],
+    'nAp':    [{ trait: 'Apron', becomes: null }],
+    'ApAp':   [{ trait: 'Apron', becomes: null }],
+    'nGr':    [{ trait: 'Greaves', becomes: null }],
+    'GrGr':   [{ trait: 'Greaves', becomes: null }],
+    'GrAp':   [{ trait: 'Greaves', becomes: 'nAp' }, { trait: 'Apron', becomes: 'nGr' }],
+    'ApGr':   [{ trait: 'Greaves', becomes: 'nAp' }, { trait: 'Apron', becomes: 'nGr' }],
     'nB':     [{ trait: 'Blanched', becomes: null }],
     'BB':     [{ trait: 'Blanched', becomes: null }],
     'BFl':    [{ trait: 'Blanched', becomes: 'nFl' }, { trait: 'False Leopard', becomes: 'nB' }],

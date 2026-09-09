@@ -105,10 +105,14 @@ inherit together):
   Carries Ether), plus compound combos.
 - **White markings**: Tobiano, Overo, Splash, Roan, Sabino, Blanched, False
   Leopard, Harlequin, Shroud, Ossuary, Filigree, Crowned, Cuirass, Girdle,
-  Collar, Rabicano, Dominant White, and Leopard Complex (Snowflake to Fewspot).
+  Collar, Greaves, Apron, Rabicano, Dominant White, and Leopard Complex
+  (Snowflake to Fewspot). Greaves and Apron share a locus, as do Girdle and
+  Collar.
   KIT locus allows max two of Tobiano/Roan/Sabino/Dominant White.
-- **Modifiers**: Dun, Pangare, Sooty, Gray, Flaxen, Silver, Illuminated,
-  Sepulchered, Tabard, Gilt, Vellum, Opal, Prism, Lacquer, Starfield.
+- **Modifiers**: Dun, Pangare, Sooty, Gray, Pitch, Flaxen, Silver, Illuminated,
+  Sepulchered, Tabard, Gilt, Vellum, Opal, Prism, Lacquer, Starfield. Pitch
+  shares Gray's locus and blackens with age where Gray whitens; a horse with
+  both goes a true mid gray.
 - **Anomalies**: 25% chance to pass each from a parent, plus a flat 5% chance of
   a random one on any foal.
 - **Variants** (Heraldic, Puck, Cavedweller, Restored): 25% chance to pass from

@@ -65,6 +65,10 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '9 Sep 2026', items: [
+      'Three new traits from the Trait Index. Pitch (Rare modifier, nPt) is Gray run the other way: the horse blackens with age instead of whitening, and it shares Gray\'s locus, so a horse can carry Gray, Pitch or the GPt pair but a parent only ever hands down one of them. Greaves (nGr) and Apron (nAp) are Common white markings that share a locus with each other in the same way, written GrAp when a horse has both.',
+      'Every tool knows them: the Foal Generator breeds them, Translate and Layers describe and place them, Somatic can hide them, Smart Search finds them, Recipe costs them out (Pitch is Rare, so it takes a Cave Root), and the Scroll Generator can roll them.'
+    ] },
     { date: '20 Aug 2026', items: [
       'Recipe now matches against your own stable. It ranks the pairs you could actually field, cheapest first, and prices what each one would cost in roots: forcing an allele a horse only carries one copy of, and blocking anything it carries that the target does not want. A root can force an allele a horse has but never create one, so a horse missing the allele outright is listed separately as a near miss with exactly what it lacks. It also names which of your coursers carry a target anomaly, since an Unusual Root can only force one a parent already has.',
       'Recipe now costs the job out in Breeding Roll Add-Ons. It works out the cheapest set of items that guarantees the foal, choosing a Cave Root or a Strong Root by the rarity of the allele being forced, adding an Unusual Root for an anomaly, and comparing that total against a Tome of Imperfect Creation so you are pointed at whichever is cheaper. Two anomalies can only be forced by the Tome, since one Unusual Root is the limit per breeding.',
