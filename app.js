@@ -69,7 +69,8 @@
       'New traits: Pitch (nPt, Rare) blackens with age the way Gray whitens and shares Gray\'s locus (GPt when both); Greaves (nGr) and Apron (nAp) are Common white markings that share a locus (GrAp when both).',
       'Every tool knows the new traits: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator.',
       'Fixed: Smart Search only counted a trait when a parent was written the carrier way (nGi), so GiGi or shared-locus pairs like GiCo and TRn scored nothing; any spelling that carries it now counts, across twenty traits.',
-      'Fixed: "false leopard" in Smart Search was read as the Leopard complex and never matched.'
+      'Fixed: "false leopard" in Smart Search was read as the Leopard complex and never matched.',
+      'Fixed: "Every possible foal" left Chimera out even when a parent carried it and the example foals rolled it; inherited anomalies are now listed from the parents directly. Thanks for the report.'
     ] },
     { date: '20 Aug 2026', items: [
       'Recipe now checks your own stable, ranking the pairs you could field cheapest first with the roots each would need; horses missing an allele outright are listed as near misses with what they lack.',

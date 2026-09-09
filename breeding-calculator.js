@@ -1855,10 +1855,18 @@ function displayFoalPossibilities(parent1, parent2) {
     addRow('White markings', poss.whiteMarkings);
     addRow('Modifiers', poss.modifiers);
 
-    const anomalyVals = poss.anomalies.length
-        ? `${poss.anomalies.join(', ')} <span class="poss-note">(plus a 5% chance of a random one)</span>`
+    // The chimera engine strips Chimera from its anomaly list on purpose (a
+    // Chimera patch can't itself be Chimera), which is right for that tab but
+    // wrong here: a parent's Chimera is inherited like any other anomaly. So
+    // this row reads the parents directly rather than the filtered set.
+    const inherited = Array.from(new Set([
+        ...parseGenotype(parent1.genotype).anomalies,
+        ...parseGenotype(parent2.genotype).anomalies
+    ])).sort();
+    const anomalyVals = inherited.length
+        ? `${inherited.join(', ')} <span class="poss-note">(25% each from a parent, plus a 5% chance of a random one)</span>`
         : `<span class="poss-note">5% chance of a random anomaly</span>`;
-    const anomalyLabel = poss.anomalies.length ? `Anomalies (${poss.anomalies.length})` : 'Anomalies';
+    const anomalyLabel = inherited.length ? `Anomalies (${inherited.length})` : 'Anomalies';
     rows.push(`<div class="poss-row"><span class="poss-label">${anomalyLabel}</span><span class="poss-vals">${anomalyVals}</span></div>`);
 
     addRow('Temperaments', temperaments);
