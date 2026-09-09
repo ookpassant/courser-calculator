@@ -66,46 +66,46 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '9 Sep 2026', items: [
-      'Three new traits from the Trait Index. Pitch (Rare modifier, nPt) is Gray run the other way: the horse blackens with age instead of whitening, and it shares Gray\'s locus, so a horse can carry Gray, Pitch or the GPt pair but a parent only ever hands down one of them. Greaves (nGr) and Apron (nAp) are Common white markings that share a locus with each other in the same way, written GrAp when a horse has both.',
-      'Every tool knows them: the Foal Generator breeds them, Translate and Layers describe and place them, Somatic can hide them, Smart Search finds them, Recipe costs them out (Pitch is Rare, so it takes a Cave Root), and the Scroll Generator can roll them.',
-      'Fixed: Smart Search only credited a parent for a marking or modifier when it was written the carrier way (nGi), so a horse with two copies (GiGi) or a shared-locus pair (GiCo, TRn, BFl) scored nothing and the pairing never showed; any spelling that carries the allele now counts, across twenty affected traits.',
-      'Fixed: a Smart Search for "false leopard" was being read as the Leopard complex and never matched anything; it now finds pairs carrying Fl.'
+      'New traits: Pitch (nPt, Rare) blackens with age the way Gray whitens and shares Gray\'s locus (GPt when both); Greaves (nGr) and Apron (nAp) are Common white markings that share a locus (GrAp when both).',
+      'Every tool knows the new traits: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator.',
+      'Fixed: Smart Search only counted a trait when a parent was written the carrier way (nGi), so GiGi or shared-locus pairs like GiCo and TRn scored nothing; any spelling that carries it now counts, across twenty traits.',
+      'Fixed: "false leopard" in Smart Search was read as the Leopard complex and never matched.'
     ] },
     { date: '20 Aug 2026', items: [
-      'Recipe now matches against your own stable. It ranks the pairs you could actually field, cheapest first, and prices what each one would cost in roots: forcing an allele a horse only carries one copy of, and blocking anything it carries that the target does not want. A root can force an allele a horse has but never create one, so a horse missing the allele outright is listed separately as a near miss with exactly what it lacks. It also names which of your coursers carry a target anomaly, since an Unusual Root can only force one a parent already has.',
-      'Recipe now costs the job out in Breeding Roll Add-Ons. It works out the cheapest set of items that guarantees the foal, choosing a Cave Root or a Strong Root by the rarity of the allele being forced, adding an Unusual Root for an anomaly, and comparing that total against a Tome of Imperfect Creation so you are pointed at whichever is cheaper. Two anomalies can only be forced by the Tome, since one Unusual Root is the limit per breeding.',
-      'Odds are now given per breeding roll rather than per foal option, because a roll offers two options and only one of them has to match. A Bunch of Grapes adds a third, and Recipe shows what that is worth before you spend on it.'
+      'Recipe now checks your own stable, ranking the pairs you could field cheapest first with the roots each would need; horses missing an allele outright are listed as near misses with what they lack.',
+      'Recipe costs the job out in Breeding Roll Add-Ons: the cheapest roots to guarantee the foal (Cave or Strong by rarity, Unusual for an anomaly) against a Tome of Imperfect Creation, whichever is cheaper.',
+      'Odds are now per breeding roll, since a roll gives two foal options and only one has to match; a Bunch of Grapes adds a third.'
     ] },
     { date: '19 Aug 2026', items: [
-      'New Recipe tab: the Foal Generator run backwards. Paste the foal you want and it works out what the two parents would have to be, locus by locus, with the odds that pairing actually throws it. It also tells you what can\'t be planned: anomalies only pass 25% of the time, and anything needing Overo, Ossuary or Dominant White is capped at 50% because two copies is lethal white.'
+      'New Recipe tab, the Foal Generator backwards: paste the foal you want and get what the parents must carry, locus by locus, with the odds, and which parts can\'t be planned (anomalies, and the lethal-white caps on Overo, Ossuary and Dominant White).'
     ] },
     { date: '13 Aug 2026', items: [
-      'New "Made by friends" section on the front page, starting with Rev\'s Group Horse Roller: it picks two temperament-compatible group horses and flags the lethal white risk and breeding cost, so you can bring a valid pair straight back here.'
+      'New "Made by friends" section on the front page, starting with Rev\'s Group Horse Roller, which picks two temperament-compatible group horses and flags lethal white risk and cost.'
     ] },
     { date: '31 Jul 2026', items: [
-      'New Somatic tab: paste a genotype (or pick a horse from your collection) and it lists every trait Somatic could hide on that horse, with what the patch reads as once each one is switched off, plus the base-colour option and the drawing rules. No parents needed — a Somatic patch can only show what the horse already has.',
-      'Genotype boxes now recognise "+ Somatic" instead of flagging it as an unknown token, and the Translate tab describes it.'
+      'New Somatic tab: paste a genotype and see every trait Somatic could hide, what the patch reads as with each one switched off, and the drawing rules.',
+      'Genotype boxes now accept "+ Somatic" instead of flagging it, and Translate describes it.'
     ] },
     { date: '17 Jul 2026', items: [
-      'New Layers tab: paste a genotype (or pick a horse from your collection) and its traits are laid out in the official visual hierarchy — Colors & Markings, Eye Colors, and Skin & Hoof Colors columns, base coat at the bottom, each layer covering the ones below — so you can paint in order. Every trait links to its Trait Index page.',
-      'The header menu is sorted into Breeding and Design dropdowns, so it stays tidy as tools get added.',
-      'A small feedback prompt may appear once asking if anything is difficult or confusing. Totally optional, and it only sends what you type into it.'
+      'New Layers tab: paste a genotype and its traits are laid out in the official visual hierarchy, base coat at the bottom, so you can paint in order; every trait links to its Trait Index page.',
+      'Header menu sorted into Breeding and Design dropdowns.',
+      'An optional one-time feedback prompt may appear; it only sends what you type.'
     ] },
     { date: '5 Jul 2026', items: [
-      'Genotype boxes now understand "patn" as one copy of the leopard pattern gene (same as "npatn"), instead of silently ignoring it and quietly changing the horse. Anything the engine still doesn\'t recognise is flagged now rather than dropped: the Translate tab warns you, and so does the live hint on the parent and collection boxes. Also fixed anomalies after a second "+" being dropped, so "Kintsugi + Swarf" keeps both.',
-      'Imports stopped silently swallowing bad data. A CSV row with no genotype is now shown as skipped instead of vanishing, a blank temperament is kept and flagged rather than dropping the whole row, and an unrecognised variant or genotype token is called out in the preview (and on bookmarklet imports). The Foal Generator warns too, if a parent\'s genotype has a token it doesn\'t recognise.'
+      'Genotype boxes now read "patn" as one copy (same as "npatn"), flag any token the engine doesn\'t recognise instead of silently dropping it, and keep every anomaly after a second "+" (so "Kintsugi + Swarf" keeps both).',
+      'Imports no longer silently swallow bad data: rows with no genotype show as skipped, blank temperaments are kept and flagged, and unrecognised variants or tokens are called out in the preview and in the Foal Generator.'
     ] },
     { date: '4 Jul 2026', items: [
-      'New Translate tab: paste a genotype (or pick one from your collection) and get a plain-English description of what the horse actually looks like, from body colour through markings, anomalies and variant. It reads the same trait data the phenotype namer does, so the two can never disagree.'
+      'New Translate tab: paste a genotype and get a plain-English description of the horse, from body colour through markings, anomalies and variant, read from the same data as the phenotype namer.'
     ] },
     { date: '16 Jun 2026', items: [
-      'Smart Search now finds pairs for Prism, Opal and Harlequin. They were never scored, so any search including one of them returned no matches even when your horses could make it. Reported by Criri.'
+      'Smart Search now finds pairs for Prism, Opal and Harlequin, which were never scored and so returned no matches. Reported by Criri.'
     ] },
     { date: '12 Jun 2026', items: [
-      'Fixed Pearl: a single copy (nprl) now reads as Carries Pearl, not an expressed Pearl coat. Pearl is recessive, so it only shows with two copies or in a compound (Cream/Tapestry Pearl). Caught by cross-checking the official Trait Index.',
-      'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a pair for a coat it can\'t actually make. Fixes Woad, and also Amber/Classic/Gold Cream Champagne, Ombre/Classic/Cold Cream Ether, and other coats that matched too loosely.',
+      'Fixed Pearl: a single copy (nprl) now reads as Carries Pearl, not an expressed coat, since Pearl only shows with two copies or in a compound.',
+      'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a coat a pair can\'t make (fixes Woad and several Cream Champagne and Cream Ether coats).',
       'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.',
-      'Rarity scoring now matches the official Trait Index tier by tier. The whole Uncommon tier wasn\'t scoring (single Cream, single Tapestry, Overo, Sabino, Silver and friends all read as Common), the leopard complex was under-rated, and Carries Filigree/Starfield now sit at Epic where they belong.'
+      'Rarity scoring now matches the Trait Index tier by tier: the Uncommon tier was scoring as Common, the leopard complex was under-rated, and Carries Filigree/Starfield now sit at Epic.'
     ] },
     { date: '10 Jun 2026', items: [
       'Clearer front page: every tool and import option is laid out with a short description and a way in.',
