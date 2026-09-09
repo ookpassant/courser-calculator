@@ -2740,6 +2740,18 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
     let traitsScores = [];
     let _pairCoats = null; // lazily-computed set of coats this pair can actually make
 
+    // Does either parent carry this allele at all, in any spelling? This reads
+    // the pair through getGeneAlleles, the same way breeding does, so a
+    // homozygous pair (GiGi) or a shared-locus compound (GiCo, TRn, BFl) counts
+    // exactly as the carrier spelling (nGi) does. The old per-trait regexes
+    // mostly checked the carrier spelling alone, so a pair that could plainly
+    // produce a trait scored zero for it and never appeared in the results.
+    const pairAlleles = new Set();
+    [parent1, parent2].forEach(p => parseGenotype(p.genotype || '').genes.forEach(g => {
+        getGeneAlleles(g).forEach(a => { if (a !== 'n') pairAlleles.add(a); });
+    }));
+    const pairCarries = (allele) => pairAlleles.has(allele);
+
     targetTraits.forEach(trait => {
         const traitLower = trait.toLowerCase();
 
@@ -2976,7 +2988,9 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             const p1HasLp = p1Geno.includes('lp');
             const p2HasLp = p2Geno.includes('lp');
             if (p1HasLp && p2HasLp && !combinedGeno.includes('patn')) traitsScores.push(100);
-        } else if (traitLower.includes('leopard')) {
+        } else if (traitLower.includes('leopard') && traitLower !== 'false leopard') {
+            // False Leopard is a KIT-family marking on its own locus (Fl), not the
+            // Leopard complex, and has its own branch further down.
             // Need nLp patnpatn — at least one Lp carrier, both parents packing patn
             const hasLp = combinedGeno.includes('lp');
             const p1HasPatn = p1Geno.includes('patn');
@@ -3069,66 +3083,66 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         } else if (traitLower.includes('ossuary')) {
             if (/\bnos\b/.test(combinedGeno)) traitsScores.push(100);
         } else if (traitLower.includes('shroud')) {
-            if (/\bnsh\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Sh')) traitsScores.push(80);
         } else if (traitLower === 'roan') {
-            if (/\bnrn\b|\brnrn\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Rn')) traitsScores.push(80);
         } else if (traitLower === 'gray' || traitLower === 'grey') {
-            if (/\bng\b|\bgg\b|\bgpt\b|\bptg\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('G')) traitsScores.push(80);
         } else if (traitLower === 'pitch') {
-            if (/\bnpt\b|\bptpt\b|\bgpt\b|\bptg\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Pt')) traitsScores.push(80);
         } else if (traitLower === 'tobiano') {
-            if (/\bnt\b|\btt\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('T')) traitsScores.push(80);
         } else if (traitLower === 'overo') {
-            if (/\bno\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('O')) traitsScores.push(80);
         } else if (traitLower === 'sabino') {
-            if (/\bnsb\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Sb')) traitsScores.push(80);
         } else if (traitLower === 'splash') {
-            if (/\bnspl\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Spl')) traitsScores.push(80);
         } else if (traitLower === 'dun') {
-            if (/\bnd\b|\bdd\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('D')) traitsScores.push(80);
         } else if (traitLower === 'silver') {
-            if (/\bnz\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Z')) traitsScores.push(80);
         } else if (traitLower === 'vellum') {
-            if (/\bnv\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('V')) traitsScores.push(80);
         } else if (traitLower === 'illuminated') {
-            if (/\bnlu\b|\blusp\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Lu')) traitsScores.push(80);
         } else if (traitLower === 'tabard') {
-            if (/\bntd\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Td')) traitsScores.push(80);
         } else if (traitLower === 'gilt') {
-            if (/\bngl\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Gl')) traitsScores.push(80);
         } else if (traitLower === 'prism') {
             // Dominant — Pr shows with one copy; PrOp shares the locus with Opal
-            if (/\bnpr\b|\bprpr\b|\bprop\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Pr')) traitsScores.push(80);
         } else if (traitLower === 'opal') {
             // Dominant — Op shows with one copy; PrOp shares the locus with Prism
-            if (/\bnop\b|\bopop\b|\bprop\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Op')) traitsScores.push(80);
         } else if (traitLower === 'harlequin') {
             // Dominant — Hq shows with one copy (nHq or HqHq)
-            if (/\bnhq\b|\bhqhq\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Hq')) traitsScores.push(80);
         } else if (traitLower === 'blanched') {
-            if (/\bnb\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('B')) traitsScores.push(80);
         } else if (traitLower === 'dominant white') {
-            if (/\bnw\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('W')) traitsScores.push(80);
         } else if (traitLower === 'rabicano') {
-            if (/\bnrb\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Rb')) traitsScores.push(80);
         } else if (traitLower === 'false leopard') {
-            if (/\bnfl\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Fl')) traitsScores.push(80);
         } else if (traitLower === 'collar') {
-            if (/\bnco\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Co')) traitsScores.push(80);
         } else if (traitLower === 'girdle') {
-            if (/\bngi\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Gi')) traitsScores.push(80);
         } else if (traitLower === 'apron') {
-            if (/\bnap\b|\bapap\b|\bgrap\b|\bapgr\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Ap')) traitsScores.push(80);
         } else if (traitLower === 'greaves') {
-            if (/\bngr\b|\bgrgr\b|\bgrap\b|\bapgr\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Gr')) traitsScores.push(80);
         } else if (traitLower === 'cuirass') {
-            if (/\bncu\b|\bcucw\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Cu')) traitsScores.push(80);
         } else if (traitLower === 'crowned') {
-            if (/\bncw\b|\bcucw\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Cw')) traitsScores.push(80);
         } else if (traitLower === 'pangare') {
-            if (/\bnp\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('P')) traitsScores.push(80);
         } else if (traitLower === 'sooty') {
-            if (/\bnsty\b/.test(combinedGeno)) traitsScores.push(80);
+            if (pairCarries('Sty')) traitsScores.push(80);
         }
     });
 
