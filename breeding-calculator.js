@@ -5392,7 +5392,9 @@ function recipeLooksLikeGenotype(text) {
 // so the caller can offer the three coats.
 function recipeFromEnglish(text) {
     const lower = text.toLowerCase();
-    const found = extractTraitsFromQuery(text);
+    // The parser expects lowercase (Smart Search lowercases before calling it);
+    // typed as 'Saffron Black Nacre' it matched nothing and fell back to 'black'.
+    const found = extractTraitsFromQuery(lower);
     const res = { genotype: '', coat: null, traits: [], choices: null, dropped: [], note: '' };
 
     // The parser hands back at most one coat-ish thing; work out which kind.
