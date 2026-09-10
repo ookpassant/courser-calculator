@@ -2594,6 +2594,11 @@ function extractTraitsFromQuery(query) {
     const coatColors = [...new Set(_coatNames)]
         .sort((a, b) => b.length - a.length)
         .map(n => [n.toLowerCase(), n]);
+    // Then the families, longest first, so "cream pearl ether" beats "cream ether"
+    // and both beat the bare generics below.
+    Object.keys(COAT_FAMILIES)
+        .sort((a, b) => b.length - a.length)
+        .forEach(f => coatColors.push([f.toLowerCase(), f]));
     // Aliases + generic dilution fallbacks (after the full names, so a specific
     // coat always wins over a bare "champagne" / "cream" / etc.).
     [['amber champ', 'Amber Champagne'], ['gold champ', 'Gold Champagne'], ['pearl cream', 'Cream Pearl'],
@@ -2768,6 +2773,21 @@ const CANONICAL_COATS = new Set(
     ['bay', 'black', 'chestnut'].concat(Object.values(SPECIAL_COAT_NAMES).map(n => n.toLowerCase()))
 );
 
+// Coat families: the trait-page name for a dilution combination, and the three
+// base-specific coats under it. Built from the coat keys ('Bay_Cream Ether'
+// names the family and its member), so a query like "cream ether" can mean any
+// of Ombre, Classic or Cold Cream Ether instead of collapsing to plain Cream.
+// Single-dilution families (Cream, Ether, ...) are left out on purpose: a bare
+// "ether" keeps its broad meaning of any coat with Ether in it.
+const COAT_FAMILIES = {};
+Object.keys(SPECIAL_COAT_NAMES).forEach(key => {
+    const family = key.slice(key.indexOf('_') + 1);
+    if (['Cream', 'Tapestry', 'Pearl', 'Champagne', 'Ether'].includes(family)) return;
+    (COAT_FAMILIES[family] = COAT_FAMILIES[family] || []).push(SPECIAL_COAT_NAMES[key]);
+});
+// The trait page calls CrCr erer 'Ash Ether'; the engine's key still says Double Cream Ether.
+COAT_FAMILIES['Ash Ether'] = COAT_FAMILIES['Double Cream Ether'];
+
 // Which base (if any) a coat-name query requires. Longest match wins.
 function requiredBaseFromName(traitLower) {
     let best = null, bestLen = 0;
@@ -2822,6 +2842,20 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (_pairCoats.has(traitLower)) {
                 const words = traitLower.split(/\s+/).length;
                 traitsScores.push(Math.min(150, 60 + 20 * words)); // rarer (longer) coats rank higher
+            }
+            return;
+        }
+
+        // A coat family ("cream ether", "nacre") matches when the pair can make
+        // any coat in it, judged by the same engine as the exact names above.
+        if (COAT_FAMILIES[trait]) {
+            if (!_pairCoats) {
+                _pairCoats = new Set(generateChimeraPossibilities('', parent1.genotype, parent2.genotype)
+                    .fullCoatNames.map(c => c.toLowerCase()));
+            }
+            if (COAT_FAMILIES[trait].some(name => _pairCoats.has(name.toLowerCase()))) {
+                const words = trait.split(/\s+/).length;
+                traitsScores.push(Math.min(150, 60 + 20 * words));
             }
             return;
         }
