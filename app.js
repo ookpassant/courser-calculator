@@ -65,6 +65,12 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '10 Sep 2026', items: [
+      'New Legendary coats from the coat overhaul: Double Cream Champagne (CrCr with Champagne: Cremello, Perlino and Smoky Cream Champagne), Ash Ether (CrCr erer: Cold, Ombre and Classic Ash Ether) and Nacre (prlprl Cher: Rose Gold, Cerulean Bay and Saffron Black Nacre). Those genotypes used to name as their single-Cream or Pearl Champagne cousins.',
+      'Translate describes the new coats in the index\'s sheen language, Layers links their Trait Index pages, Smart Search and Recipe know them by name, and the Scroll Generator can roll them.',
+      'Ether has been redefined by the coat overhaul: it desaturates and lightens the base coat and lays a sheen over it, silvery along the topline and muted purple or blue below. Translate now describes Cold, Ombre and Classic Ether that way, and the old blue-gray and purple-pink wording is gone.',
+      'Trait Index links follow the consolidated pages: Palomino, Buckskin and Smoky Black now link to the Cream page, and Weld, Madder and Woad to the Tapestry page.'
+    ] },
     { date: '9 Sep 2026', items: [
       'New traits: Pitch (nPt, Rare) blackens with age the way Gray whitens and shares Gray\'s locus (GPt when both); Greaves (nGr) and Apron (nAp) are Common white markings that share a locus (GrAp when both).',
       'Every tool knows the new traits: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator.',

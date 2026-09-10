@@ -103,6 +103,9 @@ inherit together):
 - **Base coat** (E/A locus) and **dilutions**: Cream, Tapestry, Pearl (locus 1),
   Champagne, Ether (locus 2, where Ch dominates er, so Cher = Champagne +
   Carries Ether), plus compound combos.
+  Two Cream genes with Champagne or Ether make the Legendary Double Cream
+  Champagne and Ash Ether coats, and two Pearl genes with a Cher pair make
+  Nacre; Recipe, Smart Search and the Scroll Generator all know the nine names.
 - **White markings**: Tobiano, Overo, Splash, Roan, Sabino, Blanched, False
   Leopard, Harlequin, Shroud, Ossuary, Filigree, Crowned, Cuirass, Girdle,
   Collar, Greaves, Apron, Rabicano, Dominant White, and Leopard Complex

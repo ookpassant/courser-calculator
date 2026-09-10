@@ -229,18 +229,25 @@ const SPECIAL_COAT_NAMES = {
     'Bay_Cream Champagne': 'Amber Cream Champagne',
     'Black_Cream Champagne': 'Classic Cream Champagne',
     'Chestnut_Cream Champagne': 'Gold Cream Champagne',
-    'Bay_Double Cream Champagne': 'Amber Cream Champagne',
-    'Black_Double Cream Champagne': 'Classic Cream Champagne',
-    'Chestnut_Double Cream Champagne': 'Gold Cream Champagne',
+    // Double Cream Champagne: likewise, two Creams with any Champagne. Legendary.
+    'Bay_Double Cream Champagne': 'Perlino Champagne',
+    'Black_Double Cream Champagne': 'Smoky Cream Champagne',
+    'Chestnut_Double Cream Champagne': 'Cremello Champagne',
+    // Nacre: two Pearl genes lighting up the carried Ether in a Cher pair.
+    // resolveTraits and the chimera engine label that combination 'Nacre'.
+    'Bay_Nacre': 'Cerulean Bay Nacre',
+    'Black_Nacre': 'Saffron Black Nacre',
+    'Chestnut_Nacre': 'Rose Gold Nacre',
 
     // Cream Ether — fancy AND barely corporeal, the ultimate flex
     // Double Cream (CrCr) uses the same name, just presents paler
     'Bay_Cream Ether': 'Ombre Cream Ether',
     'Black_Cream Ether': 'Classic Cream Ether',
     'Chestnut_Cream Ether': 'Cold Cream Ether',
-    'Bay_Double Cream Ether': 'Ombre Cream Ether',
-    'Black_Double Cream Ether': 'Classic Cream Ether',
-    'Chestnut_Double Cream Ether': 'Cold Cream Ether',
+    // Ash Ether: the second Cream gene used to be invisible here. Legendary.
+    'Bay_Double Cream Ether': 'Ombre Ash Ether',
+    'Black_Double Cream Ether': 'Classic Ash Ether',
+    'Chestnut_Double Cream Ether': 'Cold Ash Ether',
 
     // Tapestry Champagne — woven AND fizzy, the sommelier's tapestry
     'Bay_Tapestry Champagne': 'Madder Champagne',
@@ -513,11 +520,15 @@ function resolveTraits(genoString) {
     const locus1Gene = genes.find(g => /Cr|Tp|prl/.test(g) && !/(Ch|er)/.test(g));
     const locus2Gene = genes.find(g => /Ch|er/.test(g) && !/(Cr|Tp|prl)/.test(g));
 
-    if (locus1Gene && DILUTION_NAMES[locus1Gene]) {
-        dilutions.push(DILUTION_NAMES[locus1Gene]);
-    }
-    if (locus2Gene && DILUTION_NAMES[locus2Gene]) {
-        dilutions.push(DILUTION_NAMES[locus2Gene]);
+    // Nacre: two Pearl genes light up the carried Ether in a Cher pair, so the
+    // Ether names the coat instead of being listed as carried. Plain Champagne
+    // (nCh, ChCh) with prlprl is still Pearl Champagne.
+    const isNacre = locus1Gene === 'prlprl' && locus2Gene === 'Cher';
+    if (isNacre) {
+        dilutions.push('Nacre');
+    } else {
+        if (locus1Gene && DILUTION_NAMES[locus1Gene]) dilutions.push(DILUTION_NAMES[locus1Gene]);
+        if (locus2Gene && DILUTION_NAMES[locus2Gene]) dilutions.push(DILUTION_NAMES[locus2Gene]);
     }
 
     // Pearl is recessive too — a single nprl only CARRIES it (you need prlprl, or it
@@ -527,7 +538,7 @@ function resolveTraits(genoString) {
     }
 
     // Ether is recessive — lurking in the shadows until it gets a matching copy, very dungeon energy
-    if (locus2Gene === 'ner' || locus2Gene === 'Cher') {
+    if (!isNacre && (locus2Gene === 'ner' || locus2Gene === 'Cher')) {
         allTraits.push('Carries Ether');
     }
 
@@ -711,9 +722,9 @@ const COAT_DESC = {
     'Classic Champagne': "It's a warm taupe-brown with a metallic sheen over freckled skin.",
     'Gold Champagne': "It's a bright gold with a metallic sheen.",
     // Ether
-    'Ombre Ether': "It's a pale, otherworldly blue-gray, silvery on top and purple-pink below.",
-    'Classic Ether': "It's a pale, ghostly blue-gray.",
-    'Cold Ether': "It's a cold, pale blue-gray with a faint warm cast.",
+    'Ombre Ether': "It's a muted, desaturated reddish brown body with muted charcoal gray stockings blending into it, matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades in in bands: pale silvery gray along the topline, muted purple or blue on the belly, muzzle and upper legs, and it may cover the stockings. Gray skin, eyes and hooves.",
+    'Classic Ether': "It's a muted charcoal gray, even across the body, with Ether's sheen fading into it in bands: pale silvery gray along the topline, muted purple or blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
+    'Cold Ether': "It's a muted, desaturated reddish brown, even across the body, with Ether's sheen fading into it in bands: pale silvery gray along the topline, muted purple or blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
     // Cream Pearl
     'Buckskin Pearl': "It's a pale, luminous gold with a caramel sheen and dark points.",
     'Smoky Black Pearl': "It's a soft, smoky brown with a pearly sheen.",
@@ -742,6 +753,21 @@ const COAT_DESC = {
     'Ombre Cream Ether': "It's a very pale blue-gray with faint golden undertones.",
     'Classic Cream Ether': "It's an extremely pale, ghostly blue-gray.",
     'Cold Cream Ether': "It's a pale, cold blue-gray with a faint warm cast.",
+
+    // Ash Ether (CrCr erer)
+    'Cold Ash Ether': "It's a pale, cool gray, even across the body, with Ether's sheen fading into it in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, gray or blue eyes.",
+    'Ombre Ash Ether': "It's a pale, cool gray body with cool gray stockings, darker than the body and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades in in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, gray or blue eyes.",
+    'Classic Ash Ether': "It's a cool gray, even across the body, with Ether's sheen fading into it in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, gray or blue eyes.",
+
+    // Double Cream Champagne (CrCr with Champagne)
+    'Cremello Champagne': "It's a gray-white, even across the whole body, with the mane and tail to match. Cream skin and hooves, blue eyes.",
+    'Perlino Champagne': "It's a gray-white body with light gray stockings blending smoothly into it, matched on all four legs, and the mane and tail the stocking colour. Cream skin and hooves, blue eyes.",
+    'Smoky Cream Champagne': "It's a light gray with little to no variation over the coat, mane and tail to match. Cream skin and hooves, blue eyes.",
+
+    // Nacre (prlprl Cher)
+    'Rose Gold Nacre': "It's a warm tan or brown, even across the body, with Nacre's sheen bursting from the chest and cheeks and fading into the coat: pastel pink or orange at the centre, pink or orange further out. Cream skin with gray speckles, cream hooves, gray eyes.",
+    'Cerulean Bay Nacre': "It's a warm tan or brown body with warm brown stockings blending into it, matched on all four legs, and the mane and tail the stocking colour. Nacre's sheen bursts from the chest and cheeks and fades into the coat: pastel blue or purple at the centre, blue or purple further out, and it may cover the stockings. Cream skin with gray speckles, cream hooves, gray eyes.",
+    'Saffron Black Nacre': "It's a warm brown, even across the body, with Nacre's sheen bursting from the chest and cheeks and fading into the coat: light golden yellow at the centre, yellow or orange further out. Cream skin with gray speckles, cream hooves, gray eyes.",
     // Tapestry Champagne
     'Madder Champagne': "It's a madder red lifted by champagne's metallic sheen.",
     'Woad Champagne': "It's a woad blue with a champagne metallic sheen.",
@@ -782,9 +808,10 @@ const DILUTION_DESC = {
     'Cream': "A single dose of cream washes the red out to a warm golden tan, but leaves any black points alone.",
     'Double Cream': "Two doses of cream take it almost all the way out. The coat goes pale cream to ivory, the skin pinkish, the eyes blue.",
     'Champagne': "Champagne lightens the coat to a warm golden or grayish brown, with peachy or lavender undertones. The skin turns pinkish-gray and often freckled, the eyes gold or green.",
-    'Ether': "Ether is Dungeon Coursers' own dilution, the magical counterpart to Champagne. It washes the coat to a pale, otherworldly blue-gray, silvery-blue along the topline and purple-pink under the barrel and face. The skin is gray, the eyes gray or brown.",
+    'Ether': "Ether is Dungeon Coursers' own dilution, the magical counterpart to Champagne. It desaturates and lightens the base coat, then lays a sheen over it in bands that fade gradually into the coat: a desaturated, silvery sheen along the topline and a hue-shifted one, muted purple or blue, on the belly, legs and muzzle. Skin, eyes and hooves go gray.",
     'Pearl': "Pearl (double dose) turns the coat a shiny, warm gold-to-caramel brown, or a warm grayish brown on a black base. The tone stays even, the skin pink, the eyes gray or green.",
     'Cream Pearl': "Cream and pearl together push the coat pale and luminous, a soft warm gold with pearl's shiny caramel sheen.",
+    'Nacre': "Nacre is two Pearl genes lighting up the carried Ether in a Champagne and Ether pair. The coat itself stays a warm tan or brown, and a colourful sheen spreads from the chest across the barrel and forelegs and from the eyes down the cheeks, lighter at the source, darker further out, then fading evenly into the coat.",
     'Tapestry': "Tapestry is Dungeon Coursers' own dilution. It paints the base coat one of three bold, saturated dyes: Madder red on a bay, Weld yellow on a chestnut, and Woad blue on a black. Stack another dilution on top and those shift, in places, into oranges, greens and purples.",
     'Tapestry Cream': "Tapestry dyes the coat one of its three bold hues (Madder red, Weld yellow or Woad blue), and a dose of cream then softens and lightens it.",
     'Tapestry Pearl': "Tapestry dyes the coat one of its three bold hues, and pearl pushes it further into the oranges, greens and purples: Madder red to Tyrian purple, Weld yellow to Ochre orange, Woad blue to Phthalo green.",
@@ -1131,7 +1158,13 @@ const WHITE_MARKING_LAYER_SET = new Set(LAYER_COLORS_MARKINGS.find(r => r.group 
 const TRAIT_PAGE_BASE = 'https://dungeon-coursers.com/world/traits?id=';
 const TRAIT_PAGE_IDS = {
     // Base coats with their own page
-    'Bay': 1, 'Black': 2, 'Chestnut': 3, 'Palomino': 4, 'Smoky Black': 5, 'Buckskin': 6, 'Weld': 7, 'Woad': 8, 'Madder': 9,
+    'Bay': 1, 'Black': 2, 'Chestnut': 3,
+    // The coat overhaul folded the single-dilution coats into one page per trait
+    'Palomino': 112, 'Smoky Black': 112, 'Buckskin': 112, 'Weld': 113, 'Woad': 113, 'Madder': 113,
+    // Coat overhaul Legendary coats, one page per trait
+    'Cremello Champagne': 102, 'Perlino Champagne': 102, 'Smoky Cream Champagne': 102,
+    'Cold Ash Ether': 103, 'Ombre Ash Ether': 103, 'Classic Ash Ether': 103,
+    'Rose Gold Nacre': 104, 'Cerulean Bay Nacre': 104, 'Saffron Black Nacre': 104,
     // White markings
     'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92, 'Apron': 99, 'Greaves': 100,
     // Modifiers
@@ -1148,10 +1181,10 @@ const TRAIT_PAGE_IDS = {
 // Pearl (which shows all three of its colours). Double Cream + X shares the
 // plain Cream + X page.
 const DILUTION_PAGE_ID = {
-    'Double Cream': 11, 'Pearl': 12, 'Champagne': 10, 'Ether': 19,
+    'Double Cream': 11, 'Pearl': 12, 'Champagne': 10, 'Ether': 19, 'Nacre': 104,
     'Cream Pearl': 15, 'Tapestry Cream': 13, 'Tapestry Ether': 21, 'Pearl Ether': 22,
-    'Pearl Champagne': 16, 'Cream Champagne': 14, 'Double Cream Champagne': 14,
-    'Cream Ether': 20, 'Double Cream Ether': 20, 'Tapestry Champagne': 17,
+    'Pearl Champagne': 16, 'Cream Champagne': 14, 'Double Cream Champagne': 102,
+    'Cream Ether': 20, 'Double Cream Ether': 103, 'Tapestry Champagne': 17,
     'Cream Pearl Champagne': 23, 'Cream Pearl Ether': 24, 'Tapestry Cream Ether': 25,
     'Tapestry Pearl': 18, 'Tapestry Pearl Champagne': 26, 'Tapestry Pearl Ether': 27,
     'Tapestry Cream Champagne': 28
@@ -2092,6 +2125,11 @@ function coatRarity(genes) {
     const l1 = genes.find(g => L1_SINGLE.includes(g) || L1_RARE.includes(g) || L1_EPIC.includes(g));
     const l2 = genes.find(g => L2_DILUTIONS.includes(g));
     if (!l1 && !l2) return 0;
+    // Two Cream genes with Champagne or Ether (Double Cream Champagne, Ash
+    // Ether) and two Pearl genes with a Cher pair (Nacre) were invisible
+    // interactions until the coat overhaul made them Legendary coats.
+    if (l1 === 'CrCr' && l2) return TIER_LEGENDARY;
+    if (l1 === 'prlprl' && l2 === 'Cher') return TIER_LEGENDARY;
     if (l1 && L1_LEGENDARY.includes(l1) && l2) return TIER_LEGENDARY;
     if (l1 && l2) return TIER_EPIC;                 // two dilutions across both loci
     if (l1 && L1_EPIC.includes(l1)) return TIER_EPIC;
@@ -2151,7 +2189,17 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'TpCr', 'erer'] }, // Weld Cream Ether
             { baseCoat: 'Bay', genes: ['Ee', 'AA', 'TpCr', 'nCh'] }, // Madder Cream Champagne
             { baseCoat: 'Black', genes: ['Ee', 'aa', 'TpCr', 'nCh'] }, // Woad Cream Champagne
-            { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'TpCr', 'nCh'] } // Weld Cream Champagne
+            { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'TpCr', 'nCh'] }, // Weld Cream Champagne
+            // Coat overhaul: formerly invisible interactions, now Legendary coats
+            { baseCoat: 'Bay', genes: ['Ee', 'AA', 'CrCr', 'nCh'] }, // Perlino Champagne
+            { baseCoat: 'Black', genes: ['Ee', 'aa', 'CrCr', 'nCh'] }, // Smoky Cream Champagne
+            { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'CrCr', 'nCh'] }, // Cremello Champagne
+            { baseCoat: 'Bay', genes: ['Ee', 'AA', 'CrCr', 'erer'] }, // Ombre Ash Ether
+            { baseCoat: 'Black', genes: ['Ee', 'aa', 'CrCr', 'erer'] }, // Classic Ash Ether
+            { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'CrCr', 'erer'] }, // Cold Ash Ether
+            { baseCoat: 'Bay', genes: ['Ee', 'AA', 'prlprl', 'Cher'] }, // Cerulean Bay Nacre
+            { baseCoat: 'Black', genes: ['Ee', 'aa', 'prlprl', 'Cher'] }, // Saffron Black Nacre
+            { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'prlprl', 'Cher'] } // Rose Gold Nacre
         ],
         markings: ['fefe', 'nOs'],
         modifiers: ['nPr', 'sfsf']
@@ -3290,6 +3338,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
     // Generate actual possible genotypes — one allele from each parent, as Mendel intended
     const locus1Phenotypes = new Set();
     const locus2Phenotypes = new Set();
+    const locus2Genos = new Set();   // Nacre needs to know Cher from nCh/ChCh
     let locus1CanBeEmpty = false;
     let locus2CanBeEmpty = false;
 
@@ -3303,6 +3352,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
     p1Locus2.forEach(a1 => {
         p2Locus2.forEach(a2 => {
             const geno = combineAlleles(a1, a2);
+            locus2Genos.add(geno);
             if (DILUTION_NAMES[geno]) locus2Phenotypes.add(DILUTION_NAMES[geno]);
             else locus2CanBeEmpty = true; // nn or ner — dilution machine broke at this locus
         });
@@ -3320,6 +3370,14 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         l2Array.forEach(l2 => {
             if (l1 === 'none' && l2 === 'none') {
                 dilutionCombos.push('none');
+                return;
+            }
+            // Nacre: prlprl with a Cher pair is its own coat, while prlprl with
+            // plain Champagne stays Pearl Champagne. One pairing can put both on
+            // the table, so each is added on its own evidence.
+            if (l1 === 'Pearl' && l2 === 'Champagne') {
+                if (locus2Genos.has('nCh') || locus2Genos.has('ChCh')) { dilutionNames.add('Pearl Champagne'); dilutionCombos.push('Pearl Champagne'); }
+                if (locus2Genos.has('Cher')) { dilutionNames.add('Nacre'); dilutionCombos.push('Nacre'); }
                 return;
             }
             let combo;
