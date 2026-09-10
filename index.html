@@ -435,6 +435,12 @@
         .recipe-fit-items li { font-size: 0.85rem; color: var(--dc-slate); line-height: 1.5; }
         .recipe-fit-items code, .recipe-near-list code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
         .recipe-fit-miss { color: var(--dc-slate); font-size: 0.88rem; display: block; margin-top: 2px; }
+        .recipe-read { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve-soft); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.9rem; color: var(--dc-ink); line-height: 1.55; margin: 0 0 16px; }
+        .recipe-read code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
+        .recipe-read-drop { color: var(--dc-blood); }
+        .recipe-pick { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 14px; }
+        .recipe-pick-btn { width: auto; margin: 0; }
+        .recipe-parent-reads { margin-top: 6px; font-size: 0.88rem; color: var(--dc-slate); }
         .recipe-details { border-top: 1px solid var(--dc-line); padding-top: 14px; }
         .recipe-details summary { font-family: var(--font-stamp); letter-spacing: var(--tracking-stamp); font-size: 0.72rem; text-transform: uppercase; color: var(--dc-mauve-deep); cursor: pointer; }
         .recipe-details[open] summary { margin-bottom: 12px; }
@@ -892,7 +898,7 @@
                 <!-- Area: Recipe (standalone — works backwards from a target foal) -->
                 <section class="area" id="area-recipe">
                     <h1 class="page-title">Recipe</h1>
-                    <p class="blurb">The Foal Generator run backwards. Paste the foal you want and I'll work out what its parents would have to be, and how often that pairing would actually throw it.</p>
+                    <p class="blurb">The Foal Generator run backwards. Say what you want in plain English, or paste a genotype, and I'll work out what its parents would have to be and how often that pairing would actually throw it.</p>
 
                     <div class="info-box">
                         <p><strong>One allele from each parent.</strong> Every pair in a genotype has one side from each parent, so a recipe is really a list of who has to carry what. Nothing here needs your collection. It's what the parents would have to be, whoever owns them.</p>
@@ -900,7 +906,7 @@
                     </div>
 
                     <label for="recipeGeno">Foal you want:</label>
-                    <textarea id="recipeGeno" placeholder="Ee Aa nCr nT"></textarea>
+                    <textarea id="recipeGeno" placeholder="a cerulean bay nacre with tobiano, or Ee AA prlprl Cher nT"></textarea>
 
                     <button class="generate-btn" onclick="showRecipe()">Work out the parents</button>
 

@@ -2590,7 +2590,7 @@ function extractTraitsFromQuery(query) {
     // Recognized coat names, built straight from the coat tables so every real
     // coat (including the legendary multi-dilutions) is matched as a full name
     // instead of collapsing to a generic dilution. Longest names first.
-    const _coatNames = ['Bay', 'Black', 'Chestnut'].concat(Object.values(SPECIAL_COAT_NAMES));
+    const _coatNames = Object.values(SPECIAL_COAT_NAMES);
     const coatColors = [...new Set(_coatNames)]
         .sort((a, b) => b.length - a.length)
         .map(n => [n.toLowerCase(), n]);
@@ -2599,6 +2599,8 @@ function extractTraitsFromQuery(query) {
     Object.keys(COAT_FAMILIES)
         .sort((a, b) => b.length - a.length)
         .forEach(f => coatColors.push([f.toLowerCase(), f]));
+    // Bare bases last among the coats: "bay cream ether" is a Cream Ether, not a Bay.
+    ['Bay', 'Black', 'Chestnut'].forEach(b => coatColors.push([b.toLowerCase(), b]));
     // Aliases + generic dilution fallbacks (after the full names, so a specific
     // coat always wins over a bare "champagne" / "cream" / etc.).
     [['amber champ', 'Amber Champagne'], ['gold champ', 'Gold Champagne'], ['pearl cream', 'Cream Pearl'],
@@ -4829,11 +4831,39 @@ function showRecipe() {
 
     trackUse('recipe_run');
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const data = computeRecipe(geno);
+
+    // Plain English in: build the genotype it means, and always say what was built.
+    let readHtml = '';
+    let target = geno;
+    if (!recipeLooksLikeGenotype(geno)) {
+        trackUse('recipe_english');
+        const built = recipeFromEnglish(geno);
+        if (built.choices) {
+            const rest = built.choices.rest.join(' ');
+            const buttons = built.choices.members.map(m =>
+                `<button type="button" class="dc-btn outline auto recipe-pick-btn" onclick="recipePickCoat(${JSON.stringify(m).replace(/"/g, '&quot;')}, ${JSON.stringify(rest).replace(/"/g, '&quot;')})">${esc(m)}</button>`
+            ).join('');
+            out.innerHTML = `<p class="recipe-lead"><strong>${esc(built.choices.family)}</strong> comes in three, one per base. Which one?</p>
+                <div class="recipe-pick">${buttons}</div>
+                <p class="recipe-read">Or type it in directly, with the base: <code>${esc('bay ' + built.choices.family.toLowerCase() + (rest ? ' ' + rest.toLowerCase() : ''))}</code>.</p>`;
+            out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return;
+        }
+        if (!built.genotype) {
+            out.innerHTML = `<p class="recipe-empty">${esc(built.note)} Try something like <code>cerulean bay nacre with tobiano</code>, or paste a genotype.</p>`;
+            return;
+        }
+        target = built.genotype;
+        const dropped = built.dropped.length
+            ? ` <span class="recipe-read-drop">Left out: ${built.dropped.map(esc).join('; ')}.</span>`
+            : '';
+        readHtml = `<p class="recipe-read">I read that as <code>${esc(target)}</code>. Not quite it? Edit the box and run again.${dropped}</p>`;
+    }
+    const data = computeRecipe(target);
 
     // Same unknown-token warning Translate, Layers and Somatic give, so a typo
     // can't quietly drop a trait out of the recipe.
-    const { unknownGenes, unknownAnomalies } = findUnknownTokens(geno);
+    const { unknownGenes, unknownAnomalies } = findUnknownTokens(target);
     let warnHtml = '';
     if (unknownGenes.length || unknownAnomalies.length) {
         trackUse('recipe_unknown_tokens');
@@ -4853,9 +4883,11 @@ function showRecipe() {
         return;
     }
 
-    const looks = genotypeToPhenotype(geno);
+    const looks = genotypeToPhenotype(target);
     const p1 = data.parent1.join(' ') || 'no genes at all';
     const p2 = data.parent2.join(' ') || 'no genes at all';
+    // What each ideal parent actually is, in words, so you know what to look for.
+    const reads = g => g && g !== 'no genes at all' ? `<div class="recipe-parent-reads">${esc(genotypeToPhenotype(g))}</div>` : '';
 
     const head = `<p class="recipe-lead">To breed <strong>${esc(looks)}</strong>, you need two parents who between them can hand down every pair below. ` +
         `Each parent gives one allele per locus, so the two sides of every pair have to come from <em>different</em> parents.</p>`;
@@ -4874,11 +4906,11 @@ function showRecipe() {
     const pair = `<div class="recipe-pair">
             <div class="recipe-parent">
                 <div class="recipe-parent-head">Parent A</div>
-                <code class="recipe-geno">${esc(p1)}</code>
+                <code class="recipe-geno">${esc(p1)}</code>${reads(p1)}
             </div>
             <div class="recipe-parent">
                 <div class="recipe-parent-head">Parent B</div>
-                <code class="recipe-geno">${esc(p2)}</code>
+                <code class="recipe-geno">${esc(p2)}</code>${reads(p2)}
             </div>
         </div>
         <p class="recipe-odds">${odds}</p>
@@ -5036,7 +5068,7 @@ function showRecipe() {
             <ul class="recipe-near-list">${lines}</ul></div>`;
     }
 
-    out.innerHTML = warnHtml + head + pair + notes + planBlock + stableBlock + lociBlock + extras + how;
+    out.innerHTML = readHtml + warnHtml + head + pair + notes + planBlock + stableBlock + lociBlock + extras + how;
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -5289,4 +5321,145 @@ function computeRecipeStable(recipe, collection) {
     });
 
     return out;
+}
+
+
+// ===========================================================================
+// Recipe: plain English in
+// ---------------------------------------------------------------------------
+// "a cerulean bay nacre with tobiano" is turned into the genotype it means,
+// using the same parser Smart Search reads, so the two tools share one
+// vocabulary. The genotype it builds is always shown back, because a quiet
+// assumption is worse than a visible one.
+// ===========================================================================
+
+// Every named coat, mapped back to a genotype through the scroll pools, which
+// already hold a canonical row for each. Engine-backed, so it can't drift.
+const RECIPE_COAT_GENES = (function () {
+    const out = {};
+    Object.keys(RARITY_GENES).forEach(tier => RARITY_GENES[tier].coatColors.forEach(row => {
+        const name = resolveTraits(row.genes.join(' ')).coatColor;
+        if (!(name in out)) out[name] = row.genes.slice();
+    }));
+    return out;
+})();
+
+// Family name -> its three base-specific coats, single-dilution families included
+// (Smart Search leaves those out on purpose; here a bare "cream" needs a pick).
+const RECIPE_FAMILY_MEMBERS = (function () {
+    const out = {};
+    Object.keys(SPECIAL_COAT_NAMES).forEach(key => {
+        const family = key.slice(key.indexOf('_') + 1);
+        (out[family] = out[family] || []).push(SPECIAL_COAT_NAMES[key]);
+    });
+    out['Ash Ether'] = out['Double Cream Ether'];
+    return out;
+})();
+
+const RECIPE_BASE_GENES = { 'Bay': ['Ee', 'AA'], 'Black': ['Ee', 'aa'], 'Chestnut': ['ee', 'AA'] };
+
+// Trait name -> the pair that expresses it. Dominant traits take the carrier
+// spelling (one copy shows); recessives need both copies; the leopard complex
+// spans two loci; "Carries X" is the single hidden copy.
+const RECIPE_TRAIT_GENES = (function () {
+    const out = {};
+    [WHITE_MARKING_NAMES, MODIFIER_NAMES].forEach(table => Object.keys(table).forEach(tok => {
+        if (tok.startsWith('n') && !(table[tok] in out)) out[table[tok]] = [tok];
+    }));
+    Object.assign(out, {
+        'Flaxen': ['ff'], 'Starfield': ['sfsf'], 'Lacquer': ['lrlr'], 'Filigree': ['fefe'], 'Sepulchered': ['spsp'],
+        'Snowflake': ['nLp'], 'Blanket': ['nLp', 'npatn'], 'Leopard': ['nLp', 'patnpatn'],
+        'Varnish Roan': ['LpLp'], 'Snowcap': ['LpLp', 'npatn'], 'Fewspot': ['LpLp', 'patnpatn'],
+        'Carries Ether': ['ner'], 'Carries Pearl': ['nprl'], 'Carries Patn': ['npatn'],
+        'Carries Filigree': ['nfe'], 'Carries Flaxen': ['nf'], 'Carries Starfield': ['nsf'],
+        'Carries Lacquer': ['nlr'], 'Carries Sepulchered': ['nsp']
+    });
+    return out;
+})();
+
+// Is this input a genotype (Ee Aa nCr ...) or a sentence? Real gene tokens are
+// two characters or more (a lone "a" is an English article, not the A locus),
+// and they should make up at least half the words.
+function recipeLooksLikeGenotype(text) {
+    const genes = parseGenotype(text).genes;
+    const known = genes.filter(g => g.length >= 2 && isKnownGeneToken(g));
+    return known.length > 0 && known.length * 2 >= genes.length;
+}
+
+// Build a target genotype from a sentence. Returns:
+//   { genotype, coat, traits, choices, dropped, note }
+// choices is set (and genotype empty) when a family was named without a base,
+// so the caller can offer the three coats.
+function recipeFromEnglish(text) {
+    const lower = text.toLowerCase();
+    const found = extractTraitsFromQuery(text);
+    const res = { genotype: '', coat: null, traits: [], choices: null, dropped: [], note: '' };
+
+    // The parser hands back at most one coat-ish thing; work out which kind.
+    const coatish = found.find(t => RECIPE_COAT_GENES[t] || RECIPE_FAMILY_MEMBERS[t] || RECIPE_BASE_GENES[t]);
+    const others = found.filter(t => t !== coatish);
+    const baseWord = (lower.match(/\b(bay|black|chestnut)\b/) || [])[1];
+    const baseName = baseWord ? baseWord[0].toUpperCase() + baseWord.slice(1) : null;
+
+    let genes = [];
+    if (coatish && RECIPE_COAT_GENES[coatish]) {
+        res.coat = coatish;
+        genes = RECIPE_COAT_GENES[coatish].slice();
+    } else if (coatish && RECIPE_FAMILY_MEMBERS[coatish]) {
+        // A family: settle it with a base word if one was given, else offer the three.
+        const members = RECIPE_FAMILY_MEMBERS[coatish];
+        const pick = baseName && members.find(m => RECIPE_COAT_GENES[m] && RECIPE_COAT_GENES[m].join(' ').startsWith(RECIPE_BASE_GENES[baseName].join(' ')));
+        if (pick) {
+            res.coat = pick;
+            genes = RECIPE_COAT_GENES[pick].slice();
+        } else {
+            res.choices = { family: coatish, members: members.slice(), rest: others.slice() };
+            res.traits = others;
+            return res;
+        }
+    } else if (coatish && RECIPE_BASE_GENES[coatish]) {
+        res.coat = coatish;
+        genes = RECIPE_BASE_GENES[coatish].slice();
+    } else if (baseName) {
+        res.coat = baseName;
+        genes = RECIPE_BASE_GENES[baseName].slice();
+    }
+
+    // Markings and modifiers. Two on one locus fuse (Girdle + Collar is GiCo);
+    // a third has nowhere to sit, so it is reported rather than silently lost.
+    const byLocus = {};
+    others.forEach(trait => {
+        const toks = RECIPE_TRAIT_GENES[trait];
+        if (!toks) { res.dropped.push(trait); return; }
+        res.traits.push(trait);
+        toks.forEach(tok => {
+            const real = getGeneAlleles(tok).filter(a => a !== 'n');
+            const locus = real.length ? RECIPE_LOCUS_OF[real[0]] : tok;
+            if (!byLocus[locus]) { byLocus[locus] = tok; return; }
+            const have = getGeneAlleles(byLocus[locus]).filter(a => a !== 'n');
+            const want = real;
+            if (have.length === 1 && want.length === 1 && have[0] !== want[0]) {
+                byLocus[locus] = combineAlleles(have[0], want[0]);
+            } else if (byLocus[locus] !== tok) {
+                res.dropped.push(trait + ' (no room at that locus with ' + recipeTokenLabel(byLocus[locus]) + ')');
+            }
+        });
+    });
+    genes = genes.concat(Object.keys(byLocus).map(l => byLocus[l]));
+
+    // Anomalies and free markings, which the parser does not read.
+    const extras = ALL_ANOMALIES.concat(FREE_MARKINGS).filter(a => lower.includes(a.toLowerCase()));
+
+    res.genotype = genes.join(' ') + (extras.length ? ' + ' + extras.join(', ') : '');
+    if (!genes.length) res.note = 'I could not find a coat, a base colour or any trait I know in that.';
+    return res;
+}
+
+// A coat button under a family prompt: fill the box with the chosen coat plus
+// whatever else was asked for, and run.
+function recipePickCoat(name, rest) {
+    const ta = document.getElementById('recipeGeno');
+    if (!ta) return;
+    ta.value = (name + ' ' + (rest || '')).trim();
+    showRecipe();
 }
