@@ -23,6 +23,25 @@ leaves your machine.
   possibilities.
 - Parents can be typed in by hand or picked from your saved collection.
 
+### Recipe
+- The Foal Generator run backwards: give it the foal you want and it works out
+  what the parents would have to be, and how often that pairing would throw it.
+- Takes **plain English or a genotype** in the same box. "A cerulean bay nacre
+  with tobiano" is built into the genotype it means, and the genotype it built is
+  always shown so you can correct it. Name a coat family without a base ("cream
+  ether") and it offers the three coats as buttons.
+- Works per locus, because every pair in a genotype takes one allele from each
+  side. That makes the inverse exact rather than a guess.
+- Prices the **Breeding Roll Add-On items** and always picks the cheapest route,
+  weighing single roots against the Tome by the rarity of the genes involved.
+- Refuses targets that can't exist, so a lethal white combination is explained
+  rather than costed.
+- Checks your collection for pairs that already work, ranks the free ones first,
+  and shows near misses when nothing is an exact fit, with the items it would
+  take to block whatever a parent carries in excess.
+- Names each ideal parent in words as well as genotype, so you know what to look
+  for.
+
 ### Chimera Calculator
 - For a foal born with the Chimera anomaly.
 - Enter the foal's genotype and both parents' to see what coats could appear in
@@ -64,11 +83,25 @@ leaves your machine.
   description can never disagree with the short phenotype it shows alongside.
 - An optional variant picker factors the four breed variants in.
 
+### Layers
+- Paste a genotype (or pick one from your collection) and it lays the traits out
+  in the official visual hierarchy, so you can design in layers from the base
+  coat up.
+- Within each column the top layer covers the ones below it, and traits on the
+  same line sit on the same level. Only the traits the horse actually has are
+  shown, so it reads as a paint order.
+- Links the Trait Index page for each trait it lists.
+
 ### Smart Search
 - Ask a breeding goal in plain language ("How can I make Amber Champagne?",
   "Who can breed for fewspot and starfield?", "Which pairs can produce false
   leopard?").
 - Searches the pairs in **your collection** and ranks them.
+- Understands exact coat names, **coat families** ("cream ether", "nacre"), bare
+  base colours, traits, and carriers. A coat is judged by asking the engine
+  whether the pair can really produce it, so a match is never a name collision.
+- Uses the same carrier wording Translate prints, and accepts either spelling, so
+  a phrase copied off a translated genotype searches for the trait it described.
 - "Breed These" auto-fills the Foal Generator.
 - Recent searches are remembered.
 
@@ -174,10 +207,16 @@ ported from a design system.
 ## Deploying
 
 Served on a VPS behind Apache. Every push to `main` auto-deploys via a GitHub
-Action that SSHes in and fast-forwards a clone. See [`DEPLOY.md`](DEPLOY.md) and
-[`deploy/`](deploy/) for the one-time setup.
+Action that SSHes in and fast-forwards a clone. The same Action stamps the
+deployed commit onto the script tags as `?v=<sha>`, so a browser can never serve
+yesterday's JavaScript against today's HTML; if the stamp fails to apply, the
+deploy fails loudly rather than shipping a stale page. See
+[`DEPLOY.md`](DEPLOY.md) and [`deploy/`](deploy/) for the one-time setup.
 
 ## Credits
 
 Created for the [Dungeon Coursers](https://dungeon-coursers.com) HARPG community
 by [Ook](https://dungeon-coursers.com/user/Ook).
+
+The landing page also links other players' fan tools, hosted on their own sites.
+Thanks to Rev for the [Group Horse Roller](https://revukan.neocities.org/code/tools/dcgrouphorse).
