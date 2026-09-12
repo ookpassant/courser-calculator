@@ -326,7 +326,15 @@ const MODIFIER_NAMES = {
     // Pitch shares Gray's locus: Gray whitens with age, Pitch blackens, and a
     // horse carrying both settles somewhere in the middle.
     'nPt': 'Pitch', 'PtPt': 'Pitch',
-    'GPt': 'Gray Pitch', 'PtG': 'Gray Pitch'
+    'GPt': 'Gray Pitch', 'PtG': 'Gray Pitch',
+    // Ingot recolours every white marking one metallic colour. Dominant.
+    'nIn': 'Ingot', 'InIn': 'Ingot',
+    // Mithril is a recessive gloss over the whole coat: it needs both copies.
+    'nmt': 'Carrying Mithril', 'mtmt': 'Mithril',
+    // Damascus shares Dun's locus and only shows when paired WITH Dun (DmD), so
+    // a horse holding Dm without a D carries it silently, however many copies.
+    'nDm': 'Carries Damascus', 'DmDm': 'Carries Damascus',
+    'DmD': 'Damascus Dun', 'DDm': 'Damascus Dun'
 };
 
 // Traits that swagger in BEFORE the coat color, like heralds announcing the king
@@ -353,8 +361,10 @@ const TRAITS_AFTER_COAT = [
     'Girdle Collar',
     // Gr/Ap compound
     'Greaves Apron',
+    // Modifiers that read after the coat
+    'Ingot', 'Damascus', 'Mithril',
     // Carrier traits — the "I swear it's in my bloodline" genes
-    'Carries Ether', 'Carries Patn', 'Carries Pearl'
+    'Carries Ether', 'Carries Patn', 'Carries Pearl', 'Carries Damascus', 'Carrying Mithril'
 ];
 
 const WHITE_MARKING_NAMES = {
@@ -629,6 +639,9 @@ function resolveTraits(genoString) {
             } else if (gene === 'GPt' || gene === 'PtG') {
                 allTraits.push('Gray');
                 allTraits.push('Pitch');
+            } else if (gene === 'DmD' || gene === 'DDm') {
+                allTraits.push('Damascus');
+                allTraits.push('Dun');
             } else if (gene === 'nf') {
                 allTraits.push('Carrying Flaxen');
             } else if (gene === 'nsp') {
@@ -734,13 +747,13 @@ const COAT_DESC = {
     'Woad Smoky Black': "It's a deep woad blue darkened over a smoky black.",
     'Weld Palomino': "It's a bright weld yellow lightened over a golden palomino.",
     // Tapestry Ether
-    'Madder Ether': "It's a madder red washed pale and ghostly by ether's blue-gray.",
-    'Woad Ether': "It's a woad blue faded into ether's pale, otherworldly gray.",
-    'Weld Ether': "It's a weld yellow cooled and paled by ether.",
+    'Madder Ether': "It's a muted red body with gray stockings blending smoothly into it, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: silvery peach along the topline, red or purple on the belly, muzzle and upper legs, visibly different from the coat and free to cover part of the stockings. Gray or black skin and hooves, and the eyes the coat colour.",
+    'Woad Ether': "It's a muted blue, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: silvery blue along the topline, purple or blue on the belly, muzzle and upper legs, visibly different from the coat. Gray skin and hooves, and the eyes the coat colour.",
+    'Weld Ether': "It's a muted yellow, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Gray skin and hooves, and the eyes the coat colour.",
     // Pearl Ether
-    'Bay Pearl Ether': "It's a caramel-gold pearl washed pale by ether's blue-gray.",
-    'Black Pearl Ether': "It's a grayish-brown pearl faded into ghostly ether.",
-    'Gold Pearl Ether': "It's a gold-caramel pearl cooled by ether's pale gray.",
+    'Bay Pearl Ether': "It's an apricot body with muted brown stockings, darker than the body and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: warm pale gray or cream along the topline, muted purple or pink on the belly, muzzle and upper legs, and it may cover the stockings. Cream skin and hooves, gray eyes.",
+    'Black Pearl Ether': "It's a muted brown, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: warm pale gray or cream along the topline, muted purple or pink on the belly, muzzle and upper legs. Cream skin and hooves, gray eyes.",
+    'Gold Pearl Ether': "It's an apricot, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: warm pale gray or cream along the topline, muted purple or pink on the belly, muzzle and upper legs. Cream skin and hooves, gray eyes.",
     // Pearl Champagne
     'Bay Pearl Champagne': "It's a warm caramel gold with both pearl's sheen and champagne's metallic glow.",
     'Black Pearl Champagne': "It's a warm grayish taupe with a doubled pearl-and-champagne sheen.",
@@ -750,9 +763,9 @@ const COAT_DESC = {
     'Classic Cream Champagne': "It's a pale taupe with a metallic sheen.",
     'Gold Cream Champagne': "It's a pale, bright gold with a metallic sheen.",
     // Cream Ether
-    'Ombre Cream Ether': "It's a very pale blue-gray with faint golden undertones.",
-    'Classic Cream Ether': "It's an extremely pale, ghostly blue-gray.",
-    'Cold Cream Ether': "It's a pale, cold blue-gray with a faint warm cast.",
+    'Ombre Cream Ether': "It's a muted, desaturated golden brown body with muted charcoal gray stockings, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
+    'Classic Cream Ether': "It's a muted charcoal gray, even across the body, with Ether's sheen fading into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
+    'Cold Cream Ether': "It's a muted, desaturated golden brown, even across the body, with a white or pale cream mane and tail. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
 
     // Ash Ether (CrCr erer)
     'Cold Ash Ether': "It's a pale, cool gray, even across the body, with Ether's sheen fading into it in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, gray or blue eyes.",
@@ -777,13 +790,13 @@ const COAT_DESC = {
     'Classic Cream Pearl Champagne': "It's a pale taupe-brown with a luminous pearl-and-champagne sheen.",
     'Gold Cream Pearl Champagne': "It's a pale, luminous gold with a pearl-and-champagne sheen.",
     // Cream Pearl Ether (triple)
-    'Ombre Cream Pearl Ether': "It's an extremely pale, luminous blue-gray.",
-    'Classic Cream Pearl Ether': "It's a near-translucent, ghostly pale gray.",
-    'Cold Cream Pearl Ether': "It's an extremely pale, cold blue-gray.",
+    'Ombre Cream Pearl Ether': "It's a cream body with muted warm brown stockings, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Cream skin, gray eyes and gray hooves.",
+    'Classic Cream Pearl Ether': "It's a muted warm brown, even across the body, mane and tail to match. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Cream skin, gray eyes and gray hooves.",
+    'Cold Cream Pearl Ether': "It's a cream, even across the body, with a white mane and tail. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Cream skin, gray eyes and gray hooves.",
     // Tapestry Cream Ether (triple)
-    'Madder Cream Ether': "It's a madder red washed pale by cream and ether's blue-gray.",
-    'Woad Cream Ether': "It's a woad blue faded pale and ghostly.",
-    'Weld Cream Ether': "It's a weld yellow cooled and paled to a soft wash.",
+    'Madder Cream Ether': "It's a lightened, muted red body with dark reddish-brown or black stockings blending smoothly into it, visibly darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: pinkish silver along the topline, muted purple or blue on the belly, muzzle and upper legs, free to cover part of the stockings. Cream skin and hooves, and the eyes the coat colour.",
+    'Woad Cream Ether': "It's a lightened, muted blue, even across the body, mane and tail to match. Ether's sheen fades into it in bands: bluish silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, and the eyes the coat colour.",
+    'Weld Cream Ether': "It's a lightened, muted yellow, even across the body, with a yellowish white mane and tail. Ether's sheen fades into it in bands: yellowish silver along the topline, lighter than the coat, and muted pink or orange on the belly, muzzle and upper legs. Cream skin and hooves, and the eyes the coat colour.",
     // Tapestry Pearl (double) — pearl shifts the dye hue
     'Tyrian Pearl': "It's a rich Tyrian purple with a pearly sheen (madder red shifted by pearl).",
     'Phthalo Pearl': "It's a deep phthalo blue-green with a pearly sheen (woad blue shifted by pearl).",
@@ -793,9 +806,9 @@ const COAT_DESC = {
     'Phthalo Pearl Champagne': "It's a phthalo blue-green with a pearl-and-champagne sheen.",
     'Ochre Pearl Champagne': "It's an ochre orange with a pearl-and-champagne sheen.",
     // Tapestry Pearl Ether (triple)
-    'Tyrian Pearl Ether': "It's a Tyrian purple washed pale and ghostly by ether.",
-    'Phthalo Pearl Ether': "It's a phthalo blue-green faded into pale ether.",
-    'Ochre Pearl Ether': "It's an ochre orange cooled and paled by ether.",
+    'Tyrian Pearl Ether': "It's a somewhat muted purple body with dark purple or black stockings blending smoothly into it, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: bluish silver along the topline, lighter than the coat, and purple or blue on the belly, muzzle and upper legs, free to cover part of the stockings. Cream skin, gray hooves, and the eyes the coat colour.",
+    'Phthalo Pearl Ether': "It's a somewhat muted green, even across the body, mane and tail to match. Ether's sheen fades into it in bands: greenish silver along the topline, lighter than the coat, and purple or blue on the belly, muzzle and upper legs. Cream skin, gray hooves, and the eyes the coat colour.",
+    'Ochre Pearl Ether': "It's a somewhat muted orange, even across the body, mane and tail to match. Ether's sheen fades into it in bands: peachy silver along the topline, lighter than the coat, and muted pinky purple or blue on the belly, muzzle and upper legs. Cream skin, gray hooves, and the eyes the coat colour.",
     // Tapestry Cream Champagne (triple)
     'Madder Cream Champagne': "It's a madder red softened by cream and lifted by a champagne sheen. Pink pony club.",
     'Woad Cream Champagne': "It's a woad blue softened by cream with a champagne sheen.",
@@ -820,21 +833,24 @@ const DILUTION_DESC = {
 // Modifiers — the shading, sooting, greying and stranger DC treatments.
 const MODIFIER_DESC = {
     'Dun': "Dun pales the body and stamps on primitive marks: a dark dorsal stripe down the spine, and often barring on the legs.",
-    'Pangare': "Pangare (mealy) lightens the soft parts to a paler shade: the muzzle, eyes, belly, flanks and inner legs.",
-    'Sooty': "Sooty throws a smudge of darker hairs over the top, heaviest along the back and shoulders, like it's been dusted with charcoal.",
+    'Pangare': "Pangare lightens the coat on the underside of the body and the extremities, always the same hue as the coat and never fully white, uniform in colour with smooth edges that make no patterns. At its least it covers the belly, chest and muzzle; at its most the belly, legs, chest, groin, underside of the neck and around the face, plus the mane and tail, going near white so long as it stays distinguishable from white markings. Coverage is roughly even on all four legs. It may be hidden on an undiluted black, and on Cremello or Perlino.",
+    'Sooty': "Sooty darkens the coat along the topline and neck in the same hue, uniform in colour, its edges smooth and either crisp, gradual or both, never making patterns or shapes. At its least it covers a stretch of topline about the size of the horse's head; at its most the topline, the top half of the face, the neck, the top half of the barrel and the tops of the legs. It may darken the mane and tail to match, and on a bay-based coat it may take the colour of the stockings. It is not visible on an undiluted black, on Smoky Black, or on a black coat lightened only by its markings.",
     'Gray': "Gray is progressive: the horse is born its base colour and then steadily silvers out with age, eventually toward white.",
     'Pitch': "Pitch is progressive like Gray but runs the other way: the horse is born its base colour and steadily blackens with age, fading smoothly into the coat, mane and tail with no hard edges. Dapples and tiny flea bites of base colour showing through are fine. With Gray as well, the two meet in a true mid gray instead of whitening or darkening.",
     'Flaxen': "Flaxen lightens the mane and tail to blonde or near-white while the body keeps its colour (only really visible on a red base).",
     'Silver': "Silver dilutes black pigment specifically: a chocolate body with a flaxen-to-silver mane and tail, and no effect on red.",
     'Illuminated': "Illuminated pales the skin and hooves to a uniform, washed-out light colour, whatever the coat is doing. The coat itself is left alone.",
-    'Sepulchered': "Sepulchered darkens the skin and hooves to a uniform black, whatever the coat is doing. The coat colour itself stays untouched.",
+    'Sepulchered': "Sepulchered darkens the skin and hooves to a uniform black or gray, whatever the coat is doing, and leaves the coat colour untouched. It covers the whole horse and may ignore white markings, so the skin beneath them can stay dark too. Alongside Gilt it goes far darker than Gilt's usual range, as far as a metallic black. Recessive, so it needs both copies: one copy, or Lusp, only carries it.",
     'Tabard': "Tabard splits the coat into a gradient, lightening one half and darkening the other, often stamped with a mirrored pair of heraldic symbols reflected across the centre. Always symmetrical left-to-right.",
     'Gilt': "Gilt turns the hooves metallic, whether gold, silver, copper, bronze or brass, and tints the skin to match. It's a skin-and-hoof trait, not a coat one.",
     'Vellum': "Vellum drops the opacity of the horse's white markings, making them semi-transparent and see-through (Roan, Blanched and False Leopard shrug it off).",
     'Opal': "Opal scatters colourful pastel flecks across all of the horse's white markings, sharp-edged or blurred.",
-    'Prism': "Prism recolours the horse's Pangare or Sooty shading into any distinguishable colour (never white), blended smoothly with no hard edges.",
+    'Prism': "Prism recolours the horse's Pangare or Sooty into any distinguishable colour, never white, and may carry several colours blended evenly together with no hard edges or patterns. It takes one or the other, never both on the same horse, and covers whichever it takes completely rather than in part. It also lets Pangare or Sooty show on an undiluted black, including the black stockings of a bay-based coat. With neither Pangare nor Sooty in the genotype it stays unseen.",
     'Starfield': "Starfield turns all of the horse's white markings into a night sky, black or dark blue or a blend of the two, optionally with little round spots of the original colour showing through.",
-    'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Kintsugi, Swarf) into unnatural colours, each trait its own single colour.",
+    'Ingot': "Ingot turns every one of the horse's white markings a single metallic colour, the same one across the whole horse, optionally with a metallic shine. Where a marking reaches the mane or tail, that goes metallic too. It leaves skin, eyes and hooves alone, and sits below Starfield and Opal, so those show over the top of it. It counts as a metallic trait, so Lacquer can recolour it. With no white marking or Free White to land on it stays in the genotype, unseen.",
+    'Mithril': "Mithril is a glossy, reflective shine over the whole coat, mane and tail, evenly. It changes no colours: the horse's own coat and traits stay clearly visible underneath. Skin, eyes and hooves are untouched. It is recessive, so it needs both copies to show.",
+    'Damascus': "Damascus lets Dun's primitive marks escape their usual limits, branching into irregular streaks, swirls, webbing or blotches over up to a quarter of the coat. It is always the same colour as the other Dun marks, always grows out of one of them, and its edges may be crisp or blended. It never maps and never makes deliberate-looking shapes or repeating stripes.",
+    'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Ingot, Kintsugi and Swarf) outside their usual metallic range into any unnatural colour. It can recolour every metallic trait or only some of them, give each its own colour, and carry several colours at once, blending them evenly where they meet on one trait, with no hard edges or patterns and the trait's own boundaries still clear. It covers a trait completely or not at all, can be hidden entirely, and never matches the coat. It sits above Illuminated and Sepulchered and can override them on Gilt skin and hooves, and Signet is unaffected. Recessive, so it needs both copies to show.",
 };
 
 // White patterns and markings.
@@ -879,7 +895,9 @@ const CARRIER_DESC = {
     'Carrying Flaxen': "flaxen (one copy, hidden)",
     'Carrying Sepulchered': "sepulchered (one copy, hidden)",
     'Carrying Starfield': "starfield (one copy, hidden)",
-    'Carrying Lacquer': "lacquer (one copy, hidden)"
+    'Carrying Lacquer': "lacquer (one copy, hidden)",
+    'Carrying Mithril': "mithril (one copy, hidden)",
+    'Carries Damascus': "damascus with no Dun at the other side of the locus to switch it on, so it stays invisible"
 };
 
 // Anomalies — the rare 'with ...' extras tacked onto a genotype, drawn from the
@@ -1116,16 +1134,22 @@ function translateGenotype() {
 // ============================================================================
 
 const LAYER_COLORS_MARKINGS = [
+    // Mithril is the template's Metallic Traits layer on Overlay over the whole
+    // design, so it sits above everything.
+    { traits: ['Mithril'] },
     { traits: ['Chimera', 'Vitiligo'], join: ' & ' },
     { traits: ['Lacquer'] },
     { traits: ['Swarf', 'Kintsugi'] },
     { traits: ['Gray', 'Pitch'] },
     { group: 'White Modifiers', traits: ['Opal', 'Starfield', 'Vellum'] },
+    // Ingot recolours the white markings, so it sits over them but under Opal
+    // and Starfield, which show through on top of it.
+    { traits: ['Ingot'] },
     { group: 'White Markings', traits: ['Ossuary', 'Filigree', 'Shroud', 'Harlequin', 'Fewspot', 'Varnish Roan', 'Snowcap', 'Rabicano', 'Leopard', 'False Leopard', 'Blanched', 'Dominant White', 'Sabino', 'Overo', 'Collar', 'Cuirass', 'Crowned', 'Blanket', 'Girdle', 'Apron', 'Greaves', 'Tobiano', 'Splash', 'Snowflake', 'Roan', 'Free White'] },
     { group: 'Coat Anomalies', traits: ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle'] },
     { traits: ['Prism'] },
     { group: 'Mane/Tail Modifiers', traits: ['Silver', 'Flaxen', 'Pangare'] },
-    { group: 'Coat Modifiers', traits: ['Tabard', 'Dun', 'Sooty', 'Dapple'] },
+    { group: 'Coat Modifiers', traits: ['Tabard', 'Damascus', 'Dun', 'Sooty', 'Dapple'] },
     { traits: ['Pennant'] },
     { base: true }
 ];
@@ -1168,7 +1192,7 @@ const TRAIT_PAGE_IDS = {
     // White markings
     'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92, 'Apron': 99, 'Greaves': 100,
     // Modifiers
-    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101,
+    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101, 'Damascus': 114, 'Mithril': 115, 'Ingot': 116,
     // Anomalies
     'Bend-or Spots': 59, 'Birdcatcher Spots': 60, 'Brindle': 61, 'Chimera': 62, 'Geode': 63, 'Ore': 64, 'Stained Glass': 65, 'Kintsugi': 66, 'Swarf': 67, 'Vitiligo': 68, 'Oracle': 74, 'Signet': 75, 'Pennant': 76, 'Pastiche': 77, 'Fresco': 87, 'Lantern': 95,
     // Free markings the engine doesn't model but may name
@@ -1416,6 +1440,10 @@ function getGeneAlleles(gene) {
     if (gene === 'OpOp') return ['Op', 'Op'];
     // Compound heterozygous genes — the odd couples of the genetic world
     if (gene === 'PtPt') return ['Pt', 'Pt'];
+    if (gene === 'InIn') return ['In', 'In'];
+    if (gene === 'mtmt') return ['mt', 'mt'];
+    if (gene === 'DmDm') return ['Dm', 'Dm'];
+    if (gene === 'DmD' || gene === 'DDm') return ['Dm', 'D'];
     if (gene === 'ApAp') return ['Ap', 'Ap'];
     if (gene === 'GrGr') return ['Gr', 'Gr'];
     if (gene === 'GPt' || gene === 'PtG') return ['G', 'Pt'];
@@ -1498,6 +1526,9 @@ function combineAlleles(allele1, allele2) {
         if (allele1 === 'Pr') return 'PrPr';
         if (allele1 === 'Op') return 'OpOp';
         if (allele1 === 'Pt') return 'PtPt';
+        if (allele1 === 'In') return 'InIn';
+        if (allele1 === 'mt') return 'mtmt';
+        if (allele1 === 'Dm') return 'DmDm';
         if (allele1 === 'Ap') return 'ApAp';
         if (allele1 === 'Gr') return 'GrGr';
 
@@ -1523,6 +1554,7 @@ function combineAlleles(allele1, allele2) {
     if ((allele1 === 'Lu' && allele2 === 'sp') || (allele1 === 'sp' && allele2 === 'Lu')) return 'Lusp';
     if ((allele1 === 'Pr' && allele2 === 'Op') || (allele1 === 'Op' && allele2 === 'Pr')) return 'PrOp';
     if ((allele1 === 'G' && allele2 === 'Pt') || (allele1 === 'Pt' && allele2 === 'G')) return 'GPt';
+    if ((allele1 === 'Dm' && allele2 === 'D') || (allele1 === 'D' && allele2 === 'Dm')) return 'DmD';
     if ((allele1 === 'Gr' && allele2 === 'Ap') || (allele1 === 'Ap' && allele2 === 'Gr')) return 'GrAp';
     // KIT locus — four alleles crammed into one locus like clowns in a tiny carriage
     if ((allele1 === 'T' && allele2 === 'Rn') || (allele1 === 'Rn' && allele2 === 'T')) return 'TRn';
@@ -1720,10 +1752,23 @@ function generateFoal(parent1, parent2, variation) {
         }
     }
 
+    // D/Dm locus: Dun and Damascus share an address, and Damascus only shows
+    // when the other side carries Dun, so a foal needs one from each parent.
+    const dDmPattern = /^(nD|DD|nDm|DmDm|DmD|DDm)$/;
+    const p1DDm = findGene(p1.genes, dDmPattern);
+    const p2DDm = findGene(p2.genes, dDmPattern);
+    if (p1DDm || p2DDm) {
+        const inherited = inheritGene(p1DDm || 'nn', p2DDm || 'nn');
+        if (inherited !== 'nn' && inherited !== 'n' && !foalGenes.includes(inherited)) {
+            foalGenes.push(inherited);
+        }
+    }
+
     // These modifiers each live alone — independent loci for independent genes
     const independentModifiers = [
-        { pattern: /^(nD|DD)$/, name: 'D' },
         { pattern: /^(nP|PP)$/, name: 'P' },
+        { pattern: /^(nIn|InIn)$/, name: 'In' },
+        { pattern: /^(nmt|mtmt)$/, name: 'mt' },
         { pattern: /^(nSty|StySty)$/, name: 'Sty' },
         { pattern: /^(nf|ff)$/, name: 'f' },
         { pattern: /^(nZ|ZZ)$/, name: 'Z' },
@@ -2094,6 +2139,9 @@ const GENE_RARITY = {
     'SbW': TIER_RARE, 'WSb': TIER_RARE,
     // --- Modifiers --- (Dun, Pangare, Sooty, Gray are common = 0)
     'nPt': TIER_RARE, 'PtPt': TIER_RARE, 'GPt': TIER_RARE, 'PtG': TIER_RARE,
+    'nDm': TIER_UNCOMMON, 'DmDm': TIER_UNCOMMON, 'DmD': TIER_UNCOMMON, 'DDm': TIER_UNCOMMON,
+    'nmt': TIER_EPIC, 'mtmt': TIER_EPIC,
+    'nIn': TIER_LEGENDARY, 'InIn': TIER_LEGENDARY,
     'ff': TIER_UNCOMMON,
     'nZ': TIER_UNCOMMON, 'ZZ': TIER_UNCOMMON,
     'nLu': TIER_UNCOMMON, 'LuLu': TIER_UNCOMMON, 'Lusp': TIER_UNCOMMON,
@@ -2202,7 +2250,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'prlprl', 'Cher'] } // Rose Gold Nacre
         ],
         markings: ['fefe', 'nOs'],
-        modifiers: ['nPr', 'sfsf']
+        modifiers: ['nPr', 'sfsf', 'nIn']
     },
     epic: {
         coatColors: [
@@ -2241,7 +2289,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'prlprl', 'erer'] } // Gold Pearl Ether
         ],
         markings: ['nHq', 'LpLp patnpatn', 'nSh'],
-        modifiers: ['nOp', 'lrlr']
+        modifiers: ['nOp', 'lrlr', 'mtmt']
     },
     rare: {
         coatColors: [
@@ -2281,7 +2329,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'nTp'] } // Weld
         ],
         markings: ['nCu', 'nCw', 'nO', 'nLp patn', 'nSb', 'nGi', 'nCo'],
-        modifiers: ['nf', 'nZ', 'nLu', 'nsp']
+        modifiers: ['nf', 'nZ', 'nLu', 'nsp', 'DmD']
     },
     common: {
         coatColors: [
@@ -2565,17 +2613,21 @@ function extractTraitsFromQuery(query) {
 
     // Carrier sleuthing — "carries X" / "carrying X" / "carrier of X" finds pairs whose foals
     // can carry a recessive without expressing it (great for stacking nfe → fefe down the line)
+    // The names here must be the exact ones the translator prints, so a phrase copied
+    // off a translated genotype searches for the same trait it described.
     const carrierMap = {
-        'filigree': 'Carries Filigree',
+        'filigree': 'Carrying Filigree',
         'pearl': 'Carries Pearl',
         'ether': 'Carries Ether',
-        'flaxen': 'Carries Flaxen',
-        'starfield': 'Carries Starfield',
-        'lacquer': 'Carries Lacquer',
-        'sepulchered': 'Carries Sepulchered',
-        'patn': 'Carries Patn'
+        'flaxen': 'Carrying Flaxen',
+        'starfield': 'Carrying Starfield',
+        'lacquer': 'Carrying Lacquer',
+        'sepulchered': 'Carrying Sepulchered',
+        'patn': 'Carries Patn',
+        'mithril': 'Carrying Mithril',
+        'damascus': 'Carries Damascus'
     };
-    const carrierPattern = /(?:carries|carrier(?:\s+of)?|carrying)\s+(filigree|pearl|ether|flaxen|starfield|lacquer|sepulchered|patn)/g;
+    const carrierPattern = /(?:carries|carrier(?:\s+of)?|carrying)\s+(filigree|pearl|ether|flaxen|starfield|lacquer|sepulchered|patn|mithril|damascus)/g;
     let cMatch;
     while ((cMatch = carrierPattern.exec(query)) !== null) {
         const carrierTrait = carrierMap[cMatch[1]];
@@ -2659,6 +2711,9 @@ function extractTraitsFromQuery(query) {
     if (workingQuery.includes('sooty')) traits.push('Sooty');
     if (workingQuery.includes('blanched')) traits.push('Blanched');
     if (workingQuery.includes('pitch')) traits.push('Pitch');
+    if (workingQuery.includes('ingot')) traits.push('Ingot');
+    if (workingQuery.includes('mithril')) traits.push('Mithril');
+    if (workingQuery.includes('damascus')) traits.push('Damascus');
     if (workingQuery.includes('apron')) traits.push('Apron');
     if (workingQuery.includes('greaves')) traits.push('Greaves');
     if (workingQuery.includes('collar')) traits.push('Collar');
@@ -2873,27 +2928,13 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         // Carrier traits — only ONE parent needs the recessive allele for a carrier foal,
         // so these are way easier than expressed (homozygous) versions.
         // Must be checked BEFORE the expressed cases or the substring checks below would steal them.
-        if (traitLower === 'carries filigree') {
-            // Need at least one fe allele in the pair — foal can be nfe (carrier) or fefe (expressed)
-            if (/\bfefe\b|\bnfe\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries pearl') {
-            // prl can hide inside compounds (Tpprl, Crprl) — gotta catch 'em all
-            if (/\bnprl\b|\bprlprl\b|\btpprl\b|\bcrprl\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries ether') {
-            // er can ride along inside Cher (champagne expressed but carries ether)
-            if (/\berer\b|\bner\b|\bcher\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries flaxen') {
-            // \bnf\b dodges nfe (Filigree) and nfl (False Leopard) — word boundaries are our friends
-            if (/\bff\b|\bnf\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries starfield') {
-            if (/\bsfsf\b|\bnsf\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries lacquer') {
-            if (/\blrlr\b|\bnlr\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries sepulchered') {
-            // Lusp expresses Illuminated but still carries sp, so we count it
-            if (/\bspsp\b|\bnsp\b|\blusp\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries patn') {
-            if (/\bnpatn\b|\bpatnpatn\b/.test(combinedGeno)) traitsScores.push(60);
+        // One branch covers every carrier, whatever it is called. The allele is read
+        // off the carrier's own gene token, so a compound that hides it still counts:
+        // Crprl carries prl, Cher carries er, Lusp carries sp, TRn carries Rn. It also
+        // means a carrier added to the trait tables is scored here without new code.
+        const _carrierAllele = recipeCarrierAllele(trait);
+        if (_carrierAllele) {
+            if (pairCarries(_carrierAllele)) traitsScores.push(60);
         } else if (traitLower.includes('cream pearl ether') || traitLower === 'ombre cream pearl ether' ||
             traitLower === 'classic cream pearl ether' || traitLower === 'cold cream pearl ether') {
             // Need Crprl + erer — both parents must carry er, or the ether stays hidden
@@ -3182,6 +3223,13 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (pairCarries('G')) traitsScores.push(80);
         } else if (traitLower === 'pitch') {
             if (pairCarries('Pt')) traitsScores.push(80);
+        } else if (traitLower === 'ingot') {
+            if (pairCarries('In')) traitsScores.push(80);
+        } else if (traitLower === 'mithril') {
+            if (pairCarries('mt')) traitsScores.push(80);
+        } else if (traitLower === 'damascus') {
+            // Damascus only shows beside Dun, so the pair needs both alleles.
+            if (pairCarries('Dm') && pairCarries('D')) traitsScores.push(80);
         } else if (traitLower === 'tobiano') {
             if (pairCarries('T')) traitsScores.push(80);
         } else if (traitLower === 'overo') {
@@ -3466,12 +3514,12 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
 
     // ── Individual modifier loci — each a simple binary: "got the mutation" or "boring" ──
     const simpleModifierLoci = [
-        { pattern: /^(nD|DD)$/, allele: 'D', name: 'Dun' },
         { pattern: /^(nP|PP)$/, allele: 'P', name: 'Pangare' },
         { pattern: /^(nSty|StySty)$/, allele: 'Sty', name: 'Sooty' },
         { pattern: /^(nZ|ZZ)$/, allele: 'Z', name: 'Silver' },
         { pattern: /^(nTd|TdTd)$/, allele: 'Td', name: 'Tabard' },
         { pattern: /^(nGl|GlGl)$/, allele: 'Gl', name: 'Gilt' },
+        { pattern: /^(nIn|InIn)$/, allele: 'In', name: 'Ingot' },
         { pattern: /^(nV|VV)$/, allele: 'V', name: 'Vellum' },
     ];
 
@@ -3487,6 +3535,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
     const recessiveModifierLoci = [
         { pattern: /^(nf|ff)$/, allele: 'f', expressed: 'Flaxen', carrier: 'Carrying Flaxen' },
         { pattern: /^(nsf|sfsf)$/, allele: 'sf', expressed: 'Starfield', carrier: 'Carrying Starfield' },
+        { pattern: /^(nmt|mtmt)$/, allele: 'mt', expressed: 'Mithril', carrier: 'Carrying Mithril' },
         { pattern: /^(nlr|lrlr)$/, allele: 'lr', expressed: 'Lacquer', carrier: 'Carrying Lacquer' },
     ];
 
@@ -3509,6 +3558,16 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         else if (alleles.includes('sp') && !alleles.includes('Lu')) modifiers.add('Carrying Sepulchered');
         // Lusp: Lu dominates (Illuminated shows), sp skulks in the shadows (carried)
         if (g === 'Lusp') modifiers.add('Carrying Sepulchered');
+    });
+
+    // D/Dm shared locus: Dun shows on its own, Damascus only beside it, so a
+    // horse holding Dm without a D carries it unseen.
+    const dDmPattern = /^(nD|DD|nDm|DmDm|DmD|DDm)$/;
+    possibleGenotypes(p1.genes, p2.genes, dDmPattern).forEach(g => {
+        if (g === 'nn') return;
+        const alleles = getGeneAlleles(g);
+        if (alleles.includes('D')) modifiers.add('Dun');
+        if (alleles.includes('Dm')) modifiers.add(alleles.includes('D') ? 'Damascus' : 'Carries Damascus');
     });
 
     // G/Pt shared locus: Gray whitens, Pitch blackens, both dominant, and a horse
@@ -4214,6 +4273,11 @@ const SOMATIC_SWITCH_OFF = {
     'StySty': [{ trait: 'Sooty', becomes: null }],
     'nG':     [{ trait: 'Gray', becomes: null }],
     'GG':     [{ trait: 'Gray', becomes: null }],
+    'nIn':    [{ trait: 'Ingot', becomes: null }],
+    'InIn':   [{ trait: 'Ingot', becomes: null }],
+    'mtmt':   [{ trait: 'Mithril', becomes: null }],
+    'DmD':    [{ trait: 'Damascus', becomes: 'nD' }, { trait: 'Dun', becomes: 'nDm' }],
+    'DDm':    [{ trait: 'Damascus', becomes: 'nD' }, { trait: 'Dun', becomes: 'nDm' }],
     'nPt':    [{ trait: 'Pitch', becomes: null }],
     'PtPt':   [{ trait: 'Pitch', becomes: null }],
     'GPt':    [{ trait: 'Gray', becomes: 'nPt' }, { trait: 'Pitch', becomes: 'nG' }],
@@ -5371,11 +5435,33 @@ const RECIPE_TRAIT_GENES = (function () {
         'Snowflake': ['nLp'], 'Blanket': ['nLp', 'npatn'], 'Leopard': ['nLp', 'patnpatn'],
         'Varnish Roan': ['LpLp'], 'Snowcap': ['LpLp', 'npatn'], 'Fewspot': ['LpLp', 'patnpatn'],
         'Carries Ether': ['ner'], 'Carries Pearl': ['nprl'], 'Carries Patn': ['npatn'],
-        'Carries Filigree': ['nfe'], 'Carries Flaxen': ['nf'], 'Carries Starfield': ['nsf'],
-        'Carries Lacquer': ['nlr'], 'Carries Sepulchered': ['nsp']
+        'Carrying Filigree': ['nfe'], 'Carrying Flaxen': ['nf'], 'Carrying Starfield': ['nsf'],
+        'Carrying Lacquer': ['nlr'], 'Carrying Sepulchered': ['nsp'],
+        // Mithril is recessive; Damascus needs a Dun opposite it to show at all.
+        'Mithril': ['mtmt'], 'Carrying Mithril': ['nmt'],
+        'Damascus': ['DmD'], 'Carries Damascus': ['nDm']
+    });
+    // The trait index says "carrying" for some and "carries" for others. Accept both
+    // spellings of every carrier so a name typed either way still builds a genotype.
+    Object.keys(out).forEach(name => {
+        const alias = name.startsWith('Carrying ') ? name.replace('Carrying ', 'Carries ')
+            : name.startsWith('Carries ') ? name.replace('Carries ', 'Carrying ') : null;
+        if (alias && !(alias in out)) out[alias] = out[name];
     });
     return out;
 })();
+
+// The allele a carrier trait needs, read off the carrier's own gene token. Returns
+// null for anything that is not a single-token carrier, which is how the search
+// scorer tells a carrier apart from an expressed trait.
+function recipeCarrierAllele(traitName) {
+    if (!/^carr(?:ies|ying)\s/i.test(traitName)) return null;
+    const key = Object.keys(RECIPE_TRAIT_GENES).find(k => k.toLowerCase() === traitName.toLowerCase());
+    const toks = key ? RECIPE_TRAIT_GENES[key] : null;
+    if (!toks || toks.length !== 1) return null;
+    const real = getGeneAlleles(toks[0]).filter(a => a !== 'n');
+    return real.length === 1 ? real[0] : null;
+}
 
 // Is this input a genotype (Ee Aa nCr ...) or a sentence? Real gene tokens are
 // two characters or more (a lone "a" is an English article, not the A locus),
@@ -5440,6 +5526,12 @@ function recipeFromEnglish(text) {
             if (!byLocus[locus]) { byLocus[locus] = tok; return; }
             const have = getGeneAlleles(byLocus[locus]).filter(a => a !== 'n');
             const want = real;
+            // Damascus and Dun both land on DmD, which is Dun as well, so
+            // whichever is asked for second must not read as a clash: if what is
+            // already there covers the new trait, leave it; if the new trait
+            // covers what is there, it takes over.
+            if (want.every(a => have.includes(a))) return;
+            if (have.every(a => want.includes(a))) { byLocus[locus] = tok; return; }
             if (have.length === 1 && want.length === 1 && have[0] !== want[0]) {
                 byLocus[locus] = combineAlleles(have[0], want[0]);
             } else if (byLocus[locus] !== tok) {

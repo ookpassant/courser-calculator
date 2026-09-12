@@ -65,6 +65,14 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '12 Sep 2026', items: [
+      'Three new Modifiers: Ingot (nIn, Legendary) makes every white marking one metallic colour, Mithril (mtmt, Epic) is a recessive gloss over the whole coat, and Damascus (nDm, Uncommon) sits on Dun\'s locus and only shows as DmD.',
+      'Every tool knows them, and Recipe reads "damascus" as the visible DmD pair, so one ideal parent brings Damascus and the other brings Dun.',
+      'All 24 Ether coats rewritten from their updated pages in the index\'s sheen language, with none of the old blue-gray or ghostly wording left.',
+      'Sepulchered, Sooty, Pangare and Prism rewritten from their updated pages, including Sepulchered on gray and Prism taking Pangare or Sooty but never both.',
+      'Lacquer rewritten from its updated page: it recolours Gilt, Ingot, Kintsugi and Swarf, never matches the coat, and overrides Illuminated and Sepulchered on Gilt skin and hooves.',
+      'Fixed: Smart Search now uses the same carrier wording Translate prints, and "carries damascus" or "carrying mithril" finds pairs instead of nothing.'
+    ] },
     { date: '10 Sep 2026', items: [
       'Recipe now takes plain English. Say what you want ("a cerulean bay nacre with tobiano") and it builds the genotype, shows you what it read so you can correct it, and runs. Name a coat family without a base ("cream ether") and it offers the three coats as buttons. Each ideal parent is now also named in words, so you know what to look for.',
       'Fixed: a capitalised coat name in Recipe ("Saffron Black Nacre") was read as just its base colour; case no longer matters.',

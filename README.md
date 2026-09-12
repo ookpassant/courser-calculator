@@ -113,9 +113,11 @@ inherit together):
   Collar.
   KIT locus allows max two of Tobiano/Roan/Sabino/Dominant White.
 - **Modifiers**: Dun, Pangare, Sooty, Gray, Pitch, Flaxen, Silver, Illuminated,
-  Sepulchered, Tabard, Gilt, Vellum, Opal, Prism, Lacquer, Starfield. Pitch
-  shares Gray's locus and blackens with age where Gray whitens; a horse with
-  both goes a true mid gray.
+  Sepulchered, Tabard, Gilt, Vellum, Opal, Prism, Lacquer, Starfield, Ingot,
+  Mithril, Damascus. Pitch shares Gray's locus and blackens with age where Gray
+  whitens; a horse with both goes a true mid gray. Mithril is recessive (mtmt).
+  Damascus shares Dun's locus and only shows paired with it (DmD), so a horse
+  holding Dm without a D carries it unseen.
 - **Anomalies**: 25% chance to pass each from a parent, plus a flat 5% chance of
   a random one on any foal.
 - **Variants** (Heraldic, Puck, Cavedweller, Restored): 25% chance to pass from
