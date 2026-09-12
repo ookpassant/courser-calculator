@@ -68,6 +68,7 @@
     { date: '12 Sep 2026', items: [
       'Three new Modifiers. Ingot (nIn, Legendary) turns every white marking one metallic colour. Mithril (mtmt, Epic) is a glossy shine over the whole coat and is recessive, so nmt only carries it. Damascus (nDm, Uncommon) shares Dun\'s locus and only shows paired with Dun (DmD), which means a foal has to inherit Damascus from one parent and Dun from the other.',
       'Every tool knows them: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator. Recipe reads "damascus" as the visible DmD pair, so its ideal parents bring Damascus from one side and Dun from the other.',
+      'Sepulchered, Sooty, Pangare and Prism rewritten from their updated pages. Sepulchered allows gray as well as black and goes darker still with Gilt; Sooty covers the topline and neck and is invisible on an undiluted black; Pangare covers the underside and extremities; and Prism can be multicoloured, takes Pangare or Sooty but never both, and lets either show on an undiluted black.',
       'Lacquer rewritten from its updated page: it recolours Gilt, Ingot, Kintsugi and Swarf, can take every metallic trait or only some, give each its own colour or several blended together, covers a trait completely or not at all, never matches the coat, and overrides Illuminated and Sepulchered on Gilt skin and hooves while leaving Signet alone.'
     ] },
     { date: '10 Sep 2026', items: [
