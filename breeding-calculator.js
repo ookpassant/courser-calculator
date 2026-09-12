@@ -989,7 +989,10 @@ function genotypeToPlainEnglish(genoString, variant) {
 
     // 1. Body colour — name the coat, say what colour the whole thing is, then
     //    explain the base and each dilution underneath it.
-    let body = `You're looking at ${articleFor(coatColor)} **${coatColor}**.`;
+    // "a Black" reads as a colour rather than a horse, so the coat name always
+    // has Courser after it. The article still comes off the coat name, which is
+    // the word that follows it.
+    let body = `You're looking at ${articleFor(coatColor)} **${coatColor}** Courser.`;
     if (COAT_DESC[coatColor]) body += ' ' + COAT_DESC[coatColor];
     const baseDesc = COAT_BODY[baseCoat];
     if (baseDesc) body += ' ' + baseDesc.charAt(0).toUpperCase() + baseDesc.slice(1) + '.';
