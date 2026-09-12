@@ -747,13 +747,13 @@ const COAT_DESC = {
     'Woad Smoky Black': "It's a deep woad blue darkened over a smoky black.",
     'Weld Palomino': "It's a bright weld yellow lightened over a golden palomino.",
     // Tapestry Ether
-    'Madder Ether': "It's a madder red washed pale and ghostly by ether's blue-gray.",
-    'Woad Ether': "It's a woad blue faded into ether's pale, otherworldly gray.",
-    'Weld Ether': "It's a weld yellow cooled and paled by ether.",
+    'Madder Ether': "It's a muted red body with gray stockings blending smoothly into it, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: silvery peach along the topline, red or purple on the belly, muzzle and upper legs, visibly different from the coat and free to cover part of the stockings. Gray or black skin and hooves, and the eyes the coat colour.",
+    'Woad Ether': "It's a muted blue, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: silvery blue along the topline, purple or blue on the belly, muzzle and upper legs, visibly different from the coat. Gray skin and hooves, and the eyes the coat colour.",
+    'Weld Ether': "It's a muted yellow, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Gray skin and hooves, and the eyes the coat colour.",
     // Pearl Ether
-    'Bay Pearl Ether': "It's a caramel-gold pearl washed pale by ether's blue-gray.",
-    'Black Pearl Ether': "It's a grayish-brown pearl faded into ghostly ether.",
-    'Gold Pearl Ether': "It's a gold-caramel pearl cooled by ether's pale gray.",
+    'Bay Pearl Ether': "It's an apricot body with muted brown stockings, darker than the body and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: warm pale gray or cream along the topline, muted purple or pink on the belly, muzzle and upper legs, and it may cover the stockings. Cream skin and hooves, gray eyes.",
+    'Black Pearl Ether': "It's a muted brown, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: warm pale gray or cream along the topline, muted purple or pink on the belly, muzzle and upper legs. Cream skin and hooves, gray eyes.",
+    'Gold Pearl Ether': "It's an apricot, even across the body, mane and tail to match, with Ether's sheen fading into it in bands: warm pale gray or cream along the topline, muted purple or pink on the belly, muzzle and upper legs. Cream skin and hooves, gray eyes.",
     // Pearl Champagne
     'Bay Pearl Champagne': "It's a warm caramel gold with both pearl's sheen and champagne's metallic glow.",
     'Black Pearl Champagne': "It's a warm grayish taupe with a doubled pearl-and-champagne sheen.",
@@ -763,9 +763,9 @@ const COAT_DESC = {
     'Classic Cream Champagne': "It's a pale taupe with a metallic sheen.",
     'Gold Cream Champagne': "It's a pale, bright gold with a metallic sheen.",
     // Cream Ether
-    'Ombre Cream Ether': "It's a very pale blue-gray with faint golden undertones.",
-    'Classic Cream Ether': "It's an extremely pale, ghostly blue-gray.",
-    'Cold Cream Ether': "It's a pale, cold blue-gray with a faint warm cast.",
+    'Ombre Cream Ether': "It's a muted, desaturated golden brown body with muted charcoal gray stockings, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
+    'Classic Cream Ether': "It's a muted charcoal gray, even across the body, with Ether's sheen fading into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
+    'Cold Cream Ether': "It's a muted, desaturated golden brown, even across the body, with a white or pale cream mane and tail. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Gray skin, eyes and hooves.",
 
     // Ash Ether (CrCr erer)
     'Cold Ash Ether': "It's a pale, cool gray, even across the body, with Ether's sheen fading into it in bands: silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, gray or blue eyes.",
@@ -790,13 +790,13 @@ const COAT_DESC = {
     'Classic Cream Pearl Champagne': "It's a pale taupe-brown with a luminous pearl-and-champagne sheen.",
     'Gold Cream Pearl Champagne': "It's a pale, luminous gold with a pearl-and-champagne sheen.",
     // Cream Pearl Ether (triple)
-    'Ombre Cream Pearl Ether': "It's an extremely pale, luminous blue-gray.",
-    'Classic Cream Pearl Ether': "It's a near-translucent, ghostly pale gray.",
-    'Cold Cream Pearl Ether': "It's an extremely pale, cold blue-gray.",
+    'Ombre Cream Pearl Ether': "It's a cream body with muted warm brown stockings, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Cream skin, gray eyes and gray hooves.",
+    'Classic Cream Pearl Ether': "It's a muted warm brown, even across the body, mane and tail to match. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Cream skin, gray eyes and gray hooves.",
+    'Cold Cream Pearl Ether': "It's a cream, even across the body, with a white mane and tail. Ether's sheen fades into it in bands: pale silvery gray along the topline, muted purple to blue on the belly, muzzle and upper legs. Cream skin, gray eyes and gray hooves.",
     // Tapestry Cream Ether (triple)
-    'Madder Cream Ether': "It's a madder red washed pale by cream and ether's blue-gray.",
-    'Woad Cream Ether': "It's a woad blue faded pale and ghostly.",
-    'Weld Cream Ether': "It's a weld yellow cooled and paled to a soft wash.",
+    'Madder Cream Ether': "It's a lightened, muted red body with dark reddish-brown or black stockings blending smoothly into it, visibly darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: pinkish silver along the topline, muted purple or blue on the belly, muzzle and upper legs, free to cover part of the stockings. Cream skin and hooves, and the eyes the coat colour.",
+    'Woad Cream Ether': "It's a lightened, muted blue, even across the body, mane and tail to match. Ether's sheen fades into it in bands: bluish silver along the topline, muted purple or blue on the belly, muzzle and upper legs. Cream skin and hooves, and the eyes the coat colour.",
+    'Weld Cream Ether': "It's a lightened, muted yellow, even across the body, with a yellowish white mane and tail. Ether's sheen fades into it in bands: yellowish silver along the topline, lighter than the coat, and muted pink or orange on the belly, muzzle and upper legs. Cream skin and hooves, and the eyes the coat colour.",
     // Tapestry Pearl (double) — pearl shifts the dye hue
     'Tyrian Pearl': "It's a rich Tyrian purple with a pearly sheen (madder red shifted by pearl).",
     'Phthalo Pearl': "It's a deep phthalo blue-green with a pearly sheen (woad blue shifted by pearl).",
@@ -806,9 +806,9 @@ const COAT_DESC = {
     'Phthalo Pearl Champagne': "It's a phthalo blue-green with a pearl-and-champagne sheen.",
     'Ochre Pearl Champagne': "It's an ochre orange with a pearl-and-champagne sheen.",
     // Tapestry Pearl Ether (triple)
-    'Tyrian Pearl Ether': "It's a Tyrian purple washed pale and ghostly by ether.",
-    'Phthalo Pearl Ether': "It's a phthalo blue-green faded into pale ether.",
-    'Ochre Pearl Ether': "It's an ochre orange cooled and paled by ether.",
+    'Tyrian Pearl Ether': "It's a somewhat muted purple body with dark purple or black stockings blending smoothly into it, darker than the coat and matched on all four legs, and the mane and tail the stocking colour. Ether's sheen fades into it in bands: bluish silver along the topline, lighter than the coat, and purple or blue on the belly, muzzle and upper legs, free to cover part of the stockings. Cream skin, gray hooves, and the eyes the coat colour.",
+    'Phthalo Pearl Ether': "It's a somewhat muted green, even across the body, mane and tail to match. Ether's sheen fades into it in bands: greenish silver along the topline, lighter than the coat, and purple or blue on the belly, muzzle and upper legs. Cream skin, gray hooves, and the eyes the coat colour.",
+    'Ochre Pearl Ether': "It's a somewhat muted orange, even across the body, mane and tail to match. Ether's sheen fades into it in bands: peachy silver along the topline, lighter than the coat, and muted pinky purple or blue on the belly, muzzle and upper legs. Cream skin, gray hooves, and the eyes the coat colour.",
     // Tapestry Cream Champagne (triple)
     'Madder Cream Champagne': "It's a madder red softened by cream and lifted by a champagne sheen. Pink pony club.",
     'Woad Cream Champagne': "It's a woad blue softened by cream with a champagne sheen.",
