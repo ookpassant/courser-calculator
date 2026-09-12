@@ -66,12 +66,12 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '12 Sep 2026', items: [
-      'Fixed: Smart Search now uses the same carrier wording Translate prints, and searching "carries damascus" or "carrying mithril" finds pairs instead of nothing.',
-      'Three new Modifiers. Ingot (nIn, Legendary) turns every white marking one metallic colour. Mithril (mtmt, Epic) is a glossy shine over the whole coat and is recessive, so nmt only carries it. Damascus (nDm, Uncommon) shares Dun\'s locus and only shows paired with Dun (DmD), which means a foal has to inherit Damascus from one parent and Dun from the other.',
-      'Every tool knows them: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator. Recipe reads "damascus" as the visible DmD pair, so its ideal parents bring Damascus from one side and Dun from the other.',
-      'All 24 Ether coats rewritten from their updated pages, in the index\'s sheen language: Ether, Ash Ether, Cream Ether, Tapestry Ether, Pearl Ether, Cream Pearl Ether, Tapestry Cream Ether and Tapestry Pearl Ether. Each now gives the coat, the sheen colours on topline and underside, the stockings where there are any, and the skin, eye and hoof colours. None of the old blue-gray or ghostly wording is left anywhere.',
-      'Sepulchered, Sooty, Pangare and Prism rewritten from their updated pages. Sepulchered allows gray as well as black and goes darker still with Gilt; Sooty covers the topline and neck and is invisible on an undiluted black; Pangare covers the underside and extremities; and Prism can be multicoloured, takes Pangare or Sooty but never both, and lets either show on an undiluted black.',
-      'Lacquer rewritten from its updated page: it recolours Gilt, Ingot, Kintsugi and Swarf, can take every metallic trait or only some, give each its own colour or several blended together, covers a trait completely or not at all, never matches the coat, and overrides Illuminated and Sepulchered on Gilt skin and hooves while leaving Signet alone.'
+      'Three new Modifiers: Ingot (nIn, Legendary) makes every white marking one metallic colour, Mithril (mtmt, Epic) is a recessive gloss over the whole coat, and Damascus (nDm, Uncommon) sits on Dun\'s locus and only shows as DmD.',
+      'Every tool knows them, and Recipe reads "damascus" as the visible DmD pair, so one ideal parent brings Damascus and the other brings Dun.',
+      'All 24 Ether coats rewritten from their updated pages in the index\'s sheen language, with none of the old blue-gray or ghostly wording left.',
+      'Sepulchered, Sooty, Pangare and Prism rewritten from their updated pages, including Sepulchered on gray and Prism taking Pangare or Sooty but never both.',
+      'Lacquer rewritten from its updated page: it recolours Gilt, Ingot, Kintsugi and Swarf, never matches the coat, and overrides Illuminated and Sepulchered on Gilt skin and hooves.',
+      'Fixed: Smart Search now uses the same carrier wording Translate prints, and "carries damascus" or "carrying mithril" finds pairs instead of nothing.'
     ] },
     { date: '10 Sep 2026', items: [
       'Recipe now takes plain English. Say what you want ("a cerulean bay nacre with tobiano") and it builds the genotype, shows you what it read so you can correct it, and runs. Name a coat family without a base ("cream ether") and it offers the three coats as buttons. Each ideal parent is now also named in words, so you know what to look for.',
