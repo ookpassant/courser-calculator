@@ -71,8 +71,7 @@
       'All 24 Ether coats rewritten from their updated pages in the index\'s sheen language, with none of the old blue-gray or ghostly wording left.',
       'Sepulchered, Sooty, Pangare and Prism rewritten from their updated pages, including Sepulchered on gray and Prism taking Pangare or Sooty but never both.',
       'Lacquer rewritten from its updated page: it recolours Gilt, Ingot, Kintsugi and Swarf, never matches the coat, and overrides Illuminated and Sepulchered on Gilt skin and hooves.',
-      'Fixed: Smart Search now uses the same carrier wording Translate prints, and "carries damascus" or "carrying mithril" finds pairs instead of nothing.',
-      'Translate now opens with "a Black Courser" rather than "a Black", which read as a colour instead of a horse.'
+      'Fixed: Smart Search now uses the same carrier wording Translate prints, and "carries damascus" or "carrying mithril" finds pairs instead of nothing.'
     ] },
     { date: '10 Sep 2026', items: [
       'Recipe now takes plain English. Say what you want ("a cerulean bay nacre with tobiano") and it builds the genotype, shows you what it read so you can correct it, and runs. Name a coat family without a base ("cream ether") and it offers the three coats as buttons. Each ideal parent is now also named in words, so you know what to look for.',
