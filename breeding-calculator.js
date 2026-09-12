@@ -2613,14 +2613,16 @@ function extractTraitsFromQuery(query) {
 
     // Carrier sleuthing — "carries X" / "carrying X" / "carrier of X" finds pairs whose foals
     // can carry a recessive without expressing it (great for stacking nfe → fefe down the line)
+    // The names here must be the exact ones the translator prints, so a phrase copied
+    // off a translated genotype searches for the same trait it described.
     const carrierMap = {
-        'filigree': 'Carries Filigree',
+        'filigree': 'Carrying Filigree',
         'pearl': 'Carries Pearl',
         'ether': 'Carries Ether',
-        'flaxen': 'Carries Flaxen',
-        'starfield': 'Carries Starfield',
-        'lacquer': 'Carries Lacquer',
-        'sepulchered': 'Carries Sepulchered',
+        'flaxen': 'Carrying Flaxen',
+        'starfield': 'Carrying Starfield',
+        'lacquer': 'Carrying Lacquer',
+        'sepulchered': 'Carrying Sepulchered',
         'patn': 'Carries Patn',
         'mithril': 'Carrying Mithril',
         'damascus': 'Carries Damascus'
@@ -2926,27 +2928,13 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         // Carrier traits — only ONE parent needs the recessive allele for a carrier foal,
         // so these are way easier than expressed (homozygous) versions.
         // Must be checked BEFORE the expressed cases or the substring checks below would steal them.
-        if (traitLower === 'carries filigree') {
-            // Need at least one fe allele in the pair — foal can be nfe (carrier) or fefe (expressed)
-            if (/\bfefe\b|\bnfe\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries pearl') {
-            // prl can hide inside compounds (Tpprl, Crprl) — gotta catch 'em all
-            if (/\bnprl\b|\bprlprl\b|\btpprl\b|\bcrprl\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries ether') {
-            // er can ride along inside Cher (champagne expressed but carries ether)
-            if (/\berer\b|\bner\b|\bcher\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries flaxen') {
-            // \bnf\b dodges nfe (Filigree) and nfl (False Leopard) — word boundaries are our friends
-            if (/\bff\b|\bnf\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries starfield') {
-            if (/\bsfsf\b|\bnsf\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries lacquer') {
-            if (/\blrlr\b|\bnlr\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries sepulchered') {
-            // Lusp expresses Illuminated but still carries sp, so we count it
-            if (/\bspsp\b|\bnsp\b|\blusp\b/.test(combinedGeno)) traitsScores.push(60);
-        } else if (traitLower === 'carries patn') {
-            if (/\bnpatn\b|\bpatnpatn\b/.test(combinedGeno)) traitsScores.push(60);
+        // One branch covers every carrier, whatever it is called. The allele is read
+        // off the carrier's own gene token, so a compound that hides it still counts:
+        // Crprl carries prl, Cher carries er, Lusp carries sp, TRn carries Rn. It also
+        // means a carrier added to the trait tables is scored here without new code.
+        const _carrierAllele = recipeCarrierAllele(trait);
+        if (_carrierAllele) {
+            if (pairCarries(_carrierAllele)) traitsScores.push(60);
         } else if (traitLower.includes('cream pearl ether') || traitLower === 'ombre cream pearl ether' ||
             traitLower === 'classic cream pearl ether' || traitLower === 'cold cream pearl ether') {
             // Need Crprl + erer — both parents must carry er, or the ether stays hidden
@@ -5447,14 +5435,33 @@ const RECIPE_TRAIT_GENES = (function () {
         'Snowflake': ['nLp'], 'Blanket': ['nLp', 'npatn'], 'Leopard': ['nLp', 'patnpatn'],
         'Varnish Roan': ['LpLp'], 'Snowcap': ['LpLp', 'npatn'], 'Fewspot': ['LpLp', 'patnpatn'],
         'Carries Ether': ['ner'], 'Carries Pearl': ['nprl'], 'Carries Patn': ['npatn'],
-        'Carries Filigree': ['nfe'], 'Carries Flaxen': ['nf'], 'Carries Starfield': ['nsf'],
-        'Carries Lacquer': ['nlr'], 'Carries Sepulchered': ['nsp'],
+        'Carrying Filigree': ['nfe'], 'Carrying Flaxen': ['nf'], 'Carrying Starfield': ['nsf'],
+        'Carrying Lacquer': ['nlr'], 'Carrying Sepulchered': ['nsp'],
         // Mithril is recessive; Damascus needs a Dun opposite it to show at all.
         'Mithril': ['mtmt'], 'Carrying Mithril': ['nmt'],
         'Damascus': ['DmD'], 'Carries Damascus': ['nDm']
     });
+    // The trait index says "carrying" for some and "carries" for others. Accept both
+    // spellings of every carrier so a name typed either way still builds a genotype.
+    Object.keys(out).forEach(name => {
+        const alias = name.startsWith('Carrying ') ? name.replace('Carrying ', 'Carries ')
+            : name.startsWith('Carries ') ? name.replace('Carries ', 'Carrying ') : null;
+        if (alias && !(alias in out)) out[alias] = out[name];
+    });
     return out;
 })();
+
+// The allele a carrier trait needs, read off the carrier's own gene token. Returns
+// null for anything that is not a single-token carrier, which is how the search
+// scorer tells a carrier apart from an expressed trait.
+function recipeCarrierAllele(traitName) {
+    if (!/^carr(?:ies|ying)\s/i.test(traitName)) return null;
+    const key = Object.keys(RECIPE_TRAIT_GENES).find(k => k.toLowerCase() === traitName.toLowerCase());
+    const toks = key ? RECIPE_TRAIT_GENES[key] : null;
+    if (!toks || toks.length !== 1) return null;
+    const real = getGeneAlleles(toks[0]).filter(a => a !== 'n');
+    return real.length === 1 ? real[0] : null;
+}
 
 // Is this input a genotype (Ee Aa nCr ...) or a sentence? Real gene tokens are
 // two characters or more (a lone "a" is an English article, not the A locus),

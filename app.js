@@ -66,6 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '12 Sep 2026', items: [
+      'Fixed: Smart Search now uses the same carrier wording Translate prints, and searching "carries damascus" or "carrying mithril" finds pairs instead of nothing.',
       'Three new Modifiers. Ingot (nIn, Legendary) turns every white marking one metallic colour. Mithril (mtmt, Epic) is a glossy shine over the whole coat and is recessive, so nmt only carries it. Damascus (nDm, Uncommon) shares Dun\'s locus and only shows paired with Dun (DmD), which means a foal has to inherit Damascus from one parent and Dun from the other.',
       'Every tool knows them: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator. Recipe reads "damascus" as the visible DmD pair, so its ideal parents bring Damascus from one side and Dun from the other.',
       'All 24 Ether coats rewritten from their updated pages, in the index\'s sheen language: Ether, Ash Ether, Cream Ether, Tapestry Ether, Pearl Ether, Cream Pearl Ether, Tapestry Cream Ether and Tapestry Pearl Ether. Each now gives the coat, the sheen colours on topline and underside, the stockings where there are any, and the skin, eye and hoof colours. None of the old blue-gray or ghostly wording is left anywhere.',
