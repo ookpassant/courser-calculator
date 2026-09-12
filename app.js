@@ -65,6 +65,11 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '12 Sep 2026', items: [
+      'Three new Modifiers. Ingot (nIn, Legendary) turns every white marking one metallic colour. Mithril (mtmt, Epic) is a glossy shine over the whole coat and is recessive, so nmt only carries it. Damascus (nDm, Uncommon) shares Dun\'s locus and only shows paired with Dun (DmD), which means a foal has to inherit Damascus from one parent and Dun from the other.',
+      'Every tool knows them: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator. Recipe reads "damascus" as the visible DmD pair, so its ideal parents bring Damascus from one side and Dun from the other.',
+      'Lacquer now lists Ingot among the metallic traits it recolours, and its description no longer says one colour per trait, since Lacquer can carry several.'
+    ] },
     { date: '10 Sep 2026', items: [
       'Recipe now takes plain English. Say what you want ("a cerulean bay nacre with tobiano") and it builds the genotype, shows you what it read so you can correct it, and runs. Name a coat family without a base ("cream ether") and it offers the three coats as buttons. Each ideal parent is now also named in words, so you know what to look for.',
       'Fixed: a capitalised coat name in Recipe ("Saffron Black Nacre") was read as just its base colour; case no longer matters.',

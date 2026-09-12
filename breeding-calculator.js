@@ -326,7 +326,15 @@ const MODIFIER_NAMES = {
     // Pitch shares Gray's locus: Gray whitens with age, Pitch blackens, and a
     // horse carrying both settles somewhere in the middle.
     'nPt': 'Pitch', 'PtPt': 'Pitch',
-    'GPt': 'Gray Pitch', 'PtG': 'Gray Pitch'
+    'GPt': 'Gray Pitch', 'PtG': 'Gray Pitch',
+    // Ingot recolours every white marking one metallic colour. Dominant.
+    'nIn': 'Ingot', 'InIn': 'Ingot',
+    // Mithril is a recessive gloss over the whole coat: it needs both copies.
+    'nmt': 'Carrying Mithril', 'mtmt': 'Mithril',
+    // Damascus shares Dun's locus and only shows when paired WITH Dun (DmD), so
+    // a horse holding Dm without a D carries it silently, however many copies.
+    'nDm': 'Carries Damascus', 'DmDm': 'Carries Damascus',
+    'DmD': 'Damascus Dun', 'DDm': 'Damascus Dun'
 };
 
 // Traits that swagger in BEFORE the coat color, like heralds announcing the king
@@ -353,8 +361,10 @@ const TRAITS_AFTER_COAT = [
     'Girdle Collar',
     // Gr/Ap compound
     'Greaves Apron',
+    // Modifiers that read after the coat
+    'Ingot', 'Damascus', 'Mithril',
     // Carrier traits — the "I swear it's in my bloodline" genes
-    'Carries Ether', 'Carries Patn', 'Carries Pearl'
+    'Carries Ether', 'Carries Patn', 'Carries Pearl', 'Carries Damascus', 'Carrying Mithril'
 ];
 
 const WHITE_MARKING_NAMES = {
@@ -629,6 +639,9 @@ function resolveTraits(genoString) {
             } else if (gene === 'GPt' || gene === 'PtG') {
                 allTraits.push('Gray');
                 allTraits.push('Pitch');
+            } else if (gene === 'DmD' || gene === 'DDm') {
+                allTraits.push('Damascus');
+                allTraits.push('Dun');
             } else if (gene === 'nf') {
                 allTraits.push('Carrying Flaxen');
             } else if (gene === 'nsp') {
@@ -834,7 +847,10 @@ const MODIFIER_DESC = {
     'Opal': "Opal scatters colourful pastel flecks across all of the horse's white markings, sharp-edged or blurred.",
     'Prism': "Prism recolours the horse's Pangare or Sooty shading into any distinguishable colour (never white), blended smoothly with no hard edges.",
     'Starfield': "Starfield turns all of the horse's white markings into a night sky, black or dark blue or a blend of the two, optionally with little round spots of the original colour showing through.",
-    'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Kintsugi, Swarf) into unnatural colours, each trait its own single colour.",
+    'Ingot': "Ingot turns every one of the horse's white markings a single metallic colour, the same one across the whole horse, optionally with a metallic shine. Where a marking reaches the mane or tail, that goes metallic too. It leaves skin, eyes and hooves alone, and sits below Starfield and Opal, so those show over the top of it. With no white marking or Free White to land on it stays in the genotype, unseen.",
+    'Mithril': "Mithril is a glossy, reflective shine over the whole coat, mane and tail, evenly. It changes no colours: the horse's own coat and traits stay clearly visible underneath. Skin, eyes and hooves are untouched. It is recessive, so it needs both copies to show.",
+    'Damascus': "Damascus lets Dun's primitive marks escape their usual limits, branching into irregular streaks, swirls, webbing or blotches over up to a quarter of the coat. It is always the same colour as the other Dun marks, always grows out of one of them, and its edges may be crisp or blended. It never maps and never makes deliberate-looking shapes or repeating stripes.",
+    'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Kintsugi, Swarf, Ingot) into unnatural colours, and each trait may now carry more than one colour, blended smoothly without making patterns.",
 };
 
 // White patterns and markings.
@@ -879,7 +895,9 @@ const CARRIER_DESC = {
     'Carrying Flaxen': "flaxen (one copy, hidden)",
     'Carrying Sepulchered': "sepulchered (one copy, hidden)",
     'Carrying Starfield': "starfield (one copy, hidden)",
-    'Carrying Lacquer': "lacquer (one copy, hidden)"
+    'Carrying Lacquer': "lacquer (one copy, hidden)",
+    'Carrying Mithril': "mithril (one copy, hidden)",
+    'Carries Damascus': "damascus with no Dun at the other side of the locus to switch it on, so it stays invisible"
 };
 
 // Anomalies — the rare 'with ...' extras tacked onto a genotype, drawn from the
@@ -1116,16 +1134,22 @@ function translateGenotype() {
 // ============================================================================
 
 const LAYER_COLORS_MARKINGS = [
+    // Mithril is the template's Metallic Traits layer on Overlay over the whole
+    // design, so it sits above everything.
+    { traits: ['Mithril'] },
     { traits: ['Chimera', 'Vitiligo'], join: ' & ' },
     { traits: ['Lacquer'] },
     { traits: ['Swarf', 'Kintsugi'] },
     { traits: ['Gray', 'Pitch'] },
     { group: 'White Modifiers', traits: ['Opal', 'Starfield', 'Vellum'] },
+    // Ingot recolours the white markings, so it sits over them but under Opal
+    // and Starfield, which show through on top of it.
+    { traits: ['Ingot'] },
     { group: 'White Markings', traits: ['Ossuary', 'Filigree', 'Shroud', 'Harlequin', 'Fewspot', 'Varnish Roan', 'Snowcap', 'Rabicano', 'Leopard', 'False Leopard', 'Blanched', 'Dominant White', 'Sabino', 'Overo', 'Collar', 'Cuirass', 'Crowned', 'Blanket', 'Girdle', 'Apron', 'Greaves', 'Tobiano', 'Splash', 'Snowflake', 'Roan', 'Free White'] },
     { group: 'Coat Anomalies', traits: ['Bend-or Spots', 'Birdcatcher Spots', 'Brindle'] },
     { traits: ['Prism'] },
     { group: 'Mane/Tail Modifiers', traits: ['Silver', 'Flaxen', 'Pangare'] },
-    { group: 'Coat Modifiers', traits: ['Tabard', 'Dun', 'Sooty', 'Dapple'] },
+    { group: 'Coat Modifiers', traits: ['Tabard', 'Damascus', 'Dun', 'Sooty', 'Dapple'] },
     { traits: ['Pennant'] },
     { base: true }
 ];
@@ -1168,7 +1192,7 @@ const TRAIT_PAGE_IDS = {
     // White markings
     'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92, 'Apron': 99, 'Greaves': 100,
     // Modifiers
-    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101,
+    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101, 'Damascus': 114, 'Mithril': 115, 'Ingot': 116,
     // Anomalies
     'Bend-or Spots': 59, 'Birdcatcher Spots': 60, 'Brindle': 61, 'Chimera': 62, 'Geode': 63, 'Ore': 64, 'Stained Glass': 65, 'Kintsugi': 66, 'Swarf': 67, 'Vitiligo': 68, 'Oracle': 74, 'Signet': 75, 'Pennant': 76, 'Pastiche': 77, 'Fresco': 87, 'Lantern': 95,
     // Free markings the engine doesn't model but may name
@@ -1416,6 +1440,10 @@ function getGeneAlleles(gene) {
     if (gene === 'OpOp') return ['Op', 'Op'];
     // Compound heterozygous genes — the odd couples of the genetic world
     if (gene === 'PtPt') return ['Pt', 'Pt'];
+    if (gene === 'InIn') return ['In', 'In'];
+    if (gene === 'mtmt') return ['mt', 'mt'];
+    if (gene === 'DmDm') return ['Dm', 'Dm'];
+    if (gene === 'DmD' || gene === 'DDm') return ['Dm', 'D'];
     if (gene === 'ApAp') return ['Ap', 'Ap'];
     if (gene === 'GrGr') return ['Gr', 'Gr'];
     if (gene === 'GPt' || gene === 'PtG') return ['G', 'Pt'];
@@ -1498,6 +1526,9 @@ function combineAlleles(allele1, allele2) {
         if (allele1 === 'Pr') return 'PrPr';
         if (allele1 === 'Op') return 'OpOp';
         if (allele1 === 'Pt') return 'PtPt';
+        if (allele1 === 'In') return 'InIn';
+        if (allele1 === 'mt') return 'mtmt';
+        if (allele1 === 'Dm') return 'DmDm';
         if (allele1 === 'Ap') return 'ApAp';
         if (allele1 === 'Gr') return 'GrGr';
 
@@ -1523,6 +1554,7 @@ function combineAlleles(allele1, allele2) {
     if ((allele1 === 'Lu' && allele2 === 'sp') || (allele1 === 'sp' && allele2 === 'Lu')) return 'Lusp';
     if ((allele1 === 'Pr' && allele2 === 'Op') || (allele1 === 'Op' && allele2 === 'Pr')) return 'PrOp';
     if ((allele1 === 'G' && allele2 === 'Pt') || (allele1 === 'Pt' && allele2 === 'G')) return 'GPt';
+    if ((allele1 === 'Dm' && allele2 === 'D') || (allele1 === 'D' && allele2 === 'Dm')) return 'DmD';
     if ((allele1 === 'Gr' && allele2 === 'Ap') || (allele1 === 'Ap' && allele2 === 'Gr')) return 'GrAp';
     // KIT locus — four alleles crammed into one locus like clowns in a tiny carriage
     if ((allele1 === 'T' && allele2 === 'Rn') || (allele1 === 'Rn' && allele2 === 'T')) return 'TRn';
@@ -1720,10 +1752,23 @@ function generateFoal(parent1, parent2, variation) {
         }
     }
 
+    // D/Dm locus: Dun and Damascus share an address, and Damascus only shows
+    // when the other side carries Dun, so a foal needs one from each parent.
+    const dDmPattern = /^(nD|DD|nDm|DmDm|DmD|DDm)$/;
+    const p1DDm = findGene(p1.genes, dDmPattern);
+    const p2DDm = findGene(p2.genes, dDmPattern);
+    if (p1DDm || p2DDm) {
+        const inherited = inheritGene(p1DDm || 'nn', p2DDm || 'nn');
+        if (inherited !== 'nn' && inherited !== 'n' && !foalGenes.includes(inherited)) {
+            foalGenes.push(inherited);
+        }
+    }
+
     // These modifiers each live alone — independent loci for independent genes
     const independentModifiers = [
-        { pattern: /^(nD|DD)$/, name: 'D' },
         { pattern: /^(nP|PP)$/, name: 'P' },
+        { pattern: /^(nIn|InIn)$/, name: 'In' },
+        { pattern: /^(nmt|mtmt)$/, name: 'mt' },
         { pattern: /^(nSty|StySty)$/, name: 'Sty' },
         { pattern: /^(nf|ff)$/, name: 'f' },
         { pattern: /^(nZ|ZZ)$/, name: 'Z' },
@@ -2094,6 +2139,9 @@ const GENE_RARITY = {
     'SbW': TIER_RARE, 'WSb': TIER_RARE,
     // --- Modifiers --- (Dun, Pangare, Sooty, Gray are common = 0)
     'nPt': TIER_RARE, 'PtPt': TIER_RARE, 'GPt': TIER_RARE, 'PtG': TIER_RARE,
+    'nDm': TIER_UNCOMMON, 'DmDm': TIER_UNCOMMON, 'DmD': TIER_UNCOMMON, 'DDm': TIER_UNCOMMON,
+    'nmt': TIER_EPIC, 'mtmt': TIER_EPIC,
+    'nIn': TIER_LEGENDARY, 'InIn': TIER_LEGENDARY,
     'ff': TIER_UNCOMMON,
     'nZ': TIER_UNCOMMON, 'ZZ': TIER_UNCOMMON,
     'nLu': TIER_UNCOMMON, 'LuLu': TIER_UNCOMMON, 'Lusp': TIER_UNCOMMON,
@@ -2202,7 +2250,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'prlprl', 'Cher'] } // Rose Gold Nacre
         ],
         markings: ['fefe', 'nOs'],
-        modifiers: ['nPr', 'sfsf']
+        modifiers: ['nPr', 'sfsf', 'nIn']
     },
     epic: {
         coatColors: [
@@ -2241,7 +2289,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'prlprl', 'erer'] } // Gold Pearl Ether
         ],
         markings: ['nHq', 'LpLp patnpatn', 'nSh'],
-        modifiers: ['nOp', 'lrlr']
+        modifiers: ['nOp', 'lrlr', 'mtmt']
     },
     rare: {
         coatColors: [
@@ -2281,7 +2329,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'nTp'] } // Weld
         ],
         markings: ['nCu', 'nCw', 'nO', 'nLp patn', 'nSb', 'nGi', 'nCo'],
-        modifiers: ['nf', 'nZ', 'nLu', 'nsp']
+        modifiers: ['nf', 'nZ', 'nLu', 'nsp', 'DmD']
     },
     common: {
         coatColors: [
@@ -2573,9 +2621,11 @@ function extractTraitsFromQuery(query) {
         'starfield': 'Carries Starfield',
         'lacquer': 'Carries Lacquer',
         'sepulchered': 'Carries Sepulchered',
-        'patn': 'Carries Patn'
+        'patn': 'Carries Patn',
+        'mithril': 'Carrying Mithril',
+        'damascus': 'Carries Damascus'
     };
-    const carrierPattern = /(?:carries|carrier(?:\s+of)?|carrying)\s+(filigree|pearl|ether|flaxen|starfield|lacquer|sepulchered|patn)/g;
+    const carrierPattern = /(?:carries|carrier(?:\s+of)?|carrying)\s+(filigree|pearl|ether|flaxen|starfield|lacquer|sepulchered|patn|mithril|damascus)/g;
     let cMatch;
     while ((cMatch = carrierPattern.exec(query)) !== null) {
         const carrierTrait = carrierMap[cMatch[1]];
@@ -2659,6 +2709,9 @@ function extractTraitsFromQuery(query) {
     if (workingQuery.includes('sooty')) traits.push('Sooty');
     if (workingQuery.includes('blanched')) traits.push('Blanched');
     if (workingQuery.includes('pitch')) traits.push('Pitch');
+    if (workingQuery.includes('ingot')) traits.push('Ingot');
+    if (workingQuery.includes('mithril')) traits.push('Mithril');
+    if (workingQuery.includes('damascus')) traits.push('Damascus');
     if (workingQuery.includes('apron')) traits.push('Apron');
     if (workingQuery.includes('greaves')) traits.push('Greaves');
     if (workingQuery.includes('collar')) traits.push('Collar');
@@ -3182,6 +3235,13 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (pairCarries('G')) traitsScores.push(80);
         } else if (traitLower === 'pitch') {
             if (pairCarries('Pt')) traitsScores.push(80);
+        } else if (traitLower === 'ingot') {
+            if (pairCarries('In')) traitsScores.push(80);
+        } else if (traitLower === 'mithril') {
+            if (pairCarries('mt')) traitsScores.push(80);
+        } else if (traitLower === 'damascus') {
+            // Damascus only shows beside Dun, so the pair needs both alleles.
+            if (pairCarries('Dm') && pairCarries('D')) traitsScores.push(80);
         } else if (traitLower === 'tobiano') {
             if (pairCarries('T')) traitsScores.push(80);
         } else if (traitLower === 'overo') {
@@ -3466,12 +3526,12 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
 
     // ── Individual modifier loci — each a simple binary: "got the mutation" or "boring" ──
     const simpleModifierLoci = [
-        { pattern: /^(nD|DD)$/, allele: 'D', name: 'Dun' },
         { pattern: /^(nP|PP)$/, allele: 'P', name: 'Pangare' },
         { pattern: /^(nSty|StySty)$/, allele: 'Sty', name: 'Sooty' },
         { pattern: /^(nZ|ZZ)$/, allele: 'Z', name: 'Silver' },
         { pattern: /^(nTd|TdTd)$/, allele: 'Td', name: 'Tabard' },
         { pattern: /^(nGl|GlGl)$/, allele: 'Gl', name: 'Gilt' },
+        { pattern: /^(nIn|InIn)$/, allele: 'In', name: 'Ingot' },
         { pattern: /^(nV|VV)$/, allele: 'V', name: 'Vellum' },
     ];
 
@@ -3487,6 +3547,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
     const recessiveModifierLoci = [
         { pattern: /^(nf|ff)$/, allele: 'f', expressed: 'Flaxen', carrier: 'Carrying Flaxen' },
         { pattern: /^(nsf|sfsf)$/, allele: 'sf', expressed: 'Starfield', carrier: 'Carrying Starfield' },
+        { pattern: /^(nmt|mtmt)$/, allele: 'mt', expressed: 'Mithril', carrier: 'Carrying Mithril' },
         { pattern: /^(nlr|lrlr)$/, allele: 'lr', expressed: 'Lacquer', carrier: 'Carrying Lacquer' },
     ];
 
@@ -3509,6 +3570,16 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         else if (alleles.includes('sp') && !alleles.includes('Lu')) modifiers.add('Carrying Sepulchered');
         // Lusp: Lu dominates (Illuminated shows), sp skulks in the shadows (carried)
         if (g === 'Lusp') modifiers.add('Carrying Sepulchered');
+    });
+
+    // D/Dm shared locus: Dun shows on its own, Damascus only beside it, so a
+    // horse holding Dm without a D carries it unseen.
+    const dDmPattern = /^(nD|DD|nDm|DmDm|DmD|DDm)$/;
+    possibleGenotypes(p1.genes, p2.genes, dDmPattern).forEach(g => {
+        if (g === 'nn') return;
+        const alleles = getGeneAlleles(g);
+        if (alleles.includes('D')) modifiers.add('Dun');
+        if (alleles.includes('Dm')) modifiers.add(alleles.includes('D') ? 'Damascus' : 'Carries Damascus');
     });
 
     // G/Pt shared locus: Gray whitens, Pitch blackens, both dominant, and a horse
@@ -4214,6 +4285,11 @@ const SOMATIC_SWITCH_OFF = {
     'StySty': [{ trait: 'Sooty', becomes: null }],
     'nG':     [{ trait: 'Gray', becomes: null }],
     'GG':     [{ trait: 'Gray', becomes: null }],
+    'nIn':    [{ trait: 'Ingot', becomes: null }],
+    'InIn':   [{ trait: 'Ingot', becomes: null }],
+    'mtmt':   [{ trait: 'Mithril', becomes: null }],
+    'DmD':    [{ trait: 'Damascus', becomes: 'nD' }, { trait: 'Dun', becomes: 'nDm' }],
+    'DDm':    [{ trait: 'Damascus', becomes: 'nD' }, { trait: 'Dun', becomes: 'nDm' }],
     'nPt':    [{ trait: 'Pitch', becomes: null }],
     'PtPt':   [{ trait: 'Pitch', becomes: null }],
     'GPt':    [{ trait: 'Gray', becomes: 'nPt' }, { trait: 'Pitch', becomes: 'nG' }],
@@ -5372,7 +5448,10 @@ const RECIPE_TRAIT_GENES = (function () {
         'Varnish Roan': ['LpLp'], 'Snowcap': ['LpLp', 'npatn'], 'Fewspot': ['LpLp', 'patnpatn'],
         'Carries Ether': ['ner'], 'Carries Pearl': ['nprl'], 'Carries Patn': ['npatn'],
         'Carries Filigree': ['nfe'], 'Carries Flaxen': ['nf'], 'Carries Starfield': ['nsf'],
-        'Carries Lacquer': ['nlr'], 'Carries Sepulchered': ['nsp']
+        'Carries Lacquer': ['nlr'], 'Carries Sepulchered': ['nsp'],
+        // Mithril is recessive; Damascus needs a Dun opposite it to show at all.
+        'Mithril': ['mtmt'], 'Carrying Mithril': ['nmt'],
+        'Damascus': ['DmD'], 'Carries Damascus': ['nDm']
     });
     return out;
 })();
@@ -5440,6 +5519,12 @@ function recipeFromEnglish(text) {
             if (!byLocus[locus]) { byLocus[locus] = tok; return; }
             const have = getGeneAlleles(byLocus[locus]).filter(a => a !== 'n');
             const want = real;
+            // Damascus and Dun both land on DmD, which is Dun as well, so
+            // whichever is asked for second must not read as a clash: if what is
+            // already there covers the new trait, leave it; if the new trait
+            // covers what is there, it takes over.
+            if (want.every(a => have.includes(a))) return;
+            if (have.every(a => want.includes(a))) { byLocus[locus] = tok; return; }
             if (have.length === 1 && want.length === 1 && have[0] !== want[0]) {
                 byLocus[locus] = combineAlleles(have[0], want[0]);
             } else if (byLocus[locus] !== tok) {
