@@ -2729,11 +2729,18 @@ function extractTraitsFromQuery(query) {
 
 function findBreedingMatches(targetTraits) {
     const matches = [];
-    
-    for (let i = 0; i < horseCollection.length; i++) {
-        for (let j = i + 1; j < horseCollection.length; j++) {
-            const parent1 = horseCollection[i];
-            const parent2 = horseCollection[j];
+    // Your own coursers plus the group horses, because anybody can breed to
+    // those, so a pair that is half yours and half theirs is a real option.
+    const pool = horseCollection.concat(
+        (typeof getGroupHorses === 'function') ? getGroupHorses() : []);
+
+    for (let i = 0; i < pool.length; i++) {
+        for (let j = i + 1; j < pool.length; j++) {
+            const parent1 = pool[i];
+            const parent2 = pool[j];
+            // Two group horses are somebody else's business, not a pairing you
+            // can field, so at least one side has to be yours.
+            if (parent1.group && parent2.group) continue;
             
             // Check temperament compatibility — same vibes can't breed, those are the rules
             if (parent1.temperament === parent2.temperament) continue;
@@ -4809,7 +4816,8 @@ function computeRecipe(genoString) {
     const result = {
         loci: [], anomalies: [], free: [],
         parent1: [], parent2: [],
-        geneChance: 1, blocked: null, notes: []
+        geneChance: 1, blocked: null, notes: [],
+        target: genoString
     };
 
     // A foal you can't have is not a foal you can plan for.
@@ -5079,14 +5087,26 @@ function showRecipe() {
         </ul>
     </details>`;
 
-    // Which of your own horses could actually stand in each role.
+    // Which horses could actually stand in each role. Group horses are thrown in
+    // alongside your own, because anybody can breed to those, so a pair that is
+    // half yours and half the group roster is a pair you can really field.
     const collection = (typeof window !== 'undefined' && window.getCollection) ? window.getCollection() : [];
-    const stable = computeRecipeStable(data, collection);
+    const groupHorses = (typeof getGroupHorses === 'function') ? getGroupHorses() : [];
+    const stable = computeRecipeStable(data, collection.concat(groupHorses));
     let stableBlock = '';
 
+    // "Kes" vs "Kes (group horse, Apple)", so it is never a guess whose courser
+    // a pair is asking you to use, or what breeding to it costs.
+    const who = (h) => `<strong>${esc(h.name || h.id || 'Unnamed')}</strong>` +
+        (h.group ? ` <span class="recipe-fit-group">group horse${h.cost ? ', ' + esc(h.cost) : ''}</span>` : '') +
+        ` <span class="recipe-fit-temp">${esc(h.temperament || '?')}</span>`;
+    const pool = stable.ownSize
+        ? `your ${stable.ownSize} courser${stable.ownSize === 1 ? '' : 's'} and the ${stable.groupSize} group horses`
+        : `the ${stable.groupSize} group horses`;
+
     if (!stable.size) {
-        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
-            <p class="recipe-stable-empty">Your stable is empty, so there is nothing to match against yet. Import your coursers in the <strong>Collection</strong> tab and this will fill in with the pairs you can actually field.</p></div>`;
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
+            <p class="recipe-stable-empty">There is nothing to match against yet. Import your coursers in the <strong>Collection</strong> tab and this will fill in with the pairs you can actually field.</p></div>`;
     } else if (stable.pairs.length) {
         const rows = stable.pairs.map((p) => {
             const cost = p.coin === 0
@@ -5101,29 +5121,33 @@ function showRecipe() {
                 : '';
             return `<li class="recipe-fit">
                     <div class="recipe-fit-head">
-                        <strong>${esc(p.a.name || p.a.id || 'Unnamed')}</strong> <span class="recipe-fit-temp">${esc(p.a.temperament || '?')}</span>
+                        ${who(p.a)}
                         <span class="recipe-fit-x">with</span>
-                        <strong>${esc(p.b.name || p.b.id || 'Unnamed')}</strong> <span class="recipe-fit-temp">${esc(p.b.temperament || '?')}</span>
+                        ${who(p.b)}
                     </div>
                     <div class="recipe-fit-meta">${cost}, ${odds}</div>
                     ${itemList}
                 </li>`;
         }).join('');
-        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
-            <p class="recipe-stable-blurb">Pairs from your ${stable.size} coursers that can supply every allele the target needs, cheapest first. A root can force an allele a horse carries but never create one, so anything listed here is genuinely reachable.</p>
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
+            <p class="recipe-stable-blurb">Pairs from ${pool} that can supply every allele the target needs, cheapest first. A root can force an allele a horse carries but never create one, so anything listed here is genuinely reachable.</p>
             <ul class="recipe-fit-list">${rows}</ul></div>`;
     } else if (stable.nearMisses.length) {
         const rows = stable.nearMisses.map(m =>
-            `<li><strong>${esc(m.horse.name || m.horse.id || 'Unnamed')}</strong> <span class="recipe-fit-temp">${esc(m.horse.temperament || '?')}</span>
+            `<li>${who(m.horse)}
                 <span class="recipe-fit-miss">could be Parent ${esc(m.side)} but carries no ${m.missing.map(a => `<code>${esc(a)}</code> (${esc(recipeAlleleLabel(a))})`).join(' or ')}</span></li>`
         ).join('');
-        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
-            <p class="recipe-stable-blurb">No pair in your ${stable.size} coursers can cover this target on its own. These come closest, and what each one is missing is what you would need to bring in.</p>
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
+            <p class="recipe-stable-blurb">No pair from ${pool} can cover this target on its own. These come closest, and what each one is missing is what you would need to bring in.</p>
             <ul class="recipe-near-list">${rows}</ul></div>`;
     } else {
-        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">From your stable</h3>
-            <p class="recipe-stable-blurb">Nothing in your ${stable.size} coursers carries enough of this target to build it. Roots can force an allele a horse already has, but they cannot add one, so this needs a horse from outside your stable.</p></div>`;
+        stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
+            <p class="recipe-stable-blurb">Nothing across ${pool} carries enough of this target to build it. Roots can force an allele a horse already has, but they cannot add one, so breeding alone will not get there.</p></div>`;
     }
+
+    // Breeding cannot always get there. When it cannot, a Creation Scroll can
+    // make the courser outright, so say which scroll and what it leaves over.
+    stableBlock += recipeScrollHtml(computeRecipeScroll(data, stable));
 
     // An Unusual Root can only force an anomaly a parent already carries.
     if (stable.size && stable.anomalyCarriers.length) {
@@ -5319,10 +5343,206 @@ function recipeEvaluateHorse(horse, roleReq) {
     return res;
 }
 
+// What one horse handing down one allele at one locus costs, and how likely it
+// is without help. `want` of 'n' means it must hand down nothing here.
+function recipeLocusCost(token, want) {
+    const out = { ok: true, chance: 1, item: null, coin: 0 };
+    if (want === 'n') {
+        if (!token) return out;                     // nothing at this locus already
+        const alleles = getGeneAlleles(token);
+        const stray = alleles.find(a => a !== 'n');
+        if (!stray) return out;
+        const key = recipeRootFor(stray);
+        out.item = { item: RECIPE_ITEMS[key], mode: 'block', allele: stray, trait: recipeAlleleLabel(stray), token };
+        out.coin = RECIPE_ITEMS[key].coin;
+        out.chance = alleles.filter(a => a === 'n').length / 2;   // 0 if homozygous
+        return out;
+    }
+    if (!token) { out.ok = false; return out; }
+    const copies = getGeneAlleles(token).filter(a => a === want).length;
+    if (!copies) { out.ok = false; return out; }
+    out.chance = copies / 2;
+    if (copies < 2) {
+        const key = recipeRootFor(want);
+        out.item = { item: RECIPE_ITEMS[key], mode: 'force', allele: want, trait: recipeAlleleLabel(want), token };
+        out.coin = RECIPE_ITEMS[key].coin;
+    }
+    return out;
+}
+
+// Score one pair against the target, deciding each locus on its own.
+//
+// Loci are inherited independently, which is the whole reason a recipe can be
+// exact, so which parent supplies which allele is a separate question at every
+// locus. Fixing one split for the whole horse threw away real pairs: a courser
+// that can only ever hand down E must still be free to hand down 'a' next door.
+function recipePairEvaluate(recipe, h1, h2) {
+    const m1 = recipeHorseLoci(h1.genotype), m2 = recipeHorseLoci(h2.genotype);
+    const res = { feasible: true, items: [], coin: 0, chance: 1, missing: [] };
+
+    const wanted = {};
+    recipe.loci.forEach((e) => {
+        wanted[e.locus] = [e.p1 ? e.p1.allele : 'n', e.p2 ? e.p2.allele : 'n'];
+    });
+    // Anything either horse carries that the target never mentioned has to be
+    // kept out of the foal, so it counts as a locus wanting nothing.
+    [m1, m2].forEach(m => Object.keys(m).forEach(l => { if (!(l in wanted)) wanted[l] = ['n', 'n']; }));
+
+    Object.keys(wanted).forEach((locus) => {
+        const [x, y] = wanted[locus];
+        const t1 = m1[locus], t2 = m2[locus];
+        // Either orientation is legal; take whichever is cheaper, then likelier.
+        const a = { one: recipeLocusCost(t1, x), two: recipeLocusCost(t2, y) };
+        const b = { one: recipeLocusCost(t1, y), two: recipeLocusCost(t2, x) };
+        const score = o => (o.one.ok && o.two.ok)
+            ? { ok: true, coin: o.one.coin + o.two.coin, chance: o.one.chance * o.two.chance, items: [o.one.item, o.two.item].filter(Boolean) }
+            : { ok: false };
+        const sa = score(a), sb = score(b);
+        let pick = null;
+        if (sa.ok && sb.ok) {
+            const better = sb.coin < sa.coin || (sb.coin === sa.coin && sb.chance > sa.chance);
+            pick = better ? sb : sa;
+        } else if (sa.ok) pick = sa;
+        else if (sb.ok) pick = sb;
+        if (!pick) {
+            res.feasible = false;
+            if (x !== 'n') res.missing.push(x);
+            if (y !== 'n' && y !== x) res.missing.push(y);
+            return;
+        }
+        res.coin += pick.coin;
+        res.chance *= pick.chance;
+        pick.items.forEach(it => res.items.push(it));
+    });
+    return res;
+}
+
 // Rank the pairings your stable can actually field.
+// ===========================================================================
+// Recipe: Creation Scrolls
+// ---------------------------------------------------------------------------
+// Breeding can only move alleles that already exist in somebody's stable. When
+// no pair can cover a target, a Creation Scroll makes the courser outright, so
+// Recipe says which scroll to reach for and exactly what it leaves you to add.
+//
+// A Custom Scroll of a given rarity grants a coat AT that rarity plus one
+// marking, modifier or carrier at that rarity or below. Every tier below is
+// read off the same pools the Scroll Generator rolls from, so these can never
+// drift from the game.
+// ===========================================================================
+
+const RECIPE_TIER_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+const RECIPE_TIER_LABEL = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+
+// Coat name -> the tier a scroll has to be to roll it.
+const RECIPE_COAT_TIER = (function () {
+    const out = {};
+    RECIPE_TIER_ORDER.forEach((tier) => {
+        ((RARITY_GENES[tier] || {}).coatColors || []).forEach((row) => {
+            const name = resolveTraits(row.genes.join(' ')).coatColor;
+            if (name && !(name in out)) out[name] = tier;
+        });
+    });
+    return out;
+})();
+
+// Trait name -> its tier. Derived by asking the engine what each pool entry
+// actually produces, rather than by restating the trait lists a second time.
+const RECIPE_TRAIT_TIER = (function () {
+    const out = {};
+    const plain = resolveTraits('Ee Aa').allTraits;
+    RECIPE_TIER_ORDER.forEach((tier) => {
+        const v = RARITY_GENES[tier] || {};
+        (v.markings || []).concat(v.modifiers || []).forEach((tokens) => {
+            resolveTraits('Ee Aa ' + tokens).allTraits
+                .filter(name => plain.indexOf(name) === -1)
+                .forEach(name => { if (!(name in out)) out[name] = tier; });
+        });
+    });
+    return out;
+})();
+
+// A geno takes at most this many Genotype Update items.
+const RECIPE_UPDATE_BUDGET = 3;
+
+// What a scroll would have to cover, and what it would leave behind.
+// Returns null when a pair can already make the target, because then there is
+// nothing to suggest.
+function computeRecipeScroll(recipe, stable) {
+    if (!recipe || recipe.blocked || (stable && stable.pairs && stable.pairs.length)) return null;
+    const resolved = resolveTraits(recipe.target || '');
+    if (resolved.lethal || !resolved.coatColor) return null;
+
+    const coat = resolved.coatColor;
+    const coatTier = RECIPE_COAT_TIER[coat] || null;
+    const traits = resolved.allTraits.map(name => ({ name: name, tier: RECIPE_TRAIT_TIER[name] || null }));
+
+    // The scroll's rarity is set by the coat. It also carries one trait, so
+    // spend that on the dearest trait it is allowed to hold.
+    const rank = t => (t ? RECIPE_TIER_ORDER.indexOf(t) : -1);
+    const withinScroll = traits.filter(t => t.tier && rank(t.tier) <= rank(coatTier));
+    withinScroll.sort((a, b) => rank(b.tier) - rank(a.tier));
+    const covered = withinScroll.length ? withinScroll[0] : null;
+    const remaining = traits.filter(t => t !== covered);
+
+    return {
+        coat: coat,
+        coatTier: coatTier,
+        scroll: coatTier ? 'Custom Scroll: ' + RECIPE_TIER_LABEL[coatTier] : null,
+        covered: covered,
+        remaining: remaining,
+        free: (recipe.free || []).slice(),
+        anomalies: (recipe.anomalies || []).map(a => a.name),
+        // A geno takes at most three Genotype Update items, so say when the
+        // leftovers will not fit inside that budget.
+        updateBudget: RECIPE_UPDATE_BUDGET,
+        overBudget: remaining.length > RECIPE_UPDATE_BUDGET
+    };
+}
+
+function recipeScrollHtml(scroll) {
+    if (!scroll) return '';
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (!scroll.scroll) {
+        return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
+            <p class="recipe-stable-blurb">No pair can breed this, and <strong>${esc(scroll.coat)}</strong> is not in any scroll pool either, so there is no scroll that rolls this coat.</p></div>`;
+    }
+    const tierName = t => t ? RECIPE_TIER_LABEL[t] : 'no listed rarity';
+    const lines = [];
+    lines.push(`<li>The scroll itself rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
+    if (scroll.covered) {
+        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, the dearest thing it is allowed to carry at ${esc(tierName(scroll.covered.tier))}.</li>`);
+    }
+    if (scroll.remaining.length) {
+        lines.push(`<li>Still to add: ${scroll.remaining.map(t =>
+            `<strong>${esc(t.name)}</strong> <span class="recipe-fit-temp">${esc(tierName(t.tier))}</span>`).join(', ')}.</li>`);
+    }
+    if (scroll.free.length) {
+        lines.push(`<li>Free for anyone to add, at no cost: ${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}.</li>`);
+    }
+    if (scroll.anomalies.length) {
+        lines.push(`<li>Anomalies are not part of a Custom Scroll beyond its 10% random roll, so ${scroll.anomalies.map(a => `<strong>${esc(a)}</strong>`).join(', ')} needs its own item.</li>`);
+    }
+    const warn = scroll.overBudget
+        ? `<p class="recipe-stable-blurb">That leaves ${scroll.remaining.length} traits to add, and a geno takes at most ${scroll.updateBudget} Genotype Update items, so some of them have to come from Transformations instead.</p>`
+        : '';
+    return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
+        <p class="recipe-stable-blurb">No pair can breed this one, so the shortest route is to create the courser instead. A <strong>${esc(scroll.scroll)}</strong> is the one to reach for.</p>
+        <ul class="recipe-near-list">${lines.join('')}</ul>${warn}</div>`;
+}
+
 function computeRecipeStable(recipe, collection) {
-    const out = { pairs: [], nearMisses: [], size: (collection || []).length, anomalyCarriers: [] };
+    const all = collection || [];
+    // Group horses ride along in the same list; count them separately so the
+    // wording can say whose coursers these actually are.
+    const out = {
+        pairs: [], nearMisses: [], anomalyCarriers: [],
+        size: all.length,
+        ownSize: all.filter(h => !h.group).length,
+        groupSize: all.filter(h => h.group).length
+    };
     if (!out.size || !recipe.loci.length) return out;
+    collection = all;
 
     // The two sides, as locus -> required allele.
     const reqA = {}, reqB = {};
@@ -5336,20 +5556,22 @@ function computeRecipeStable(recipe, collection) {
     const asB = collection.map(h => recipeEvaluateHorse(h, reqB));
 
     // Parents still have to be two different horses with different temperaments.
+    // Each pair is judged locus by locus, so the two sides are free to swap
+    // roles independently at every locus rather than once for the whole horse.
     for (let i = 0; i < collection.length; i++) {
-        for (let j = 0; j < collection.length; j++) {
-            if (i === j) continue;
-            const a = asA[i], b = asB[j];
-            if (!a.feasible || !b.feasible) continue;
+        for (let j = i + 1; j < collection.length; j++) {
+            // A group horse is one you can breed TO, so you have to bring the
+            // other half. Two group horses together is somebody else's pairing.
+            if (collection[i].group && collection[j].group) continue;
             const t1 = (collection[i].temperament || '').trim();
             const t2 = (collection[j].temperament || '').trim();
             if (t1 && t2 && t1 === t2) continue;
-            const coin = a.coin + b.coin;
-            const chance = a.chance * b.chance;
+            const ev = recipePairEvaluate(recipe, collection[i], collection[j]);
+            if (!ev.feasible) continue;
             out.pairs.push({
-                a: collection[i], b: collection[j], evalA: a, evalB: b,
-                coin, chance,
-                items: a.items.concat(b.items),
+                a: collection[i], b: collection[j], evalA: asA[i], evalB: asB[j],
+                coin: ev.coin, chance: ev.chance,
+                items: ev.items,
                 key: [collection[i].id || collection[i].name, collection[j].id || collection[j].name].join('|')
             });
         }

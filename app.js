@@ -65,6 +65,11 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '15 Sep 2026', items: [
+      'Group horses are in. All 44 from Tower\'s directory now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, each labelled with the fruit it costs to breed to them.',
+      'Recipe suggests a Creation Scroll when no pair can breed your target, naming the scroll, the trait it should carry, and everything left to add.',
+      'Fixed: Recipe missed pairs that could really work, because it decided which parent gave which allele once for the whole horse instead of locus by locus.'
+    ] },
     { date: '12 Sep 2026', items: [
       'Three new Modifiers: Ingot (nIn, Legendary) makes every white marking one metallic colour, Mithril (mtmt, Epic) is a recessive gloss over the whole coat, and Damascus (nDm, Uncommon) sits on Dun\'s locus and only shows as DmD.',
       'Every tool knows them, and Recipe reads "damascus" as the visible DmD pair, so one ideal parent brings Damascus and the other brings Dun.',
@@ -591,20 +596,37 @@
   // =========================================================================
   // "From Collection" parent pickers (calculator area)
   // =========================================================================
+  // Group horses sit in their own group in the picker. Anybody can breed to
+  // them, so they are always offered even when your own collection is empty.
+  function groupRoster() {
+    return (typeof getGroupHorses === 'function') ? getGroupHorses() : [];
+  }
+
   function populateParentPickers() {
+    const group = groupRoster();
     ['1', '2'].forEach(n => {
       const sel = $('#parent' + n + 'FromColl');
       if (!sel) return;
       const cur = sel.value;
-      sel.innerHTML = '<option value="">Pick from collection…</option>' +
-        collection.map((h, i) => `<option value="${i}">${esc(h.name)} (${esc(h.temperament)})</option>`).join('');
-      if (cur && Number(cur) < collection.length) sel.value = cur;
-      $$('.parent-source-row').forEach(r => { r.style.display = collection.length ? '' : 'none'; });
+      const mine = collection.length
+        ? `<optgroup label="My collection">${collection.map((h, i) =>
+            `<option value="${i}">${esc(h.name)} (${esc(h.temperament)})</option>`).join('')}</optgroup>`
+        : '';
+      const theirs = group.length
+        ? `<optgroup label="Group horses (anyone can breed to these)">${group.map((h, i) =>
+            `<option value="g${i}">${esc(h.name)} (${esc(h.temperament)}, ${esc(h.cost)})</option>`).join('')}</optgroup>`
+        : '';
+      sel.innerHTML = '<option value="">Pick a courser…</option>' + mine + theirs;
+      if (cur && sel.querySelector(`option[value="${cur}"]`)) sel.value = cur;
+      $$('.parent-source-row').forEach(r => {
+        r.style.display = (collection.length || group.length) ? '' : 'none';
+      });
     });
   }
 
   function fillParentFromCollection(n, idx) {
-    const h = collection[Number(idx)];
+    const key = String(idx);
+    const h = key.charAt(0) === 'g' ? groupRoster()[Number(key.slice(1))] : collection[Number(key)];
     if (!h) return;
     $('#parent' + n + 'Name').value = h.name || '';
     $('#parent' + n + 'Geno').value = h.genotype || '';
