@@ -66,7 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '15 Sep 2026', items: [
-      'Group horses are in. All 44 from Tower\'s directory now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, each labelled with the fruit it costs to breed to them.',
+      'Group horses are in. All 44 from Tower\'s directory now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, and the Juicy Berry or Juicy Apple each one costs is priced into the plan.',
       'Recipe suggests a Creation Scroll when no pair can breed your target, naming the scroll, the trait it should carry, and everything left to add.',
       'Fixed: Recipe missed pairs that could really work, because it decided which parent gave which allele once for the whole horse instead of locus by locus.'
     ] },

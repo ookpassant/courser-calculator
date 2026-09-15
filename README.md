@@ -38,8 +38,10 @@ leaves your machine.
 - Refuses targets that can't exist, so a lethal white combination is explained
   rather than costed.
 - Checks your collection **and the group horses** for pairs that already work,
-  ranks the free ones first, and shows near misses when nothing is an exact fit,
+  ranks the cheapest first, and shows near misses when nothing is an exact fit,
   with the items it would take to block whatever a parent carries in excess.
+  A group horse needs a Juicy Berry or a Juicy Apple for the breeding slot, one
+  per group horse in the pairing, and that goes into the price.
 - When no pair can breed the target at all, names the **Creation Scroll** that
   would make the courser outright, which trait its one free slot should carry,
   and everything left over.
@@ -107,8 +109,7 @@ leaves your machine.
 - Uses the same carrier wording Translate prints, and accepts either spelling, so
   a phrase copied off a translated genotype searches for the trait it described.
 - Searches your collection alongside the **group horses**, so a pair that is half
-  yours and half theirs is offered too. Two group horses are never paired with
-  each other, since you have to bring one side yourself.
+  yours and half theirs is offered too, as is a pair of two group horses.
 - "Breed These" auto-fills the Foal Generator.
 - Recent searches are remembered.
 

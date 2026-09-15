@@ -2738,9 +2738,6 @@ function findBreedingMatches(targetTraits) {
         for (let j = i + 1; j < pool.length; j++) {
             const parent1 = pool[i];
             const parent2 = pool[j];
-            // Two group horses are somebody else's business, not a pairing you
-            // can field, so at least one side has to be yours.
-            if (parent1.group && parent2.group) continue;
             
             // Check temperament compatibility — same vibes can't breed, those are the rules
             if (parent1.temperament === parent2.temperament) continue;
@@ -5111,13 +5108,18 @@ function showRecipe() {
         const rows = stable.pairs.map((p) => {
             const cost = p.coin === 0
                 ? '<span class="recipe-fit-free">no items needed</span>'
-                : `<span class="recipe-fit-coin">${p.coin} coin</span> in roots`;
+                : `<span class="recipe-fit-coin">${p.coin} coin</span> in items`;
+            // A pair that can only get there with items reads as "never" on its
+            // own, which needs saying as a sentence rather than as a percentage.
             const odds = p.chance >= 1
                 ? 'every foal option matches'
-                : `${recipePercent(recipeChanceInRoll(p.chance, RECIPE_OPTIONS_PER_ROLL))} of rolls without items`;
+                : p.chance <= 0
+                    ? 'and nothing but the items will get you there'
+                    : `${recipePercent(recipeChanceInRoll(p.chance, RECIPE_OPTIONS_PER_ROLL))} of rolls match without them`;
             const itemList = p.items.length
-                ? `<ul class="recipe-fit-items">${p.items.map(it =>
-                    `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${it.item.coin} coin</span></li>`).join('')}</ul>`
+                ? `<ul class="recipe-fit-items">${p.items.map(it => it.mode === 'slot'
+                    ? `<li>${esc(it.item.name)}, ${esc(it.trait)} <span class="recipe-coin">${it.item.coin} coin</span></li>`
+                    : `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${it.item.coin} coin</span></li>`).join('')}</ul>`
                 : '';
             return `<li class="recipe-fit">
                     <div class="recipe-fit-head">
@@ -5343,6 +5345,15 @@ function recipeEvaluateHorse(horse, roleReq) {
     return res;
 }
 
+// A breeding slot to a group horse is bought with fruit, one per group horse in
+// the pairing, so two group horses cost two. Which fruit a given courser takes
+// comes from Tower's directory rather than being worked out from its traits,
+// because the roster is the authority on what the game actually charges.
+const RECIPE_FRUIT = {
+    Berry: { name: 'Juicy Berry', coin: 50, note: 'breeding slot, Common to Rare traits' },
+    Apple: { name: 'Juicy Apple', coin: 150, note: 'breeding slot, traits up to Legendary' }
+};
+
 // What one horse handing down one allele at one locus costs, and how likely it
 // is without help. `want` of 'n' means it must hand down nothing here.
 function recipeLocusCost(token, want) {
@@ -5560,18 +5571,20 @@ function computeRecipeStable(recipe, collection) {
     // roles independently at every locus rather than once for the whole horse.
     for (let i = 0; i < collection.length; i++) {
         for (let j = i + 1; j < collection.length; j++) {
-            // A group horse is one you can breed TO, so you have to bring the
-            // other half. Two group horses together is somebody else's pairing.
-            if (collection[i].group && collection[j].group) continue;
             const t1 = (collection[i].temperament || '').trim();
             const t2 = (collection[j].temperament || '').trim();
             if (t1 && t2 && t1 === t2) continue;
             const ev = recipePairEvaluate(recipe, collection[i], collection[j]);
             if (!ev.feasible) continue;
+            // Each group horse in the pairing needs its own fruit.
+            const fruit = [collection[i], collection[j]]
+                .filter(h => h.group && RECIPE_FRUIT[h.cost])
+                .map(h => ({ item: RECIPE_FRUIT[h.cost], mode: 'slot', allele: '', trait: 'breeding slot to ' + (h.name || 'a group horse'), token: '' }));
+            const fruitCoin = fruit.reduce((n, f) => n + f.item.coin, 0);
             out.pairs.push({
                 a: collection[i], b: collection[j], evalA: asA[i], evalB: asB[j],
-                coin: ev.coin, chance: ev.chance,
-                items: ev.items,
+                coin: ev.coin + fruitCoin, chance: ev.chance,
+                items: fruit.concat(ev.items),
                 key: [collection[i].id || collection[i].name, collection[j].id || collection[j].name].join('|')
             });
         }
