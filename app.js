@@ -67,7 +67,7 @@
   const CHANGELOG = [
     { date: '15 Sep 2026', items: [
       'Group horses are in. All 44 now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, with the Juicy Berry or Juicy Apple each one costs counted in the price. GG Tower for the amazing sheet!',
-      'Recipe suggests a Creation Scroll when no pair can breed your target, and prices the rest in Scroll Add-Ons: which potion each leftover trait takes, how many, and what the lot comes to.',
+      'Recipe suggests a Creation Scroll when no pair can breed your target, and prices the whole thing at the Wizard\'s rates: the scroll, which potion each leftover trait takes, how many, and what it all comes to.',
       'Fixed: Recipe missed pairs that could really work, because it decided which parent gave which allele once for the whole horse instead of locus by locus.'
     ] },
     { date: '12 Sep 2026', items: [

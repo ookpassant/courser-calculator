@@ -47,7 +47,9 @@ leaves your machine.
   otherwise cost the most, and prices the rest in **Scroll Add-Ons**: a Marking
   or Modifier Potion per Common trait, two for Uncommon, three for Rare, and the
   Super potions for Epic and Legendary. Anomalies take one potion each, and a
-  scroll only takes two.
+  scroll only takes two. Totals use the **Wizard's shop price** wherever an item
+  is sold, and fall back to the listed resale value where it isn't, saying which
+  figures are stand-ins rather than mixing the two silently.
 - Names each ideal parent in words as well as genotype, so you know what to look
   for.
 

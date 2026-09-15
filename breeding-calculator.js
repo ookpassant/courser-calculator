@@ -5087,7 +5087,7 @@ function showRecipe() {
             <li>Neither temperament nor variant lives in a genotype, so nothing above plans for them. If you want either pinned, that is what those two items are for.</li>
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
-            <li>Coin figures are listed <strong>resale values</strong>, used as a stand in so two plans can be compared. What you actually pay depends on where the item came from.</li>
+            <li>Coin figures are the <strong>Wizard's price</strong> wherever the item is sold. Plenty are not sold at all, and those fall back to the listed resale value, which is much lower than any real cost. Anything resting on a stand-in figure says so.</li>
         </ul>
     </details>`;
 
@@ -5181,9 +5181,11 @@ function showRecipe() {
 // Epic and Legendary. Anomalies need an Unusual Root, and only one of those may
 // be used per breeding.
 //
-// Coin figures are the listed resale values, used here as a stand in for cost
-// so two plans can be compared. What you actually pay depends on where you got
-// the item.
+// Two coin figures matter and they are not the same number. `shop` is what the
+// Wizard charges, which is what you would actually spend; `coin` is the listed
+// resale value, and it is far lower. Only some items are sold at all, so where
+// there is no shop price the resale value stands in and every total says so
+// rather than quietly mixing the two.
 // ===========================================================================
 
 const RECIPE_ITEMS = {
@@ -5194,8 +5196,18 @@ const RECIPE_ITEMS = {
     skewer:      { name: 'Mushroom Skewer', coin: 75, note: 'pick the foal temperament' },
     grapes:      { name: 'Bunch of Grapes', coin: 150, note: 'adds a third foal option' },
     seeds:       { name: 'Bitter Seeds', coin: 150, note: 'merges both options into one foal' },
-    tome:        { name: 'Tome of Imperfect Creation', coin: 500, note: 'every gene and anomaly at once' }
+    tome:        { name: 'Tome of Imperfect Creation', coin: 500, note: 'every gene and anomaly at once' },
+    scrying:     { name: 'Scrying Lens', coin: 50, shop: 500, note: 'preview a roll without spending the slots' }
 };
+
+// What an item costs and where that number came from. The Wizard's price wins
+// when there is one, because that is the money you would really hand over.
+function recipeItemCost(item) {
+    if (!item) return { coin: 0, sold: false };
+    return (typeof item.shop === 'number')
+        ? { coin: item.shop, sold: true }
+        : { coin: item.coin, sold: false };
+}
 
 // The loci that between them make the coat. Bitter Seeds treats the coat as one
 // thing and everything else piece by piece, so the two have to be told apart.
@@ -5533,13 +5545,16 @@ const RECIPE_TRAIT_KIND = (function () {
 // climb a tier for each extra copy, so a Rare marking is three Marking Potions;
 // the Super ones start at Epic. Anomalies take one potion each, two per scroll.
 const RECIPE_SCROLL_ADDONS = {
-    marking:       { name: 'Marking Potion', coin: 75 },
+    marking:       { name: 'Marking Potion', coin: 75, shop: 500 },
     superMarking:  { name: 'Super Marking Potion', coin: 500 },
-    modifier:      { name: 'Modifier Potion', coin: 75 },
+    modifier:      { name: 'Modifier Potion', coin: 75, shop: 500 },
     superModifier: { name: 'Super Modifier Potion', coin: 500 },
-    anomaly:       { name: 'Anomaly Potion', coin: 75 },
+    anomaly:       { name: 'Anomaly Potion', coin: 75, shop: 500 },
     variant:       { name: 'Variant Potion', coin: 1000 }
 };
+
+// The scrolls themselves. Only Common through Rare are on the Wizard's shelf.
+const RECIPE_SCROLL_PRICE = { common: 600, uncommon: 1500, rare: 3000 };
 const RECIPE_ANOMALY_POTION_LIMIT = 2;
 
 // How many potions one trait costs, and of which kind.
@@ -5550,7 +5565,11 @@ function recipeScrollPotion(name, tier) {
     const isSuper = tier === 'epic' || tier === 'legendary';
     const key = isSuper ? (kind === 'marking' ? 'superMarking' : 'superModifier') : kind;
     const item = RECIPE_SCROLL_ADDONS[key];
-    return { item: item, count: counts[tier], coin: item.coin * counts[tier], kind: kind };
+    const unit = recipeItemCost(item);
+    return {
+        item: item, count: counts[tier], kind: kind,
+        coin: unit.coin * counts[tier], sold: unit.sold
+    };
 }
 
 // What a scroll would have to cover, and what it would leave behind.
@@ -5577,8 +5596,17 @@ function computeRecipeScroll(recipe, stable) {
     const remaining = traits.filter(t => t !== covered);
 
     const anomalies = (recipe.anomalies || []).map(a => a.name);
+    const anomalyUnit = recipeItemCost(RECIPE_SCROLL_ADDONS.anomaly);
     const traitCoin = remaining.reduce((n, t) => n + (t.potion ? t.potion.coin : 0), 0);
-    const anomalyCoin = anomalies.length * RECIPE_SCROLL_ADDONS.anomaly.coin;
+    const anomalyCoin = anomalies.length * anomalyUnit.coin;
+    const scrollCoin = RECIPE_SCROLL_PRICE[coatTier] || 0;
+
+    // Anything whose figure is a resale stand-in rather than a shelf price, so
+    // the total can admit which parts of it are guesses.
+    const estimated = remaining
+        .filter(t => t.potion && !t.potion.sold)
+        .map(t => t.potion.item.name);
+    if (!anomalyUnit.sold && anomalies.length) estimated.push(RECIPE_SCROLL_ADDONS.anomaly.name);
 
     return {
         coat: coat,
@@ -5588,9 +5616,14 @@ function computeRecipeScroll(recipe, stable) {
         remaining: remaining,
         free: (recipe.free || []).slice(),
         anomalies: anomalies,
+        anomalyCoinEach: anomalyUnit.coin,
         traitCoin: traitCoin,
         anomalyCoin: anomalyCoin,
         addOnCoin: traitCoin + anomalyCoin,
+        scrollCoin: scrollCoin,
+        totalCoin: scrollCoin + traitCoin + anomalyCoin,
+        scrollSold: scrollCoin > 0,
+        estimated: [...new Set(estimated)],
         unpriced: remaining.filter(t => !t.potion).map(t => t.name),
         anomalyLimit: RECIPE_ANOMALY_POTION_LIMIT,
         tooManyAnomalies: anomalies.length > RECIPE_ANOMALY_POTION_LIMIT
@@ -5618,17 +5651,28 @@ function recipeScrollHtml(scroll) {
     }
     scroll.remaining.forEach((t) => { lines.push('<li>' + potionLine(t) + '</li>'); });
     scroll.anomalies.forEach((a) => {
-        lines.push(`<li><strong>${esc(a)}</strong>, Anomaly Potion <span class="recipe-coin">${RECIPE_SCROLL_ADDONS.anomaly.coin} coin</span></li>`);
+        lines.push(`<li><strong>${esc(a)}</strong>, Anomaly Potion <span class="recipe-coin">${scroll.anomalyCoinEach} coin</span></li>`);
     });
     if (scroll.free.length) {
         lines.push(`<li>${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}, free for anyone to add</li>`);
     }
 
-    const total = scroll.addOnCoin
-        ? `<p class="recipe-plan-total"><strong>${scroll.addOnCoin} coin</strong> in Scroll Add-Ons, on top of the scroll itself.</p>`
-        : '<p class="recipe-plan-total">The scroll covers the whole courser on its own.</p>';
+    const total = scroll.scrollSold
+        ? `<p class="recipe-plan-total"><strong>${scroll.totalCoin} coin</strong> all in: ${scroll.scrollCoin} for the scroll${scroll.addOnCoin ? ` and ${scroll.addOnCoin} in potions` : ', which covers the whole courser'}.</p>`
+        : (scroll.addOnCoin
+            ? `<p class="recipe-plan-total"><strong>${scroll.addOnCoin} coin</strong> in potions, plus the scroll, which the Wizard does not stock at this rarity.</p>`
+            : '<p class="recipe-plan-total">The scroll covers the whole courser on its own.</p>');
     const warn = scroll.tooManyAnomalies
         ? `<p class="recipe-stable-blurb">A scroll takes at most ${scroll.anomalyLimit} Anomaly Potions and this wants ${scroll.anomalies.length}, so one of them has to come from somewhere else.</p>`
+        : '';
+    const guess = scroll.estimated.length
+        ? `<p class="recipe-stable-blurb">The Wizard does not stock ${scroll.estimated.map(n => `<strong>${esc(n)}</strong>`).join(' or ')}, so that part of the figure is the resale value standing in and the real cost will be higher.</p>`
+        : '';
+    // The breeding plan above is priced in resale values, because none of those
+    // items are sold. Putting the two totals next to each other without saying
+    // so would make breeding look far cheaper than it is.
+    const scales = (scroll.scrollSold || scroll.addOnCoin)
+        ? '<p class="recipe-stable-blurb">Do not read this against the breeding total above. None of the roots or tomes are sold by the Wizard, so those are resale values, and resale runs several times below a shelf price.</p>'
         : '';
     const gap = scroll.unpriced.length
         ? `<p class="recipe-stable-blurb">No Scroll Add-On covers ${scroll.unpriced.map(n => `<strong>${esc(n)}</strong>`).join(', ')}, so that would have to go on after the courser exists.</p>`
@@ -5637,7 +5681,7 @@ function recipeScrollHtml(scroll) {
     return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
         <p class="recipe-stable-blurb">No pair can breed this one, so the shortest route is to create the courser instead. A <strong>${esc(scroll.scroll)}</strong> is the one to reach for, with potions for the rest.</p>
         ${total}
-        <ul class="recipe-near-list">${lines.join('')}</ul>${warn}${gap}</div>`;
+        <ul class="recipe-near-list">${lines.join('')}</ul>${warn}${guess}${gap}${scales}</div>`;
 }
 
 function computeRecipeStable(recipe, collection) {
