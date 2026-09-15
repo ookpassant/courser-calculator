@@ -5053,7 +5053,6 @@ function showRecipe() {
             : '';
 
         planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Fewest items to guarantee it</h3>
-            <p class="recipe-plan-total"><strong>${plan.useTome ? 1 : plan.itemCount} Breeding Roll Add-On${(plan.useTome ? 1 : plan.itemCount) === 1 ? '' : 's'}</strong>, none of which the Wizard sells, so they come out of gameplay.</p>
             ${chosen}${alt}${gamble}${seeds}</div>`;
     }
 
