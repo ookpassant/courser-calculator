@@ -21,7 +21,8 @@ leaves your machine.
   the same temperament can never breed).
 - 5% chance of **twins**: two separate foals, each shown with its own set of
   possibilities.
-- Parents can be typed in by hand or picked from your saved collection.
+- Parents can be typed in by hand, picked from your saved collection, or picked
+  from the **group horses** that anybody can breed to.
 
 ### Recipe
 - The Foal Generator run backwards: give it the foal you want and it works out
@@ -36,9 +37,14 @@ leaves your machine.
   weighing single roots against the Tome by the rarity of the genes involved.
 - Refuses targets that can't exist, so a lethal white combination is explained
   rather than costed.
-- Checks your collection for pairs that already work, ranks the free ones first,
-  and shows near misses when nothing is an exact fit, with the items it would
-  take to block whatever a parent carries in excess.
+- Checks your collection **and the group horses** for pairs that already work,
+  ranks the cheapest first, and shows near misses when nothing is an exact fit,
+  with the items it would take to block whatever a parent carries in excess.
+  A group horse needs a Juicy Berry or a Juicy Apple for the breeding slot, one
+  per group horse in the pairing, and that goes into the price.
+- When no pair can breed the target at all, names the **Creation Scroll** that
+  would make the courser outright, which trait its one free slot should carry,
+  and everything left over.
 - Names each ideal parent in words as well as genotype, so you know what to look
   for.
 
@@ -96,12 +102,14 @@ leaves your machine.
 - Ask a breeding goal in plain language ("How can I make Amber Champagne?",
   "Who can breed for fewspot and starfield?", "Which pairs can produce false
   leopard?").
-- Searches the pairs in **your collection** and ranks them.
+- Ranks the pairs that can actually produce what you asked for.
 - Understands exact coat names, **coat families** ("cream ether", "nacre"), bare
   base colours, traits, and carriers. A coat is judged by asking the engine
   whether the pair can really produce it, so a match is never a name collision.
 - Uses the same carrier wording Translate prints, and accepts either spelling, so
   a phrase copied off a translated genotype searches for the trait it described.
+- Searches your collection alongside the **group horses**, so a pair that is half
+  yours and half theirs is offered too, as is a pair of two group horses.
 - "Breed These" auto-fills the Foal Generator.
 - Recent searches are remembered.
 
@@ -191,6 +199,8 @@ A static site, no build step:
 - `index.html`: markup, styles, and all the views.
 - `breeding-calculator.js`: the genetics engine and the existing tools (source
   of truth for inheritance).
+- `group-horses.js`: the group horse roster, data only, so updating it never
+  means touching code.
 - `app.js`: the app shell: routing, landing page, toasts, the
   localStorage-backed collection, import wizard, the courser-import bookmarklets,
   and recent searches. It talks to the engine through small optional hooks.
@@ -219,4 +229,6 @@ Created for the [Dungeon Coursers](https://dungeon-coursers.com) HARPG community
 by [Ook](https://dungeon-coursers.com/user/Ook).
 
 The landing page also links other players' fan tools, hosted on their own sites.
-Thanks to Rev for the [Group Horse Roller](https://revukan.neocities.org/code/tools/dcgrouphorse).
+Thanks to Rev for the [Group Horse Roller](https://revukan.neocities.org/code/tools/dcgrouphorse),
+and to Tower (Crowned_Ladybug) for the Group Horse Directory the built-in roster
+in `group-horses.js` is built from.
