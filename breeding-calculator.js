@@ -5022,14 +5022,14 @@ function showRecipe() {
             <p class="recipe-plan-free"><strong>None.</strong> These two parents throw the target on every foal option, so there is nothing worth spending on.</p></div>`;
     } else {
         const rootItems = plan.roots.map(r =>
-            `<li><strong>${esc(r.item.name)}</strong> <span class="recipe-coin">${r.item.coin} coin</span><br>
+            `<li><strong>${esc(r.item.name)}</strong> <span class="recipe-coin">${esc(recipeItemTag(r.item))}</span><br>
                 <span class="recipe-plan-why">Force <code>${esc(r.allele)}</code> (${esc(r.trait)}) from Parent ${esc(r.parent)}. ${esc(r.item.note)}.</span></li>`
         ).join('') + plan.anomalyRoots.map(a =>
-            `<li><strong>${esc(a.item.name)}</strong> <span class="recipe-coin">${a.item.coin} coin</span><br>
+            `<li><strong>${esc(a.item.name)}</strong> <span class="recipe-coin">${esc(recipeItemTag(a.item))}</span><br>
                 <span class="recipe-plan-why">Force ${esc(a.name)} from a parent that has it. Only one per breeding.</span></li>`
         ).join('');
 
-        const tomeItem = `<li><strong>${esc(RECIPE_ITEMS.tome.name)}</strong> <span class="recipe-coin">${RECIPE_ITEMS.tome.coin} coin</span><br>
+        const tomeItem = `<li><strong>${esc(RECIPE_ITEMS.tome.name)}</strong> <span class="recipe-coin">${esc(recipeItemTag(RECIPE_ITEMS.tome))}</span><br>
                 <span class="recipe-plan-why">Picks every gene and anomaly at once. Blocks all other add-ons, cannot roll twins, and cannot choose temperament.</span></li>`;
 
         const chosen = plan.useTome
@@ -5038,22 +5038,22 @@ function showRecipe() {
 
         const alt = plan.useTome
             ? (plan.guaranteedByRoots
-                ? `<p class="recipe-plan-alt">Roots would come to ${plan.rootCoin} coin for ${plan.itemCount} item${plan.itemCount === 1 ? '' : 's'}, so the Tome is cheaper here.</p>`
+                ? `<p class="recipe-plan-alt">Roots would take ${plan.itemCount} item${plan.itemCount === 1 ? '' : 's'} to do the same job, so the single Tome is the easier ask.</p>`
                 : `<p class="recipe-plan-alt">${plan.notes.map(esc).join(' ')} The Tome is the only route that forces all of them.</p>`)
-            : `<p class="recipe-plan-alt">A Tome of Imperfect Creation would also do it in one item, but costs ${RECIPE_ITEMS.tome.coin} coin against ${plan.rootCoin} here.</p>`;
+            : `<p class="recipe-plan-alt">A Tome of Imperfect Creation would also do it in one item rather than ${plan.itemCount}, but it is Epic where these are not.</p>`;
 
         const gamble = plan.perFoal > 0
-            ? `<p class="recipe-plan-gamble">Or spend nothing: ${recipePercent(plan.perRoll)} of rolls already give you a match, and a Bunch of Grapes (${RECIPE_ITEMS.grapes.coin} coin) adds a third option to take that to ${recipePercent(plan.perRollGrapes)}.</p>`
+            ? `<p class="recipe-plan-gamble">Or spend nothing: ${recipePercent(plan.perRoll)} of rolls already give you a match, and a Bunch of Grapes adds a third option to take that to ${recipePercent(plan.perRollGrapes)}.</p>`
             : '';
 
         // Bitter Seeds only earns its place on a target with several separate
         // traits, since that is where two goes at each one adds up.
         const seeds = (plan.perFoal > 0 && plan.seedsHelps)
-            ? `<p class="recipe-plan-gamble">Bitter Seeds (${RECIPE_ITEMS.seeds.coin} coin) squashes both options into one foal, keeping every marking, modifier and anomaly either of them rolled, which takes this to roughly ${recipePercent(plan.perRollSeeds)}. The coat is the exception: the merged foal keeps whichever option's coat was rarer, so that half still has to land on its own. No twins, and it cannot be used with a Bunch of Grapes.</p>`
+            ? `<p class="recipe-plan-gamble">Bitter Seeds squashes both options into one foal, keeping every marking, modifier and anomaly either of them rolled, which takes this to roughly ${recipePercent(plan.perRollSeeds)}. The coat is the exception: the merged foal keeps whichever option's coat was rarer, so that half still has to land on its own. No twins, and it cannot be used with a Bunch of Grapes.</p>`
             : '';
 
-        planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Cheapest way to guarantee it</h3>
-            <p class="recipe-plan-total"><strong>${plan.cheapestCoin} coin</strong> in Breeding Roll Add-Ons.</p>
+        planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Fewest items to guarantee it</h3>
+            <p class="recipe-plan-total"><strong>${plan.useTome ? 1 : plan.itemCount} Breeding Roll Add-On${(plan.useTome ? 1 : plan.itemCount) === 1 ? '' : 's'}</strong>, none of which the Wizard sells, so they come out of gameplay.</p>
             ${chosen}${alt}${gamble}${seeds}</div>`;
     }
 
@@ -5087,7 +5087,7 @@ function showRecipe() {
             <li>Neither temperament nor variant lives in a genotype, so nothing above plans for them. If you want either pinned, that is what those two items are for.</li>
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
-            <li>Coin figures are the <strong>Wizard's price</strong> wherever the item is sold. Plenty are not sold at all, and those fall back to the listed resale value, which is much lower than any real cost. Anything resting on a stand-in figure says so.</li>
+            <li>The Wizard sells very little of this. Only the Marking, Modifier and Anomaly Potions, the Scrying Lens, a couple of tomes, the temperament herbs and the Common through Rare scrolls carry a price. Everything else, every root included, comes out of gameplay, so it is listed by rarity rather than given a figure it does not have.</li>
         </ul>
     </details>`;
 
@@ -5113,9 +5113,10 @@ function showRecipe() {
             <p class="recipe-stable-empty">There is nothing to match against yet. Import your coursers in the <strong>Collection</strong> tab and this will fill in with the pairs you can actually field.</p></div>`;
     } else if (stable.pairs.length) {
         const rows = stable.pairs.map((p) => {
-            const cost = p.coin === 0
+            const itemCount = p.items.length;
+            const cost = itemCount === 0
                 ? '<span class="recipe-fit-free">no items needed</span>'
-                : `<span class="recipe-fit-coin">${p.coin} coin</span> in items`;
+                : `<span class="recipe-fit-coin">${itemCount} item${itemCount === 1 ? '' : 's'}</span>`;
             // A pair that can only get there with items reads as "never" on its
             // own, which needs saying as a sentence rather than as a percentage.
             const odds = p.chance >= 1
@@ -5125,8 +5126,8 @@ function showRecipe() {
                     : `${recipePercent(recipeChanceInRoll(p.chance, RECIPE_OPTIONS_PER_ROLL))} of rolls match without them`;
             const itemList = p.items.length
                 ? `<ul class="recipe-fit-items">${p.items.map(it => it.mode === 'slot'
-                    ? `<li>${esc(it.item.name)}, ${esc(it.trait)} <span class="recipe-coin">${it.item.coin} coin</span></li>`
-                    : `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${it.item.coin} coin</span></li>`).join('')}</ul>`
+                    ? `<li>${esc(it.item.name)}, ${esc(it.trait)} <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`
+                    : `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`).join('')}</ul>`
                 : '';
             return `<li class="recipe-fit">
                     <div class="recipe-fit-head">
@@ -5139,7 +5140,7 @@ function showRecipe() {
                 </li>`;
         }).join('');
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">Pairs from ${pool} that can supply every allele the target needs, cheapest first. A root can force an allele a horse carries but never create one, so everything below is a pairing you could really field.</p>
+            <p class="recipe-stable-blurb">Pairs from ${pool} that can supply every allele the target needs, fewest items first. A root can force an allele a horse carries but never create one, so everything below is a pairing you could really field.</p>
             <ul class="recipe-fit-list">${rows}</ul></div>`;
     } else if (stable.nearMisses.length) {
         const rows = stable.nearMisses.map(m =>
@@ -5189,24 +5190,33 @@ function showRecipe() {
 // ===========================================================================
 
 const RECIPE_ITEMS = {
-    caveRoot:    { name: 'Cave Root', coin: 50, note: 'Common to Rare allele' },
-    strongRoot:  { name: 'Strong Root', coin: 75, note: 'Epic or Legendary allele' },
-    unusualRoot: { name: 'Unusual Root', coin: 75, note: 'one Anomaly, one per breeding' },
-    specialRoot: { name: 'Special Root', coin: 150, note: "one parent's Variant, one per breeding" },
-    skewer:      { name: 'Mushroom Skewer', coin: 75, note: 'pick the foal temperament' },
-    grapes:      { name: 'Bunch of Grapes', coin: 150, note: 'adds a third foal option' },
-    seeds:       { name: 'Bitter Seeds', coin: 150, note: 'merges both options into one foal' },
-    tome:        { name: 'Tome of Imperfect Creation', coin: 500, note: 'every gene and anomaly at once' },
-    scrying:     { name: 'Scrying Lens', coin: 50, shop: 500, note: 'preview a roll without spending the slots' }
+    caveRoot:    { name: 'Cave Root', weight: 50, rarity: 'Common', note: 'Common to Rare allele' },
+    strongRoot:  { name: 'Strong Root', weight: 75, rarity: 'Uncommon', note: 'Epic or Legendary allele' },
+    unusualRoot: { name: 'Unusual Root', weight: 75, rarity: 'Uncommon', note: 'one Anomaly, one per breeding' },
+    specialRoot: { name: 'Special Root', weight: 150, rarity: 'Rare', note: "one parent's Variant, one per breeding" },
+    skewer:      { name: 'Mushroom Skewer', weight: 75, rarity: 'Uncommon', note: 'pick the foal temperament' },
+    grapes:      { name: 'Bunch of Grapes', weight: 150, rarity: 'Rare', note: 'adds a third foal option' },
+    seeds:       { name: 'Bitter Seeds', weight: 150, rarity: 'Rare', note: 'merges both options into one foal' },
+    tome:        { name: 'Tome of Imperfect Creation', weight: 500, rarity: 'Epic', note: 'every gene and anomaly at once' },
+    scrying:     { name: 'Scrying Lens', weight: 50, rarity: 'Common', shop: 500, note: 'preview a roll without spending the slots' }
 };
 
-// What an item costs and where that number came from. The Wizard's price wins
-// when there is one, because that is the money you would really hand over.
+// Is it on the Wizard's shelf, and what does he want for it?
 function recipeItemCost(item) {
     if (!item) return { coin: 0, sold: false };
     return (typeof item.shop === 'number')
         ? { coin: item.shop, sold: true }
-        : { coin: item.coin, sold: false };
+        : { coin: 0, sold: false };
+}
+
+// How an item is written wherever one is named. A price if you can buy it,
+// otherwise where it actually comes from, because printing a resale value next
+// to an item nobody sells reads as a price and is not one.
+function recipeItemTag(item) {
+    if (!item) return '';
+    const cost = recipeItemCost(item);
+    if (cost.sold) return cost.coin + ' coin';
+    return (item.rarity ? item.rarity + ', ' : '') + 'from gameplay';
 }
 
 // The loci that between them make the coat. Bitter Seeds treats the coat as one
@@ -5264,7 +5274,7 @@ function computeRecipePlan(recipe) {
                 trait: recipeAlleleLabel(side.allele),
                 token: entry.token
             });
-            plan.rootCoin += RECIPE_ITEMS[key].coin;
+            plan.rootCoin += RECIPE_ITEMS[key].weight;
         });
     });
 
@@ -5272,7 +5282,7 @@ function computeRecipePlan(recipe) {
     // cannot be fully forced by roots at all.
     if (recipe.anomalies.length === 1) {
         plan.anomalyRoots.push({ item: RECIPE_ITEMS.unusualRoot, name: recipe.anomalies[0].name });
-        plan.rootCoin += RECIPE_ITEMS.unusualRoot.coin;
+        plan.rootCoin += RECIPE_ITEMS.unusualRoot.weight;
     } else if (recipe.anomalies.length > 1) {
         plan.guaranteedByRoots = false;
         plan.notes.push('Only one Unusual Root can be used per breeding, so ' +
@@ -5281,7 +5291,7 @@ function computeRecipePlan(recipe) {
 
     // The Tome does every gene and anomaly in one go, but it locks out every
     // other add-on and cannot pick temperament.
-    plan.tomeCoin = RECIPE_ITEMS.tome.coin;
+    plan.tomeCoin = RECIPE_ITEMS.tome.weight;
 
     const rootsWork = plan.guaranteedByRoots;
     plan.cheapestCoin = rootsWork ? Math.min(plan.rootCoin, plan.tomeCoin) : plan.tomeCoin;
@@ -5306,7 +5316,7 @@ function computeRecipePlan(recipe) {
         else restChance *= both(e.chance);
     });
     recipe.anomalies.forEach((a) => { restChance *= both(a.chance); });
-    plan.seedsCoin = RECIPE_ITEMS.seeds.coin;
+    plan.seedsWeight = RECIPE_ITEMS.seeds.weight;
     plan.perRollSeeds = both(coatChance) * restChance;
     // Only worth mentioning when it actually beats a plain roll.
     plan.seedsHelps = plan.perRollSeeds > plan.perRoll + 0.005;
@@ -5370,7 +5380,7 @@ function recipeEvaluateHorse(horse, roleReq) {
                 item: RECIPE_ITEMS[key], mode: 'block', allele: stray,
                 trait: recipeAlleleLabel(stray), token
             });
-            res.coin += RECIPE_ITEMS[key].coin;
+            res.coin += RECIPE_ITEMS[key].weight;
             res.blocks++;
             res.chance *= nCount / 2;      // 0 if homozygous, so only a root saves it
             return;
@@ -5387,7 +5397,7 @@ function recipeEvaluateHorse(horse, roleReq) {
                 item: RECIPE_ITEMS[key], mode: 'force', allele: want,
                 trait: recipeAlleleLabel(want), token
             });
-            res.coin += RECIPE_ITEMS[key].coin;
+            res.coin += RECIPE_ITEMS[key].weight;
             res.forces++;
         }
     });
@@ -5400,8 +5410,8 @@ function recipeEvaluateHorse(horse, roleReq) {
 // comes from Tower's directory rather than being worked out from its traits,
 // because the roster is the authority on what the game actually charges.
 const RECIPE_FRUIT = {
-    Berry: { name: 'Juicy Berry', coin: 50, note: 'breeding slot, Common to Rare traits' },
-    Apple: { name: 'Juicy Apple', coin: 150, note: 'breeding slot, traits up to Legendary' }
+    Berry: { name: 'Juicy Berry', weight: 50, rarity: 'Common', note: 'breeding slot, Common to Rare traits' },
+    Apple: { name: 'Juicy Apple', weight: 150, rarity: 'Uncommon', note: 'breeding slot, traits up to Legendary' }
 };
 
 // What one horse handing down one allele at one locus costs, and how likely it
@@ -5415,7 +5425,7 @@ function recipeLocusCost(token, want) {
         if (!stray) return out;
         const key = recipeRootFor(stray);
         out.item = { item: RECIPE_ITEMS[key], mode: 'block', allele: stray, trait: recipeAlleleLabel(stray), token };
-        out.coin = RECIPE_ITEMS[key].coin;
+        out.coin = RECIPE_ITEMS[key].weight;
         out.chance = alleles.filter(a => a === 'n').length / 2;   // 0 if homozygous
         return out;
     }
@@ -5426,7 +5436,7 @@ function recipeLocusCost(token, want) {
     if (copies < 2) {
         const key = recipeRootFor(want);
         out.item = { item: RECIPE_ITEMS[key], mode: 'force', allele: want, trait: recipeAlleleLabel(want), token };
-        out.coin = RECIPE_ITEMS[key].coin;
+        out.coin = RECIPE_ITEMS[key].weight;
     }
     return out;
 }
@@ -5545,12 +5555,12 @@ const RECIPE_TRAIT_KIND = (function () {
 // climb a tier for each extra copy, so a Rare marking is three Marking Potions;
 // the Super ones start at Epic. Anomalies take one potion each, two per scroll.
 const RECIPE_SCROLL_ADDONS = {
-    marking:       { name: 'Marking Potion', coin: 75, shop: 500 },
-    superMarking:  { name: 'Super Marking Potion', coin: 500 },
-    modifier:      { name: 'Modifier Potion', coin: 75, shop: 500 },
-    superModifier: { name: 'Super Modifier Potion', coin: 500 },
-    anomaly:       { name: 'Anomaly Potion', coin: 75, shop: 500 },
-    variant:       { name: 'Variant Potion', coin: 1000 }
+    marking:       { name: 'Marking Potion', rarity: 'Uncommon', shop: 500 },
+    superMarking:  { name: 'Super Marking Potion', rarity: 'Epic' },
+    modifier:      { name: 'Modifier Potion', rarity: 'Uncommon', shop: 500 },
+    superModifier: { name: 'Super Modifier Potion', rarity: 'Epic' },
+    anomaly:       { name: 'Anomaly Potion', rarity: 'Uncommon', shop: 500 },
+    variant:       { name: 'Variant Potion', rarity: 'Legendary' }
 };
 
 // The scrolls themselves. Only Common through Rare are on the Wizard's shelf.
@@ -5641,13 +5651,19 @@ function recipeScrollHtml(scroll) {
     const potionLine = (t) => {
         if (!t.potion) return `<strong>${esc(t.name)}</strong>, which no potion covers`;
         const many = t.potion.count > 1 ? t.potion.count + ' x ' : '';
-        return `<strong>${esc(t.name)}</strong>, ${many}${esc(t.potion.item.name)} <span class="recipe-coin">${t.potion.coin} coin</span>`;
+        const tag = t.potion.sold
+            ? t.potion.coin + ' coin'
+            : (t.potion.item.rarity ? t.potion.item.rarity + ', from gameplay' : 'from gameplay');
+        return `<strong>${esc(t.name)}</strong>, ${many}${esc(t.potion.item.name)} <span class="recipe-coin">${esc(tag)}</span>`;
     };
 
     const lines = [];
     lines.push(`<li>The scroll rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
     if (scroll.covered) {
-        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, the priciest of the lot at ${scroll.covered.potion ? scroll.covered.potion.coin + ' coin' : 'its own rarity'}.</li>`);
+        const savedTag = (scroll.covered.potion && scroll.covered.potion.sold)
+            ? 'saving ' + scroll.covered.potion.coin + ' coin'
+            : 'the hardest of the lot to come by';
+        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, ${esc(savedTag)}.</li>`);
     }
     scroll.remaining.forEach((t) => { lines.push('<li>' + potionLine(t) + '</li>'); });
     scroll.anomalies.forEach((a) => {
@@ -5666,14 +5682,9 @@ function recipeScrollHtml(scroll) {
         ? `<p class="recipe-stable-blurb">A scroll takes at most ${scroll.anomalyLimit} Anomaly Potions and this wants ${scroll.anomalies.length}, so one of them has to come from somewhere else.</p>`
         : '';
     const guess = scroll.estimated.length
-        ? `<p class="recipe-stable-blurb">The Wizard does not stock ${scroll.estimated.map(n => `<strong>${esc(n)}</strong>`).join(' or ')}, so that part of the figure is the resale value standing in and the real cost will be higher.</p>`
+        ? `<p class="recipe-stable-blurb">${scroll.estimated.map(n => `<strong>${esc(n)}</strong>`).join(' and ')} cannot be bought, so ${scroll.estimated.length === 1 ? 'that one has' : 'those have'} to come out of gameplay and ${scroll.estimated.length === 1 ? 'is' : 'are'} not in the figure above.</p>`
         : '';
-    // The breeding plan above is priced in resale values, because none of those
-    // items are sold. Putting the two totals next to each other without saying
-    // so would make breeding look far cheaper than it is.
-    const scales = (scroll.scrollSold || scroll.addOnCoin)
-        ? '<p class="recipe-stable-blurb">Do not read this against the breeding total above. None of the roots or tomes are sold by the Wizard, so those are resale values, and resale runs several times below a shelf price.</p>'
-        : '';
+    const scales = '';
     const gap = scroll.unpriced.length
         ? `<p class="recipe-stable-blurb">No Scroll Add-On covers ${scroll.unpriced.map(n => `<strong>${esc(n)}</strong>`).join(', ')}, so that would have to go on after the courser exists.</p>`
         : '';
@@ -5722,7 +5733,7 @@ function computeRecipeStable(recipe, collection) {
             const fruit = [collection[i], collection[j]]
                 .filter(h => h.group && RECIPE_FRUIT[h.cost])
                 .map(h => ({ item: RECIPE_FRUIT[h.cost], mode: 'slot', allele: '', trait: 'breeding slot to ' + (h.name || 'a group horse'), token: '' }));
-            const fruitCoin = fruit.reduce((n, f) => n + f.item.coin, 0);
+            const fruitCoin = fruit.reduce((n, f) => n + f.item.weight, 0);
             out.pairs.push({
                 a: collection[i], b: collection[j], evalA: asA[i], evalB: asB[j],
                 coin: ev.coin + fruitCoin, chance: ev.chance,

@@ -67,8 +67,9 @@
   const CHANGELOG = [
     { date: '15 Sep 2026', items: [
       'Group horses are in. All 44 now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, with the Juicy Berry or Juicy Apple each one costs counted in the price. GG Tower for the amazing sheet!',
-      'Recipe suggests a Creation Scroll when no pair can breed your target, and prices the whole thing at the Wizard\'s rates: the scroll, which potion each leftover trait takes, how many, and what it all comes to.',
-      'Fixed: Recipe missed pairs that could really work, because it decided which parent gave which allele once for the whole horse instead of locus by locus.'
+      'Recipe suggests a Creation Scroll when no pair can breed your target, and prices it at the Wizard\'s rates: the scroll, which potion each leftover trait takes, and what it all comes to.',
+      'Fixed: Recipe missed pairs that could really work, because it decided which parent gave which allele once for the whole horse instead of locus by locus.',
+      'Fixed: item costs were the resale values, which read like prices for things the Wizard does not even sell. Only what he stocks shows coin now. Everything else is listed by rarity and marked as coming out of gameplay.'
     ] },
     { date: '12 Sep 2026', items: [
       'Three new Modifiers: Ingot (nIn, Legendary) makes every white marking one metallic colour, Mithril (mtmt, Epic) is a recessive gloss over the whole coat, and Damascus (nDm, Uncommon) sits on Dun\'s locus and only shows as DmD.',

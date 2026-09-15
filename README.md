@@ -33,23 +33,26 @@ leaves your machine.
   ether") and it offers the three coats as buttons.
 - Works per locus, because every pair in a genotype takes one allele from each
   side. That makes the inverse exact rather than a guess.
-- Prices the **Breeding Roll Add-On items** and always picks the cheapest route,
-  weighing single roots against the Tome by the rarity of the genes involved.
+- Works out the **Breeding Roll Add-On items** a target needs and picks the
+  route that takes the fewest, weighing single roots against the Tome by the
+  rarity of the genes involved. None of those are sold, so they are listed by
+  rarity rather than given a price.
 - Refuses targets that can't exist, so a lethal white combination is explained
   rather than costed.
 - Checks your collection **and the group horses** for pairs that already work,
-  ranks the cheapest first, and shows near misses when nothing is an exact fit,
-  with the items it would take to block whatever a parent carries in excess.
-  A group horse needs a Juicy Berry or a Juicy Apple for the breeding slot, one
-  per group horse in the pairing, and that goes into the price.
+  ranks them by how few items they need, and shows near misses when nothing is
+  an exact fit, with the items it would take to block whatever a parent carries
+  in excess. A group horse needs a Juicy Berry or a Juicy Apple for the breeding
+  slot, one per group horse in the pairing, and that counts as an item too.
 - When no pair can breed the target at all, names the **Creation Scroll** that
   would make the courser outright, spends its one free trait on whichever would
   otherwise cost the most, and prices the rest in **Scroll Add-Ons**: a Marking
   or Modifier Potion per Common trait, two for Uncommon, three for Rare, and the
   Super potions for Epic and Legendary. Anomalies take one potion each, and a
-  scroll only takes two. Totals use the **Wizard's shop price** wherever an item
-  is sold, and fall back to the listed resale value where it isn't, saying which
-  figures are stand-ins rather than mixing the two silently.
+  scroll only takes two. Coin totals cover only what the Wizard actually sells,
+  which is the three plain potions and the Common through Rare scrolls. Anything
+  else, the Super potions included, is named with its rarity and flagged as
+  coming out of gameplay rather than given a price it does not have.
 - Names each ideal parent in words as well as genotype, so you know what to look
   for.
 
