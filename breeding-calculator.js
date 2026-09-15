@@ -5511,8 +5511,47 @@ const RECIPE_TRAIT_TIER = (function () {
     return out;
 })();
 
-// A geno takes at most this many Genotype Update items.
-const RECIPE_UPDATE_BUDGET = 3;
+// Marking or modifier, from the same pools. The potions are different items, so
+// the two have to be told apart before anything can be costed.
+const RECIPE_TRAIT_KIND = (function () {
+    const out = {};
+    const plain = resolveTraits('Ee Aa').allTraits;
+    RECIPE_TIER_ORDER.forEach((tier) => {
+        const v = RARITY_GENES[tier] || {};
+        [['marking', v.markings || []], ['modifier', v.modifiers || []]].forEach(function (pair) {
+            pair[1].forEach((tokens) => {
+                resolveTraits('Ee Aa ' + tokens).allTraits
+                    .filter(name => plain.indexOf(name) === -1)
+                    .forEach(name => { if (!(name in out)) out[name] = pair[0]; });
+            });
+        });
+    });
+    return out;
+})();
+
+// Scroll Add-Ons put traits straight onto a Creation Scroll. The plain potions
+// climb a tier for each extra copy, so a Rare marking is three Marking Potions;
+// the Super ones start at Epic. Anomalies take one potion each, two per scroll.
+const RECIPE_SCROLL_ADDONS = {
+    marking:       { name: 'Marking Potion', coin: 75 },
+    superMarking:  { name: 'Super Marking Potion', coin: 500 },
+    modifier:      { name: 'Modifier Potion', coin: 75 },
+    superModifier: { name: 'Super Modifier Potion', coin: 500 },
+    anomaly:       { name: 'Anomaly Potion', coin: 75 },
+    variant:       { name: 'Variant Potion', coin: 1000 }
+};
+const RECIPE_ANOMALY_POTION_LIMIT = 2;
+
+// How many potions one trait costs, and of which kind.
+function recipeScrollPotion(name, tier) {
+    const kind = RECIPE_TRAIT_KIND[name];
+    if (!kind || !tier) return null;
+    const counts = { common: 1, uncommon: 2, rare: 3, epic: 1, legendary: 2 };
+    const isSuper = tier === 'epic' || tier === 'legendary';
+    const key = isSuper ? (kind === 'marking' ? 'superMarking' : 'superModifier') : kind;
+    const item = RECIPE_SCROLL_ADDONS[key];
+    return { item: item, count: counts[tier], coin: item.coin * counts[tier], kind: kind };
+}
 
 // What a scroll would have to cover, and what it would leave behind.
 // Returns null when a pair can already make the target, because then there is
@@ -5526,13 +5565,20 @@ function computeRecipeScroll(recipe, stable) {
     const coatTier = RECIPE_COAT_TIER[coat] || null;
     const traits = resolved.allTraits.map(name => ({ name: name, tier: RECIPE_TRAIT_TIER[name] || null }));
 
-    // The scroll's rarity is set by the coat. It also carries one trait, so
-    // spend that on the dearest trait it is allowed to hold.
+    // Price every trait as a Scroll Add-On, since that is how they go on.
+    traits.forEach((t) => { t.potion = recipeScrollPotion(t.name, t.tier); });
+
+    // The scroll's rarity is set by the coat. It also carries one trait for
+    // nothing, so spend that on whichever would otherwise cost the most.
     const rank = t => (t ? RECIPE_TIER_ORDER.indexOf(t) : -1);
     const withinScroll = traits.filter(t => t.tier && rank(t.tier) <= rank(coatTier));
-    withinScroll.sort((a, b) => rank(b.tier) - rank(a.tier));
+    withinScroll.sort((a, b) => (b.potion ? b.potion.coin : 0) - (a.potion ? a.potion.coin : 0));
     const covered = withinScroll.length ? withinScroll[0] : null;
     const remaining = traits.filter(t => t !== covered);
+
+    const anomalies = (recipe.anomalies || []).map(a => a.name);
+    const traitCoin = remaining.reduce((n, t) => n + (t.potion ? t.potion.coin : 0), 0);
+    const anomalyCoin = anomalies.length * RECIPE_SCROLL_ADDONS.anomaly.coin;
 
     return {
         coat: coat,
@@ -5541,11 +5587,13 @@ function computeRecipeScroll(recipe, stable) {
         covered: covered,
         remaining: remaining,
         free: (recipe.free || []).slice(),
-        anomalies: (recipe.anomalies || []).map(a => a.name),
-        // A geno takes at most three Genotype Update items, so say when the
-        // leftovers will not fit inside that budget.
-        updateBudget: RECIPE_UPDATE_BUDGET,
-        overBudget: remaining.length > RECIPE_UPDATE_BUDGET
+        anomalies: anomalies,
+        traitCoin: traitCoin,
+        anomalyCoin: anomalyCoin,
+        addOnCoin: traitCoin + anomalyCoin,
+        unpriced: remaining.filter(t => !t.potion).map(t => t.name),
+        anomalyLimit: RECIPE_ANOMALY_POTION_LIMIT,
+        tooManyAnomalies: anomalies.length > RECIPE_ANOMALY_POTION_LIMIT
     };
 }
 
@@ -5557,27 +5605,39 @@ function recipeScrollHtml(scroll) {
             <p class="recipe-stable-blurb">No pair can breed this, and no scroll rolls <strong>${esc(scroll.coat)}</strong> either, so there is no shortcut to fall back on.</p></div>`;
     }
     const tierName = t => t ? RECIPE_TIER_LABEL[t] : 'no listed rarity';
+    const potionLine = (t) => {
+        if (!t.potion) return `<strong>${esc(t.name)}</strong>, which no potion covers`;
+        const many = t.potion.count > 1 ? t.potion.count + ' x ' : '';
+        return `<strong>${esc(t.name)}</strong>, ${many}${esc(t.potion.item.name)} <span class="recipe-coin">${t.potion.coin} coin</span>`;
+    };
+
     const lines = [];
-    lines.push(`<li>The scroll itself rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
+    lines.push(`<li>The scroll rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
     if (scroll.covered) {
-        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, the priciest thing it may carry, at ${esc(tierName(scroll.covered.tier))}.</li>`);
+        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, the priciest of the lot at ${scroll.covered.potion ? scroll.covered.potion.coin + ' coin' : 'its own rarity'}.</li>`);
     }
-    if (scroll.remaining.length) {
-        lines.push(`<li>Still to add: ${scroll.remaining.map(t =>
-            `<strong>${esc(t.name)}</strong> <span class="recipe-fit-temp">${esc(tierName(t.tier))}</span>`).join(', ')}.</li>`);
-    }
+    scroll.remaining.forEach((t) => { lines.push('<li>' + potionLine(t) + '</li>'); });
+    scroll.anomalies.forEach((a) => {
+        lines.push(`<li><strong>${esc(a)}</strong>, Anomaly Potion <span class="recipe-coin">${RECIPE_SCROLL_ADDONS.anomaly.coin} coin</span></li>`);
+    });
     if (scroll.free.length) {
-        lines.push(`<li>Free for anyone to add: ${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}.</li>`);
+        lines.push(`<li>${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}, free for anyone to add</li>`);
     }
-    if (scroll.anomalies.length) {
-        lines.push(`<li>A Custom Scroll only rolls a 10% chance of a random anomaly, so ${scroll.anomalies.map(a => `<strong>${esc(a)}</strong>`).join(', ')} needs its own item.</li>`);
-    }
-    const warn = scroll.overBudget
-        ? `<p class="recipe-stable-blurb">That leaves ${scroll.remaining.length} traits to add, and a geno takes at most ${scroll.updateBudget} Genotype Update items, so at least one has to come from a Transformation instead.</p>`
+
+    const total = scroll.addOnCoin
+        ? `<p class="recipe-plan-total"><strong>${scroll.addOnCoin} coin</strong> in Scroll Add-Ons, on top of the scroll itself.</p>`
+        : '<p class="recipe-plan-total">The scroll covers the whole courser on its own.</p>';
+    const warn = scroll.tooManyAnomalies
+        ? `<p class="recipe-stable-blurb">A scroll takes at most ${scroll.anomalyLimit} Anomaly Potions and this wants ${scroll.anomalies.length}, so one of them has to come from somewhere else.</p>`
         : '';
+    const gap = scroll.unpriced.length
+        ? `<p class="recipe-stable-blurb">No Scroll Add-On covers ${scroll.unpriced.map(n => `<strong>${esc(n)}</strong>`).join(', ')}, so that would have to go on after the courser exists.</p>`
+        : '';
+
     return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
-        <p class="recipe-stable-blurb">No pair can breed this one, so the shortest route is to create the courser instead. A <strong>${esc(scroll.scroll)}</strong> is the one to reach for.</p>
-        <ul class="recipe-near-list">${lines.join('')}</ul>${warn}</div>`;
+        <p class="recipe-stable-blurb">No pair can breed this one, so the shortest route is to create the courser instead. A <strong>${esc(scroll.scroll)}</strong> is the one to reach for, with potions for the rest.</p>
+        ${total}
+        <ul class="recipe-near-list">${lines.join('')}</ul>${warn}${gap}</div>`;
 }
 
 function computeRecipeStable(recipe, collection) {

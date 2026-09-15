@@ -43,8 +43,11 @@ leaves your machine.
   A group horse needs a Juicy Berry or a Juicy Apple for the breeding slot, one
   per group horse in the pairing, and that goes into the price.
 - When no pair can breed the target at all, names the **Creation Scroll** that
-  would make the courser outright, which trait its one free slot should carry,
-  and everything left over.
+  would make the courser outright, spends its one free trait on whichever would
+  otherwise cost the most, and prices the rest in **Scroll Add-Ons**: a Marking
+  or Modifier Potion per Common trait, two for Uncommon, three for Rare, and the
+  Super potions for Epic and Legendary. Anomalies take one potion each, and a
+  scroll only takes two.
 - Names each ideal parent in words as well as genotype, so you know what to look
   for.
 
