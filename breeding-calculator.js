@@ -5046,9 +5046,15 @@ function showRecipe() {
             ? `<p class="recipe-plan-gamble">Or spend nothing: ${recipePercent(plan.perRoll)} of rolls already give you a match, and a Bunch of Grapes (${RECIPE_ITEMS.grapes.coin} coin) adds a third option to take that to ${recipePercent(plan.perRollGrapes)}.</p>`
             : '';
 
+        // Bitter Seeds only earns its place on a target with several separate
+        // traits, since that is where two goes at each one adds up.
+        const seeds = (plan.perFoal > 0 && plan.seedsHelps)
+            ? `<p class="recipe-plan-gamble">Bitter Seeds (${RECIPE_ITEMS.seeds.coin} coin) squashes both options into one foal, keeping every marking, modifier and anomaly either of them rolled, which takes this to roughly ${recipePercent(plan.perRollSeeds)}. The coat is the exception: the merged foal keeps whichever option's coat was rarer, so that half still has to land on its own. No twins, and it cannot be used with a Bunch of Grapes.</p>`
+            : '';
+
         planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Cheapest way to guarantee it</h3>
             <p class="recipe-plan-total"><strong>${plan.cheapestCoin} coin</strong> in Breeding Roll Add-Ons.</p>
-            ${chosen}${alt}${gamble}</div>`;
+            ${chosen}${alt}${gamble}${seeds}</div>`;
     }
 
     // Anomalies and free markings can't be planned the way genes can.
@@ -5077,7 +5083,8 @@ function showRecipe() {
             <li>A parent with <strong>two copies</strong> passes that allele every time; with <strong>one copy</strong>, half the time. That's why the ideal parents above are doubled up wherever it's survivable.</li>
             <li>Some alleles <strong>share a locus</strong> and a parent can only pass one of them: Cream, Tapestry and Pearl sit together, as do Tobiano, Roan, Sabino and Dominant White.</li>
             <li><strong>Overo, Ossuary and Dominant White can't be doubled</strong>, because two copies is lethal white, so anything needing one is capped at 50% per parent.</li>
-            <li>Temperament runs backwards: a foal's temperament is one <strong>neither parent has</strong>, so two parents rule out two of the four. A <strong>Mushroom Skewer</strong> overrides that and lets you pick. Variants pass at 25% each, unless both parents share one, which is guaranteed.</li>
+            <li>Temperament runs backwards: a foal's temperament is one <strong>neither parent has</strong>, so two parents rule out two of the four. A <strong>Mushroom Skewer</strong> overrides that and lets you pick. Variants pass at 25% each, unless both parents share one, which is guaranteed, and a <strong>Special Root</strong> forces one parent's variant onto every option.</li>
+            <li>Neither temperament nor variant lives in a genotype, so nothing above plans for them. If you want either pinned, that is what those two items are for.</li>
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
             <li>Coin figures are listed <strong>resale values</strong>, used as a stand in so two plans can be compared. What you actually pay depends on where the item came from.</li>
@@ -5132,7 +5139,7 @@ function showRecipe() {
                 </li>`;
         }).join('');
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">Pairs from ${pool} that can supply every allele the target needs, cheapest first. A root can force an allele a horse carries but never create one, so anything listed here is genuinely reachable.</p>
+            <p class="recipe-stable-blurb">Pairs from ${pool} that can supply every allele the target needs, cheapest first. A root can force an allele a horse carries but never create one, so everything below is a pairing you could really field.</p>
             <ul class="recipe-fit-list">${rows}</ul></div>`;
     } else if (stable.nearMisses.length) {
         const rows = stable.nearMisses.map(m =>
@@ -5140,7 +5147,7 @@ function showRecipe() {
                 <span class="recipe-fit-miss">could be Parent ${esc(m.side)} but carries no ${m.missing.map(a => `<code>${esc(a)}</code> (${esc(recipeAlleleLabel(a))})`).join(' or ')}</span></li>`
         ).join('');
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">No pair from ${pool} can cover this target on its own. These come closest, and what each one is missing is what you would need to bring in.</p>
+            <p class="recipe-stable-blurb">No pair from ${pool} can cover this target on its own. These come closest. What each one lacks is what you would have to bring in yourself.</p>
             <ul class="recipe-near-list">${rows}</ul></div>`;
     } else {
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
@@ -5183,9 +5190,23 @@ const RECIPE_ITEMS = {
     caveRoot:    { name: 'Cave Root', coin: 50, note: 'Common to Rare allele' },
     strongRoot:  { name: 'Strong Root', coin: 75, note: 'Epic or Legendary allele' },
     unusualRoot: { name: 'Unusual Root', coin: 75, note: 'one Anomaly, one per breeding' },
+    specialRoot: { name: 'Special Root', coin: 150, note: "one parent's Variant, one per breeding" },
+    skewer:      { name: 'Mushroom Skewer', coin: 75, note: 'pick the foal temperament' },
     grapes:      { name: 'Bunch of Grapes', coin: 150, note: 'adds a third foal option' },
+    seeds:       { name: 'Bitter Seeds', coin: 150, note: 'merges both options into one foal' },
     tome:        { name: 'Tome of Imperfect Creation', coin: 500, note: 'every gene and anomaly at once' }
 };
+
+// The loci that between them make the coat. Bitter Seeds treats the coat as one
+// thing and everything else piece by piece, so the two have to be told apart.
+const RECIPE_COAT_LOCI = (function () {
+    const out = {};
+    ['E', 'e', 'A', 'a', 'Cr', 'Tp', 'prl', 'Ch', 'er'].forEach((allele) => {
+        const locus = RECIPE_LOCUS_OF[allele];
+        if (locus) out[locus] = true;
+    });
+    return out;
+})();
 
 // A breeding roll gives two foal options, three with a Bunch of Grapes, and it
 // counts as a win if any one of them matches.
@@ -5260,6 +5281,23 @@ function computeRecipePlan(recipe) {
     plan.perFoal = recipe.geneChance * recipe.anomalies.reduce((acc, a) => acc * a.chance, 1);
     plan.perRoll = recipeChanceInRoll(plan.perFoal, RECIPE_OPTIONS_PER_ROLL);
     plan.perRollGrapes = recipeChanceInRoll(plan.perFoal, RECIPE_OPTIONS_WITH_GRAPES);
+
+    // Bitter Seeds squashes the two options into one foal, keeping every
+    // marking, modifier and anomaly that either of them rolled. So each of
+    // those gets two goes rather than one. The coat is the exception: the
+    // merged foal keeps whichever option's coat was rarer, so it still has to
+    // arrive whole from one side.
+    const both = p => 1 - Math.pow(1 - p, RECIPE_OPTIONS_PER_ROLL);
+    let coatChance = 1, restChance = 1;
+    recipe.loci.forEach((e) => {
+        if (RECIPE_COAT_LOCI[e.locus]) coatChance *= e.chance;
+        else restChance *= both(e.chance);
+    });
+    recipe.anomalies.forEach((a) => { restChance *= both(a.chance); });
+    plan.seedsCoin = RECIPE_ITEMS.seeds.coin;
+    plan.perRollSeeds = both(coatChance) * restChance;
+    // Only worth mentioning when it actually beats a plain roll.
+    plan.seedsHelps = plan.perRollSeeds > plan.perRoll + 0.005;
 
     return plan;
 }
@@ -5516,26 +5554,26 @@ function recipeScrollHtml(scroll) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     if (!scroll.scroll) {
         return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
-            <p class="recipe-stable-blurb">No pair can breed this, and <strong>${esc(scroll.coat)}</strong> is not in any scroll pool either, so there is no scroll that rolls this coat.</p></div>`;
+            <p class="recipe-stable-blurb">No pair can breed this, and no scroll rolls <strong>${esc(scroll.coat)}</strong> either, so there is no shortcut to fall back on.</p></div>`;
     }
     const tierName = t => t ? RECIPE_TIER_LABEL[t] : 'no listed rarity';
     const lines = [];
     lines.push(`<li>The scroll itself rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
     if (scroll.covered) {
-        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, the dearest thing it is allowed to carry at ${esc(tierName(scroll.covered.tier))}.</li>`);
+        lines.push(`<li>Its one free trait is best spent on <strong>${esc(scroll.covered.name)}</strong>, the priciest thing it may carry, at ${esc(tierName(scroll.covered.tier))}.</li>`);
     }
     if (scroll.remaining.length) {
         lines.push(`<li>Still to add: ${scroll.remaining.map(t =>
             `<strong>${esc(t.name)}</strong> <span class="recipe-fit-temp">${esc(tierName(t.tier))}</span>`).join(', ')}.</li>`);
     }
     if (scroll.free.length) {
-        lines.push(`<li>Free for anyone to add, at no cost: ${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}.</li>`);
+        lines.push(`<li>Free for anyone to add: ${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}.</li>`);
     }
     if (scroll.anomalies.length) {
-        lines.push(`<li>Anomalies are not part of a Custom Scroll beyond its 10% random roll, so ${scroll.anomalies.map(a => `<strong>${esc(a)}</strong>`).join(', ')} needs its own item.</li>`);
+        lines.push(`<li>A Custom Scroll only rolls a 10% chance of a random anomaly, so ${scroll.anomalies.map(a => `<strong>${esc(a)}</strong>`).join(', ')} needs its own item.</li>`);
     }
     const warn = scroll.overBudget
-        ? `<p class="recipe-stable-blurb">That leaves ${scroll.remaining.length} traits to add, and a geno takes at most ${scroll.updateBudget} Genotype Update items, so some of them have to come from Transformations instead.</p>`
+        ? `<p class="recipe-stable-blurb">That leaves ${scroll.remaining.length} traits to add, and a geno takes at most ${scroll.updateBudget} Genotype Update items, so at least one has to come from a Transformation instead.</p>`
         : '';
     return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
         <p class="recipe-stable-blurb">No pair can breed this one, so the shortest route is to create the courser instead. A <strong>${esc(scroll.scroll)}</strong> is the one to reach for.</p>
