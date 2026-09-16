@@ -36,85 +36,85 @@ const PET_AREAS = [
 ];
 
 const PETS = [
-    { name: 'Hound', rarity: 'Common', drop: 'Old Bone' },
-    { name: 'Eagle', rarity: 'Common', drop: 'Monster Parts', variantOf: 'Hawk' },
-    { name: 'Osprey', rarity: 'Common', drop: 'Monster Parts', variantOf: 'Hawk' },
-    { name: 'Hawk', rarity: 'Common', drop: 'Monster Parts' },
-    { name: 'Wisp', rarity: 'Common', drop: 'Cave Moss' },
-    { name: 'Owl', rarity: 'Common', drop: 'Monster Parts' },
-    { name: 'Cat', rarity: 'Common', drop: 'Critter Tail' },
-    { name: 'Cute Bookworm', rarity: 'Common', drop: 'Juicy Apple' },
-    { name: 'Green Frog', rarity: 'Common', drop: 'Creature Eye' },
-    { name: 'Raccoon', rarity: 'Common', drop: 'Empty Bottle' },
-    { name: 'Evil Mushroom', rarity: 'Uncommon', drop: 'Hearty Mushroom' },
-    { name: 'Bat', rarity: 'Uncommon', drop: 'Juicy Berry' },
-    { name: 'Mole', rarity: 'Uncommon', drop: 'Cave Root' },
-    { name: 'Slime', rarity: 'Uncommon', drop: 'Acidic Tongue' },
-    { name: 'Fox', rarity: 'Uncommon', drop: 'Old Bone' },
-    { name: 'Giant Moth', rarity: 'Uncommon', drop: 'Soothing Herb' },
-    { name: 'Giant Beetle', rarity: 'Uncommon', drop: 'Bland Vegetable' },
-    { name: 'Big Toad', rarity: 'Uncommon', drop: 'Juicy Berry' },
-    { name: 'Tiny Snail', rarity: 'Uncommon', drop: 'Soothing Herb' },
-    { name: 'Rat', rarity: 'Uncommon', drop: 'Stinky Bait' },
-    { name: 'Black Cat', rarity: 'Uncommon', drop: 'Monster Parts', variantOf: 'Cat' },
-    { name: 'Bouncing Bunny', rarity: 'Uncommon', drop: 'Clump of Fur' },
-    { name: 'Sneaky Weasel', rarity: 'Uncommon', drop: 'Clump of Fur' },
-    { name: 'Opossum', rarity: 'Uncommon', drop: 'Hearty Mushroom' },
-    { name: 'Unsteady Automaton', rarity: 'Uncommon', drop: 'Metal Scrap' },
-    { name: 'Mycelid', rarity: 'Uncommon', drop: 'Mushroom Skewer' },
-    { name: 'Mimic', rarity: 'Rare', drop: 'Sack of Coin' },
-    { name: 'Floating Eyeball', rarity: 'Rare', drop: 'Brute Tentacle' },
-    { name: 'Pygmy Drake', rarity: 'Rare', drop: 'Herbs' },
-    { name: 'Molten Dragonbat', rarity: 'Rare', drop: 'Humongous Egg', variantOf: 'Bat' },
-    { name: 'Obsidian Golem', rarity: 'Rare', drop: 'Strong Root' },
-    { name: 'Carrion Crawler', rarity: 'Rare', drop: 'Humanoid Skull' },
-    { name: 'Crow', rarity: 'Rare', drop: 'Plain Key' },
-    { name: 'Fire Elemental', rarity: 'Rare', drop: 'Carnite Nugget' },
-    { name: 'Lava Ant', rarity: 'Rare', drop: 'Searing Herb' },
-    { name: 'Skeletal Servant', rarity: 'Rare', drop: 'Fabric Scrap' },
-    { name: 'Dracula Bat', rarity: 'Rare', drop: 'Monster Juice', variantOf: 'Bat' },
-    { name: 'Painted Bat', rarity: 'Rare', drop: 'Juicy Apple', variantOf: 'Bat' },
-    { name: 'Dark Hound', rarity: 'Rare', drop: 'Old Bone', variantOf: 'Hound' },
-    { name: 'Wandering Spirit', rarity: 'Rare', drop: 'Humanoid Skull' },
-    { name: 'Scarecrow', rarity: 'Rare', drop: 'Soul Seeds x5' },
-    { name: 'Hedge Golem', rarity: 'Rare', drop: 'Strong Root' },
-    { name: 'Killer Bee', rarity: 'Rare', drop: 'Blooming Herb' },
-    { name: 'Fierce Chimera', rarity: 'Rare', drop: 'Monster Juice' },
-    { name: 'Oomling', rarity: 'Rare', drop: 'Library Key' },
-    { name: 'Pigeon', rarity: 'Rare', drop: 'Dropped Feather' },
-    { name: 'Owlbear', rarity: 'Rare', drop: 'Berserker Potion' },
-    { name: 'Seriously Sinister Shroom', rarity: 'Rare', drop: 'Bitter Bud', variantOf: 'Evil Mushroom' },
-    { name: 'Iron Golem', rarity: 'Rare', drop: 'Humming Fragments' },
-    { name: 'Slimy Snail', rarity: 'Rare', drop: 'Corroding Elixir', variantOf: 'Tiny Snail' },
-    { name: 'Cave Boar', rarity: 'Rare', drop: 'Mushroom Trinkets' },
-    { name: 'Wolf', rarity: 'Epic', drop: 'Monster Parts' },
-    { name: 'Phantasmal Hand', rarity: 'Epic', drop: 'Forager\'s Pack Contents (Random)' },
-    { name: 'Treent', rarity: 'Epic', drop: 'Herbs' },
-    { name: 'Normal Goose', rarity: 'Epic', drop: 'Humongous Egg' },
-    { name: 'Sizeable Serpent', rarity: 'Epic', drop: 'Monster Parts' },
-    { name: 'Golden Hound', rarity: 'Epic', drop: 'Old Bone', variantOf: 'Hound' },
-    { name: 'Mutant Hound', rarity: 'Epic', drop: 'Humanoid Skull', variantOf: 'Hound' },
-    { name: 'Mutant Goose', rarity: 'Epic', drop: 'Bunch of Grapes', variantOf: 'Normal Goose' },
-    { name: 'Ghastly Eyeball', rarity: 'Epic', drop: 'Scrying Lens' },
-    { name: 'Corrupted Treent', rarity: 'Epic', drop: 'Strong Root', variantOf: 'Treent' },
-    { name: 'BABY SKULL', rarity: 'Epic', drop: 'Tome of Skull Summoning' },
-    { name: 'Undead Dragonling', rarity: 'Epic', drop: 'Beast Fang x2' },
-    { name: 'Wretched Imp', rarity: 'Epic', drop: 'Carnite Nugget' },
-    { name: 'Grotesque Gargoyle', rarity: 'Epic', drop: 'Beast Fang x2' },
-    { name: 'Addled Minotaur', rarity: 'Epic', drop: 'Ancient Key' },
-    { name: 'Fairy Drake', rarity: 'Epic', drop: 'Stained Glass Shards', variantOf: 'Pygmy Drake' },
-    { name: 'Kasperl', rarity: 'Epic', drop: 'Soul Seeds x5' },
-    { name: 'Living Puppet', rarity: 'Epic', drop: 'Metal Scrap' },
-    { name: 'Botched Servant', rarity: 'Epic', drop: 'Monstrous Pack', variantOf: 'Skeletal Servant' },
-    { name: 'Luminous Lion', rarity: 'Epic', drop: 'Gold Nugget' },
-    { name: 'White Dragon', rarity: 'Legendary', drop: 'Mithril Nugget' },
-    { name: 'Strange Shadow', rarity: 'Legendary', drop: 'Treasure Map' },
-    { name: 'Gelatinous Cube', rarity: 'Legendary', drop: 'Dungeon Dive Level 1 Loot' },
-    { name: 'Polar Bear', rarity: 'Legendary', drop: 'Monster Haunch' },
-    { name: 'Yucky Bug', rarity: 'Legendary', drop: 'Dubious Coin x5' },
-    { name: 'Celestial Snake', rarity: 'Legendary', drop: 'Glittering Swarf' },
-    { name: 'Gift Mimic', rarity: 'Legendary', drop: 'Dubious Coin x10', variantOf: 'Mimic' },
-    { name: 'Rainbow Slime', rarity: 'Legendary', drop: 'Furled Pennant', variantOf: 'Slime' }
+    { typeId: 1, name: 'Hound', rarity: 'Common', drop: 'Old Bone' },
+    { typeId: 2, name: 'Eagle', rarity: 'Common', drop: 'Monster Parts', variantOf: 'Hawk' },
+    { typeId: 3, name: 'Osprey', rarity: 'Common', drop: 'Monster Parts', variantOf: 'Hawk' },
+    { typeId: 4, name: 'Hawk', rarity: 'Common', drop: 'Monster Parts' },
+    { typeId: 6, name: 'Wisp', rarity: 'Common', drop: 'Cave Moss' },
+    { typeId: 10, name: 'Owl', rarity: 'Common', drop: 'Monster Parts' },
+    { typeId: 29, name: 'Cat', rarity: 'Common', drop: 'Critter Tail' },
+    { typeId: 63, name: 'Cute Bookworm', rarity: 'Common', drop: 'Juicy Apple' },
+    { typeId: 65, name: 'Green Frog', rarity: 'Common', drop: 'Creature Eye' },
+    { typeId: 67, name: 'Raccoon', rarity: 'Common', drop: 'Empty Bottle' },
+    { typeId: 7, name: 'Evil Mushroom', rarity: 'Uncommon', drop: 'Hearty Mushroom' },
+    { typeId: 9, name: 'Bat', rarity: 'Uncommon', drop: 'Juicy Berry' },
+    { typeId: 12, name: 'Mole', rarity: 'Uncommon', drop: 'Cave Root' },
+    { typeId: 14, name: 'Slime', rarity: 'Uncommon', drop: 'Acidic Tongue' },
+    { typeId: 15, name: 'Fox', rarity: 'Uncommon', drop: 'Old Bone' },
+    { typeId: 16, name: 'Giant Moth', rarity: 'Uncommon', drop: 'Soothing Herb' },
+    { typeId: 17, name: 'Giant Beetle', rarity: 'Uncommon', drop: 'Bland Vegetable' },
+    { typeId: 18, name: 'Big Toad', rarity: 'Uncommon', drop: 'Juicy Berry' },
+    { typeId: 28, name: 'Tiny Snail', rarity: 'Uncommon', drop: 'Soothing Herb' },
+    { typeId: 43, name: 'Rat', rarity: 'Uncommon', drop: 'Stinky Bait' },
+    { typeId: 44, name: 'Black Cat', rarity: 'Uncommon', drop: 'Monster Parts', variantOf: 'Cat' },
+    { typeId: 58, name: 'Bouncing Bunny', rarity: 'Uncommon', drop: 'Clump of Fur' },
+    { typeId: 66, name: 'Sneaky Weasel', rarity: 'Uncommon', drop: 'Clump of Fur' },
+    { typeId: 68, name: 'Opossum', rarity: 'Uncommon', drop: 'Hearty Mushroom' },
+    { typeId: 73, name: 'Unsteady Automaton', rarity: 'Uncommon', drop: 'Metal Scrap' },
+    { typeId: 74, name: 'Mycelid', rarity: 'Uncommon', drop: 'Mushroom Skewer' },
+    { typeId: 8, name: 'Mimic', rarity: 'Rare', drop: 'Sack of Coin' },
+    { typeId: 11, name: 'Floating Eyeball', rarity: 'Rare', drop: 'Brute Tentacle' },
+    { typeId: 13, name: 'Pygmy Drake', rarity: 'Rare', drop: 'Herbs' },
+    { typeId: 19, name: 'Molten Dragonbat', rarity: 'Rare', drop: 'Humongous Egg', variantOf: 'Bat' },
+    { typeId: 20, name: 'Obsidian Golem', rarity: 'Rare', drop: 'Strong Root' },
+    { typeId: 21, name: 'Carrion Crawler', rarity: 'Rare', drop: 'Humanoid Skull' },
+    { typeId: 22, name: 'Crow', rarity: 'Rare', drop: 'Plain Key' },
+    { typeId: 23, name: 'Fire Elemental', rarity: 'Rare', drop: 'Carnite Nugget' },
+    { typeId: 24, name: 'Lava Ant', rarity: 'Rare', drop: 'Searing Herb' },
+    { typeId: 27, name: 'Skeletal Servant', rarity: 'Rare', drop: 'Fabric Scrap' },
+    { typeId: 35, name: 'Dracula Bat', rarity: 'Rare', drop: 'Monster Juice', variantOf: 'Bat' },
+    { typeId: 36, name: 'Painted Bat', rarity: 'Rare', drop: 'Juicy Apple', variantOf: 'Bat' },
+    { typeId: 37, name: 'Dark Hound', rarity: 'Rare', drop: 'Old Bone', variantOf: 'Hound' },
+    { typeId: 45, name: 'Wandering Spirit', rarity: 'Rare', drop: 'Humanoid Skull' },
+    { typeId: 46, name: 'Scarecrow', rarity: 'Rare', drop: 'Soul Seeds x5' },
+    { typeId: 54, name: 'Hedge Golem', rarity: 'Rare', drop: 'Strong Root' },
+    { typeId: 56, name: 'Killer Bee', rarity: 'Rare', drop: 'Blooming Herb' },
+    { typeId: 62, name: 'Fierce Chimera', rarity: 'Rare', drop: 'Monster Juice' },
+    { typeId: 64, name: 'Oomling', rarity: 'Rare', drop: 'Library Key' },
+    { typeId: 69, name: 'Pigeon', rarity: 'Rare', drop: 'Dropped Feather' },
+    { typeId: 70, name: 'Owlbear', rarity: 'Rare', drop: 'Berserker Potion' },
+    { typeId: 75, name: 'Seriously Sinister Shroom', rarity: 'Rare', drop: 'Bitter Bud', variantOf: 'Evil Mushroom' },
+    { typeId: 76, name: 'Iron Golem', rarity: 'Rare', drop: 'Humming Fragments' },
+    { typeId: 78, name: 'Slimy Snail', rarity: 'Rare', drop: 'Corroding Elixir', variantOf: 'Tiny Snail' },
+    { typeId: 79, name: 'Cave Boar', rarity: 'Rare', drop: 'Mushroom Trinkets' },
+    { typeId: 25, name: 'Wolf', rarity: 'Epic', drop: 'Monster Parts' },
+    { typeId: 26, name: 'Phantasmal Hand', rarity: 'Epic', drop: 'Forager\'s Pack Contents (Random)' },
+    { typeId: 31, name: 'Treent', rarity: 'Epic', drop: 'Herbs' },
+    { typeId: 32, name: 'Normal Goose', rarity: 'Epic', drop: 'Humongous Egg' },
+    { typeId: 34, name: 'Sizeable Serpent', rarity: 'Epic', drop: 'Monster Parts' },
+    { typeId: 38, name: 'Golden Hound', rarity: 'Epic', drop: 'Old Bone', variantOf: 'Hound' },
+    { typeId: 39, name: 'Mutant Hound', rarity: 'Epic', drop: 'Humanoid Skull', variantOf: 'Hound' },
+    { typeId: 40, name: 'Mutant Goose', rarity: 'Epic', drop: 'Bunch of Grapes', variantOf: 'Normal Goose' },
+    { typeId: 41, name: 'Ghastly Eyeball', rarity: 'Epic', drop: 'Scrying Lens' },
+    { typeId: 42, name: 'Corrupted Treent', rarity: 'Epic', drop: 'Strong Root', variantOf: 'Treent' },
+    { typeId: 48, name: 'BABY SKULL', rarity: 'Epic', drop: 'Tome of Skull Summoning' },
+    { typeId: 49, name: 'Undead Dragonling', rarity: 'Epic', drop: 'Beast Fang x2' },
+    { typeId: 50, name: 'Wretched Imp', rarity: 'Epic', drop: 'Carnite Nugget' },
+    { typeId: 53, name: 'Grotesque Gargoyle', rarity: 'Epic', drop: 'Beast Fang x2' },
+    { typeId: 55, name: 'Addled Minotaur', rarity: 'Epic', drop: 'Ancient Key' },
+    { typeId: 57, name: 'Fairy Drake', rarity: 'Epic', drop: 'Stained Glass Shards', variantOf: 'Pygmy Drake' },
+    { typeId: 60, name: 'Kasperl', rarity: 'Epic', drop: 'Soul Seeds x5' },
+    { typeId: 61, name: 'Living Puppet', rarity: 'Epic', drop: 'Metal Scrap' },
+    { typeId: 71, name: 'Botched Servant', rarity: 'Epic', drop: 'Monstrous Pack', variantOf: 'Skeletal Servant' },
+    { typeId: 77, name: 'Luminous Lion', rarity: 'Epic', drop: 'Gold Nugget' },
+    { typeId: 5, name: 'White Dragon', rarity: 'Legendary', drop: 'Mithril Nugget' },
+    { typeId: 30, name: 'Strange Shadow', rarity: 'Legendary', drop: 'Treasure Map' },
+    { typeId: 33, name: 'Gelatinous Cube', rarity: 'Legendary', drop: 'Dungeon Dive Level 1 Loot' },
+    { typeId: 47, name: 'Polar Bear', rarity: 'Legendary', drop: 'Monster Haunch' },
+    { typeId: 51, name: 'Yucky Bug', rarity: 'Legendary', drop: 'Dubious Coin x5' },
+    { typeId: 52, name: 'Celestial Snake', rarity: 'Legendary', drop: 'Glittering Swarf' },
+    { typeId: 59, name: 'Gift Mimic', rarity: 'Legendary', drop: 'Dubious Coin x10', variantOf: 'Mimic' },
+    { typeId: 72, name: 'Rainbow Slime', rarity: 'Legendary', drop: 'Furled Pennant', variantOf: 'Slime' }
 ];
 
 // Fresh copies, so nothing downstream can bend the roster.
@@ -158,10 +158,29 @@ function petSave(list) {
     catch (e) { return false; }
 }
 
-// Everything known about one of your pets, roster entry included.
+// Look a species up by name or by the game's own pet type id.
+function petSpecies(key) {
+    return PETS.find(p => p.name === key || p.typeId === Number(key)) || null;
+}
+
+// Everything known about one of your pets, roster entry folded in.
+//
+// You can own several of the same species at different bonding levels, so a
+// stored pet is an individual with its own id. `species` is what it is and
+// `name` is what you call it, which are often not the same thing.
 function petResolve(mine) {
-    const base = PETS.find(p => p.name === mine.name);
-    return Object.assign({ drop: '', rarity: '' }, base || {}, mine);
+    const base = petSpecies(mine.species || mine.name);
+    return Object.assign(
+        { drop: '', rarity: '', species: mine.species || mine.name },
+        base || {},
+        mine,
+        { name: mine.name || (base && base.name) || mine.species }
+    );
+}
+
+// A stable key for one owned pet, since two can share a species and a name.
+function petKey(pet) {
+    return String(pet.id || pet.name || pet.species);
 }
 
 // Which items a given pet name brings back.
@@ -201,14 +220,29 @@ function petPlan(mine, wishlist) {
 
     const assigned = {};
     order.forEach((area) => {
-        const free = pets.filter(p => !taken[p.name] && petCanGo(p.bonding, area));
-        free.sort((a, b) => area.guaranteesDrops
-            // At the Castle, take the useful drops first.
-            ? (wanted(b) ? 1 : 0) - (wanted(a) ? 1 : 0) || a.name.localeCompare(b.name)
+        const free = pets.filter(p => !taken[petKey(p)] && petCanGo(p.bonding, area));
+        let pick;
+        if (area.guaranteesDrops) {
+            // Every pet here brings its own drop, so a team of four identical
+            // pets brings four of the same thing. Take the drops you asked for
+            // first, then anything that widens the haul, and only then fill.
+            const got = {};
+            const rank = p => (wanted(p) ? 0 : 2) + (got[p.drop] ? 1 : 0);
+            const pool = free.slice();
+            pick = [];
+            while (pick.length < area.pets && pool.length) {
+                pool.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+                const next = pool.shift();
+                got[next.drop] = true;
+                pick.push(next);
+            }
+        } else {
             // Everywhere else, spend the least-bonded pet you can.
-            : petBondingRank(a.bonding) - petBondingRank(b.bonding) || a.name.localeCompare(b.name));
-        const pick = free.slice(0, area.pets);
-        pick.forEach(p => { taken[p.name] = true; });
+            free.sort((a, b) => petBondingRank(a.bonding) - petBondingRank(b.bonding) ||
+                a.name.localeCompare(b.name));
+            pick = free.slice(0, area.pets);
+        }
+        pick.forEach(p => { taken[petKey(p)] = true; });
         assigned[area.stage] = {
             area: area,
             pick: pick.map(p => Object.assign({ wanted: wanted(p) }, p)),
@@ -219,7 +253,7 @@ function petPlan(mine, wishlist) {
 
     return {
         rows: PET_AREAS.map(a => assigned[a.stage]),
-        idle: pets.filter(p => !taken[p.name]),
+        idle: pets.filter(p => !taken[petKey(p)]),
         busy: busy
     };
 }
@@ -273,33 +307,56 @@ function petAdd() {
     const lvl = document.getElementById('petAddBonding');
     if (!sel || !sel.value) return;
     const list = petLoad();
-    if (!list.some(p => p.name === sel.value)) {
-        list.push({
-            name: sel.value,
-            bonding: (lvl && lvl.value) || PET_BONDING[0],
-            status: 'Ready'
-        });
-        petSave(list);
-    }
+    // Duplicates are allowed: several of one species is the normal case.
+    list.push({
+        id: 'pet-local-' + Date.now() + '-' + list.length,
+        species: sel.value,
+        name: sel.value,
+        bonding: (lvl && lvl.value) || PET_BONDING[0],
+        status: 'Ready'
+    });
+    petSave(list);
     sel.value = '';
     showPets();
 }
 
-function petSetStatus(name, status) {
+function petSetStatus(id, status) {
     const list = petLoad();
-    const hit = list.find(p => p.name === name);
+    const hit = list.find(p => petKey(p) === id);
     if (hit) { hit.status = status; petSave(list); }
     showPets();
 }
 
-function petRemove(name) {
-    petSave(petLoad().filter(p => p.name !== name));
+function petClearAll() {
+    petSave([]);
     showPets();
 }
 
-function petSetBonding(name, level) {
+function petDoImport() {
+    const box = document.getElementById('petImportBox');
+    const out = document.getElementById('petImportResult');
+    if (!box) return;
+    const res = petImport(box.value);
+    if (out) {
+        out.innerHTML = (res.added || res.updated)
+            ? `<p class="recipe-stable-blurb">Read ${res.added} new pet${res.added === 1 ? '' : 's'}${res.updated ? ' and updated ' + res.updated : ''}.` +
+              (res.total && res.total > res.added + res.updated
+                ? ` Your collection has ${res.total}, so page through and paste the rest.`
+                : '') + '</p>'
+            : '<p class="recipe-stable-blurb">Nothing recognisable in there. Paste the whole page source from your pets page, not the text of it.</p>';
+    }
+    box.value = '';
+    showPets();
+}
+
+function petRemove(id) {
+    petSave(petLoad().filter(p => petKey(p) !== id));
+    showPets();
+}
+
+function petSetBonding(id, level) {
     const list = petLoad();
-    const hit = list.find(p => p.name === name);
+    const hit = list.find(p => petKey(p) === id);
     if (hit) { hit.bonding = level; petSave(list); }
     showPets();
 }
@@ -314,17 +371,25 @@ function showPets() {
     const wishlist = wishRaw.split(',').map(s => s.trim()).filter(Boolean);
     const recipeItems = petRecipeItems();
 
-    // Your pets, with their bonding editable in place.
+    // Your pets, with their bonding and status editable in place. Sorted so the
+    // ones that can go the furthest are at the top.
+    const sorted = mine.slice().sort((a, b) =>
+        petBondingRank(b.bonding) - petBondingRank(a.bonding) ||
+        String(a.name || '').localeCompare(String(b.name || '')));
     const yours = mine.length
-        ? `<ul class="recipe-fit-list">${mine.map(p => {
+        ? `<ul class="recipe-fit-list">${sorted.map(p => {
             const full = petResolve(p);
+            const key = petEsc(petKey(p)).replace(/'/g, "\\'");
             const opts = PET_BONDING.map(b =>
                 `<option value="${petEsc(b)}"${b === p.bonding ? ' selected' : ''}>${petEsc(b)}</option>`).join('');
             const statusOpts = PET_STATUS.map(st =>
                 `<option value="${petEsc(st)}"${st === (p.status || 'Ready') ? ' selected' : ''}>${petEsc(st)}</option>`).join('');
+            // A renamed pet shows its own name, with the species after it.
+            const named = full.name && full.name !== full.species;
             return `<li class="recipe-fit">
                 <div class="recipe-fit-head">
-                    <strong>${petEsc(p.name)}</strong>
+                    <strong>${petEsc(full.name)}</strong>
+                    ${named ? `<span class="recipe-fit-temp">${petEsc(full.species)}</span>` : ''}
                     <span class="recipe-fit-temp">${petEsc(full.rarity)}</span>
                     <span class="recipe-fit-x">drops</span>
                     <strong>${petEsc(full.drop)}</strong>
@@ -332,14 +397,16 @@ function showPets() {
                 </div>
                 <div class="pet-controls">
                     <span class="pet-label">Bonding</span>
-                    <select onchange="petSetBonding('${petEsc(p.name).replace(/'/g, "\\'")}', this.value)">${opts}</select>
+                    <select onchange="petSetBonding('${key}', this.value)">${opts}</select>
                     <span class="pet-label">Status</span>
-                    <select onchange="petSetStatus('${petEsc(p.name).replace(/'/g, "\\'")}', this.value)">${statusOpts}</select>
-                    <button class="dc-btn" onclick="petRemove('${petEsc(p.name).replace(/'/g, "\\'")}')">Remove</button>
+                    <select onchange="petSetStatus('${key}', this.value)">${statusOpts}</select>
+                    <button class="dc-btn" onclick="petRemove('${key}')">Remove</button>
                 </div>
             </li>`;
-        }).join('')}</ul>`
-        : '<p class="recipe-stable-empty">No pets yet. Add them above and this fills in.</p>';
+        }).join('')}</ul>
+        <p class="recipe-stable-blurb">${mine.length} pet${mine.length === 1 ? '' : 's'}.
+            <button class="dc-btn" onclick="petClearAll()">Clear them all</button></p>`
+        : '<p class="recipe-stable-empty">No pets yet. Paste your pets page above, or add them one at a time.</p>';
 
     // The allocation.
     const plan = petPlan(mine, wishlist);
@@ -366,7 +433,7 @@ function showPets() {
         ? `<p class="recipe-stable-blurb">Free but not needed: ${plan.idle.map(p => petEsc(p.name)).join(', ')}.</p>`
         : '';
     const busy = plan.busy.length
-        ? `<p class="recipe-stable-blurb">Not available: ${plan.busy.map(p => `${petEsc(p.name)} (${petEsc(p.status)})`).join(', ')}.</p>`
+        ? `<p class="recipe-stable-blurb">Not available: ${plan.busy.map(p => `${petEsc(p.name)} (${petEsc(p.status)}${p.away ? ' at ' + petEsc(p.away) : ''})`).join(', ')}.</p>`
         : '';
 
 
@@ -385,4 +452,71 @@ function showPets() {
         <div class="recipe-stable"><h3 class="recipe-head">Where to send them</h3>
             <p class="recipe-stable-blurb">One pet can only be on one excursion, so this hands them out across all seven at once. The strict areas get first refusal, and everywhere else takes the least-bonded pet that still qualifies, which keeps your Devoted ones free for the Castle.</p>
             <ul class="recipe-fit-list">${rows}</ul>${idle}${busy}</div>`;
+}
+
+// ===========================================================================
+// Importing your pets
+// ---------------------------------------------------------------------------
+// Paste the source of your pets page and this reads it. The species comes from
+// the image path rather than the caption, because a pet you have named yourself
+// shows your name instead of its species, and the image is the only place the
+// species survives: /images/data/pets/12-image.gif is a Mole whatever you call
+// it. Nothing is sent anywhere; the parsing happens in your own browser.
+// ===========================================================================
+
+function petParseCollection(html) {
+    const out = { pets: [], skipped: 0, pages: 0 };
+    const text = String(html || '');
+    if (!text.trim()) return out;
+
+    const total = text.match(/Showing\s+\d+[–\-]\d+\s+of\s+(\d+)/i);
+    if (total) out.pages = Number(total[1]);
+
+    // One card per pet. Splitting on the wrapper keeps each card's fields together.
+    const cards = text.split(/class="[^"]*inventory-pet[^"]*"/i).slice(1);
+    cards.forEach((card) => {
+        const typeId = (card.match(/\/images\/data\/pets\/(\d+)-image/) || [])[1];
+        const species = typeId ? petSpecies(typeId) : null;
+        if (!species) { out.skipped++; return; }
+
+        // The caption is the species unless you have renamed the pet.
+        const caption = (card.match(/btn-(?:primary|dark) btn btn-sm[^>]*>\s*([^<]+?)\s*</) || [])[1] || '';
+        const owned = (card.match(/\/pets\/view\/(\d+)/) || [])[1];
+
+        // Bonding is either a plain label or the muted "No Bonding".
+        let bonding = 'No Bonding';
+        const bonded = card.match(/<span style="font-size:14px;">\s*([A-Za-z ]+?)\s*<\/span>/);
+        if (bonded && PET_BONDING.indexOf(bonded[1].trim()) !== -1) bonding = bonded[1].trim();
+
+        let status = 'Ready', where = '';
+        if (/badge-secondary[^>]*>\s*Resting/i.test(card)) status = 'Resting';
+        const away = card.match(/badge-warning[^>]*>\s*Away:\s*([^<]+?)\s*</i);
+        if (away) { status = 'Away'; where = away[1].trim(); }
+
+        out.pets.push({
+            id: owned ? 'pet-' + owned : 'pet-' + species.typeId + '-' + out.pets.length,
+            species: species.name,
+            name: caption && caption !== species.name ? caption : species.name,
+            bonding: bonding,
+            status: status,
+            away: where
+        });
+    });
+    return out;
+}
+
+// Merge an import into what is stored, matching on the game's own pet id so a
+// second paste updates rather than duplicates.
+function petImport(html) {
+    const parsed = petParseCollection(html);
+    if (!parsed.pets.length) return { added: 0, updated: 0, skipped: parsed.skipped, total: parsed.pages };
+    const list = petLoad();
+    let added = 0, updated = 0;
+    parsed.pets.forEach((p) => {
+        const at = list.findIndex(x => x.id === p.id);
+        if (at >= 0) { list[at] = Object.assign({}, list[at], p); updated++; }
+        else { list.push(p); added++; }
+    });
+    petSave(list);
+    return { added: added, updated: updated, skipped: parsed.skipped, total: parsed.pages };
 }

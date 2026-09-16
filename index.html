@@ -936,7 +936,15 @@
                         <p><strong>Only the Castle cares who you send.</strong> Every other area hands back the same loot whoever goes, so the pet is interchangeable and the only question is who you can spare. The Buried Castle is the exception: it takes four Devoted pets for a week and every one of them brings its own drop back on top of the area's loot.</p>
                     </div>
 
-                    <label for="petAddName">Add a pet:</label>
+                    <label for="petImportBox">Bring your pets in:</label>
+                    <p class="blurb">Open your pets page on Dungeon Coursers, view source, and paste the lot in here. It reads the species off each pet's image, so one you have renamed still comes through as what it actually is. Set the page size to 96 and paste each page. Nothing leaves your browser.</p>
+                    <textarea id="petImportBox" placeholder="Paste the page source from dungeon-coursers.com/pets"></textarea>
+                    <div class="pet-add-row">
+                        <button class="dc-btn" onclick="petDoImport()">Read my pets</button>
+                    </div>
+                    <div id="petImportResult"></div>
+
+                    <label for="petAddName">Or add one at a time:</label>
                     <div class="pet-add-row">
                         <select id="petAddName"><option value="">Pick a pet…</option></select>
                         <select id="petAddBonding">
