@@ -745,6 +745,14 @@
         toast('Drag this button up to your bookmarks bar, then click it on a courser page.', 'success', 5000);
       });
     });
+    const petBm = $('#petBmAll');
+    if (petBm && typeof window.petBookmarklet === 'function') {
+      petBm.href = window.petBookmarklet();
+      petBm.addEventListener('click', (e) => {
+        e.preventDefault();
+        toast('Drag this up to your bookmarks bar, then click it on your pets page.', 'success', 5000);
+      });
+    }
     ['#dcBmAll', '#dcBmAllLanding'].forEach((sel) => {
       const allBtn = $(sel);
       if (!allBtn) return;
@@ -986,6 +994,19 @@
     return true;
   }
 
+  // A pets bookmarklet drops its haul in the hash as "#pets=<json>". pets.js
+  // does the merging; this just reports it and lands you on the page.
+  function importPetsFromHash() {
+    if (typeof window.petImportFromHash !== 'function') return false;
+    const res = window.petImportFromHash();
+    if (!res) return false;
+    if (res.bad) { toast('That pets link was malformed.', 'error'); return true; }
+    showArea('pets');
+    toast(window.petResultText ? window.petResultText(res) : 'Pets imported.', 'success', 6000);
+    if (window.trackUse) trackUse('pets_bookmarklet_import');
+    return true;
+  }
+
   // #pets and the like. Only areas this script knows about are honoured, so a
   // stray hash cannot route anywhere unexpected.
   function openAreaFromHash() {
@@ -1019,14 +1040,23 @@
     // doesn't repeat the import.
     const didQuery = importFromQuery();
     const didBulk = importBulkFromHash();
-    if (didQuery || didBulk) {
-      history.replaceState({}, '', window.location.pathname);
+    const didPets = importPetsFromHash();
+    if (didQuery || didBulk || didPets) {
+      history.replaceState({}, '', window.location.pathname + (didPets ? '#pets' : ''));
     }
 
     // A tool can be reached by putting its name in the hash. That is the only
     // way into an unlisted one, since it has no nav link to click.
     openAreaFromHash();
-    window.addEventListener('hashchange', openAreaFromHash);
+    window.addEventListener('hashchange', () => {
+      // Clicking the bookmarklet again reuses this tab, which only changes the
+      // hash, so the import has to be tried here too.
+      if (importPetsFromHash()) {
+        history.replaceState({}, '', window.location.pathname + '#pets');
+        return;
+      }
+      openAreaFromHash();
+    });
 
     // Offline support was removed (it cached stale versions). Tear down any
     // previously-installed service worker + its caches so nothing is pinned.

@@ -348,7 +348,7 @@ function petDoImport() {
     const res = petImport(box.value);
     if (out) {
         out.innerHTML = (res.added || res.updated)
-            ? `<p class="recipe-stable-blurb">${petImportText(res)} ${petProgressText(petLoad().length)}</p>`
+            ? `<p class="recipe-stable-blurb">${petResultText(res)}</p>`
             : '<p class="recipe-stable-blurb">Nothing recognisable in there. Paste the page source from your pets page, not the text of it.</p>';
     }
     box.value = '';
@@ -376,12 +376,58 @@ function petImportText(res) {
     return 'Read ' + pets(res.added) + ' and refreshed ' + res.updated + ' already in.';
 }
 
+// What a paste or a click gets told. The progress line already leads with the
+// count, so the first sentence is dropped when it would only say it again.
+function petResultText(res) {
+    const have = petLoad().length;
+    const progress = petProgressText(have);
+    if (res.added === have && !res.updated) return progress;
+    return petImportText(res) + ' ' + progress;
+}
+
 // "30 pets" on its own, or "30 of your 119" when a paste has told us the size.
 function petProgressText(have) {
     const owned = petTotalOwned();
     if (!owned || owned <= have) return have + ' pet' + (have === 1 ? '' : 's') + '.';
-    return have + ' of your ' + owned + ' pets. Paste the next page to bring in the other ' +
+    return have + ' of your ' + owned + ' pets. Bring in the next page for the other ' +
         (owned - have) + '.';
+}
+
+// The pet's own picture, straight off Dungeon Coursers. The species is what
+// decides it, so a renamed pet still shows the right animal. If it fails to
+// load the card drops back to text and nothing breaks.
+function petImageUrl(typeId) {
+    return typeId ? 'https://dungeon-coursers.com/images/data/pets/' + Number(typeId) + '-image.gif' : '';
+}
+
+// One pet as a card: picture, what it is, what it drops, and its two settings.
+function petCardHtml(p, recipeItems) {
+    const full = petResolve(p);
+    const key = petEsc(petKey(p)).replace(/'/g, "\\'");
+    const img = petImageUrl(full.typeId);
+    const opts = PET_BONDING.map(b =>
+        `<option value="${petEsc(b)}"${b === p.bonding ? ' selected' : ''}>${petEsc(b)}</option>`).join('');
+    const statusOpts = PET_STATUS.map(st =>
+        `<option value="${petEsc(st)}"${st === (p.status || 'Ready') ? ' selected' : ''}>${petEsc(st)}</option>`).join('');
+    // A renamed pet shows its own name, with the species underneath.
+    const named = full.name && full.name !== full.species;
+    const status = p.status || 'Ready';
+
+    return `<li class="pet-card">
+        <button class="pet-card-x" title="Remove ${petEsc(full.name)}" onclick="petRemove('${key}')">&times;</button>
+        ${img ? `<div class="pet-card-pic"><img src="${petEsc(img)}" alt="" loading="lazy"
+            onerror="this.parentNode.remove()"></div>` : ''}
+        <div class="pet-card-name">${petEsc(full.name)}</div>
+        <div class="pet-card-species">${named ? petEsc(full.species) + ' &middot; ' : ''}${petEsc(full.rarity)}</div>
+        <div class="pet-card-drop">${petEsc(full.drop)}${
+            recipeItems[full.drop] ? '<span class="recipe-fit-group">Recipe</span>' : ''}</div>
+        ${status === 'Ready' ? '' : `<div class="pet-card-busy">${petEsc(
+            status === 'Away' && p.away ? 'Away: ' + p.away : status)}</div>`}
+        <select class="pet-card-sel" aria-label="Bonding for ${petEsc(full.name)}"
+            onchange="petSetBonding('${key}', this.value)">${opts}</select>
+        <select class="pet-card-sel" aria-label="Status for ${petEsc(full.name)}"
+            onchange="petSetStatus('${key}', this.value)">${statusOpts}</select>
+    </li>`;
 }
 
 function showPets() {
@@ -400,33 +446,7 @@ function showPets() {
         petBondingRank(b.bonding) - petBondingRank(a.bonding) ||
         String(a.name || '').localeCompare(String(b.name || '')));
     const yours = mine.length
-        ? `<ul class="recipe-fit-list">${sorted.map(p => {
-            const full = petResolve(p);
-            const key = petEsc(petKey(p)).replace(/'/g, "\\'");
-            const opts = PET_BONDING.map(b =>
-                `<option value="${petEsc(b)}"${b === p.bonding ? ' selected' : ''}>${petEsc(b)}</option>`).join('');
-            const statusOpts = PET_STATUS.map(st =>
-                `<option value="${petEsc(st)}"${st === (p.status || 'Ready') ? ' selected' : ''}>${petEsc(st)}</option>`).join('');
-            // A renamed pet shows its own name, with the species after it.
-            const named = full.name && full.name !== full.species;
-            return `<li class="recipe-fit">
-                <div class="recipe-fit-head">
-                    <strong>${petEsc(full.name)}</strong>
-                    ${named ? `<span class="recipe-fit-temp">${petEsc(full.species)}</span>` : ''}
-                    <span class="recipe-fit-temp">${petEsc(full.rarity)}</span>
-                    <span class="recipe-fit-x">drops</span>
-                    <strong>${petEsc(full.drop)}</strong>
-                    ${recipeItems[full.drop] ? '<span class="recipe-fit-group">Recipe asks for this</span>' : ''}
-                </div>
-                <div class="pet-controls">
-                    <span class="pet-label">Bonding</span>
-                    <select onchange="petSetBonding('${key}', this.value)">${opts}</select>
-                    <span class="pet-label">Status</span>
-                    <select onchange="petSetStatus('${key}', this.value)">${statusOpts}</select>
-                    <button class="dc-btn" onclick="petRemove('${key}')">Remove</button>
-                </div>
-            </li>`;
-        }).join('')}</ul>
+        ? `<ul class="pet-grid">${sorted.map(p => petCardHtml(p, recipeItems)).join('')}</ul>
         <p class="recipe-stable-blurb">${petProgressText(mine.length)}
             <button class="dc-btn" onclick="petClearAll()">Clear them all</button></p>`
         : '<p class="recipe-stable-empty">No pets yet. Paste your pets page above, or add them one at a time.</p>';
@@ -526,6 +546,83 @@ function petParseCollection(html) {
         });
     });
     return out;
+}
+
+// ---------------------------------------------------------------------------
+// The bookmarklet
+//
+// Same idea as the stable's "Import all": drag it to the bookmarks bar, click
+// it on your pets page, and it reads the page you are standing on and hands the
+// list over in the URL. It runs in your own browser and talks to nobody.
+//
+// The payload is kept short because it travels in a URL: t is the species' type
+// id, and name, bonding and status are left out when they are the obvious
+// default, since this side can work them back out.
+// ---------------------------------------------------------------------------
+
+function petBookmarklet(base) {
+    const site = base || 'https://ook.monster/courser-calc/';
+    return "javascript:(function(){" +
+        "var B=['Wary','Aloof','Comfortable','Friendly','Loyal','Devoted'],out=[];" +
+        "document.querySelectorAll('.inventory-pet').forEach(function(c){" +
+        "var im=c.querySelector('img[src*=\"/images/data/pets/\"]');if(!im)return;" +
+        "var t=(im.getAttribute('src').match(/pets\\/(\\d+)-image/)||[])[1];if(!t)return;" +
+        "var a=c.querySelector('a[href*=\"/pets/view/\"]');" +
+        "var id=a?(a.getAttribute('href').match(/\\/pets\\/view\\/(\\d+)/)||[])[1]:'';" +
+        "var cap=c.querySelector('.btn.btn-sm');var n=cap?cap.textContent.replace(/\\s+/g,' ').trim():'';" +
+        "var b='';c.querySelectorAll('span').forEach(function(s){" +
+        "var v=s.textContent.replace(/\\s+/g,' ').trim();if(B.indexOf(v)>-1)b=v;});" +
+        "var st='',aw='';var w=c.querySelector('.badge-warning'),r=c.querySelector('.badge-secondary');" +
+        "if(w&&/Away/i.test(w.textContent)){st='Away';aw=w.textContent.replace(/\\s+/g,' ').replace(/^\\s*Away:\\s*/i,'').trim();}" +
+        "else if(r&&/Resting/i.test(r.textContent))st='Resting';" +
+        "var p={t:Number(t)};if(id)p.i=id;if(n)p.n=n;if(b)p.b=b;if(st)p.s=st;if(aw)p.a=aw;out.push(p);});" +
+        "if(!out.length){alert('Bloodline: no pets found. Open your pets page and try again.');return;}" +
+        "var tot=(document.body.innerText.match(/Showing\\s+\\d+\\s*[\\u2013-]\\s*\\d+\\s+of\\s+(\\d+)/)||[])[1];" +
+        "var d={p:out};if(tot)d.o=Number(tot);" +
+        "window.open('" + site + "#pets=' + encodeURIComponent(JSON.stringify(d)),'bloodline');" +
+        "})();";
+}
+
+// The other end of it. Takes what the bookmarklet sent, fills the defaults back
+// in, and merges exactly the way a paste does.
+function petImportBulk(data) {
+    const payload = data && Array.isArray(data.p) ? data : { p: [] };
+    const list = petLoad();
+    let added = 0, updated = 0, skipped = 0;
+
+    payload.p.forEach((raw, ix) => {
+        const species = petSpecies(raw.t);
+        if (!species) { skipped++; return; }
+        const pet = {
+            id: raw.i ? 'pet-' + raw.i : 'pet-' + species.typeId + '-' + ix,
+            species: species.name,
+            name: raw.n || species.name,
+            bonding: PET_BONDING.indexOf(raw.b) > 0 ? raw.b : 'No Bonding',
+            status: PET_STATUS.indexOf(raw.s) > 0 ? raw.s : 'Ready',
+            away: raw.a || ''
+        };
+        const at = list.findIndex(x => x.id === pet.id);
+        if (at >= 0) { list[at] = Object.assign({}, list[at], pet); updated++; }
+        else { list.push(pet); added++; }
+    });
+
+    petSave(list);
+    if (payload.o) {
+        try { localStorage.setItem(PET_TOTAL_KEY, String(payload.o)); } catch (e) { /* not fatal */ }
+    }
+    return { added: added, updated: updated, skipped: skipped, total: payload.o || 0 };
+}
+
+// Reads a "#pets=..." hash left by the bookmarklet. Anything else, including a
+// plain "#pets", is left alone for the normal routing to deal with.
+function petImportFromHash(hash) {
+    const h = hash == null ? (window.location.hash || '') : hash;
+    const m = h.match(/^#pets=(.+)$/);
+    if (!m) return null;
+    let data;
+    try { data = JSON.parse(decodeURIComponent(m[1])); } catch (e) { return { bad: true }; }
+    if (!data || !Array.isArray(data.p) || !data.p.length) return { bad: true };
+    return petImportBulk(data);
 }
 
 // Merge an import into what is stored, matching on the game's own pet id so a

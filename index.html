@@ -120,7 +120,8 @@
         .tool-card p a { color: var(--dc-link); }
         .tool-card .tool-open { font-family: var(--font-stamp); font-size: 0.62rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); color: var(--dc-mauve); }
         .tool-card .dc-btn { margin: 4px 0 0; text-decoration: none; align-self: flex-start; }
-        #dcBmAllLanding { cursor: grab; }
+        #dcBmAllLanding, #petBmAll { cursor: grab; }
+        #petBmAll { text-decoration: none; margin: 0; }
         .import-cta { margin-top: 28px; background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 4px solid var(--dc-mauve); border-radius: var(--radius); padding: 24px; }
         .import-cta h2 { font-family: var(--font-display); font-weight: 400; color: var(--dc-ink); font-size: 1.5rem; margin-bottom: 6px; }
         .import-cta > p { color: var(--dc-slate); font-size: 0.95rem; margin-bottom: 12px; }
@@ -432,6 +433,24 @@
         .pet-controls select { width: auto; min-width: 8.5rem; margin: 0; }
         .pet-controls .dc-btn { width: auto; padding: 4px 12px; font-size: 0.7rem; margin: 0; }
         .pet-controls .pet-label { font-size: 0.8rem; color: var(--dc-slate); }
+        .pet-grid { list-style: none; margin: 0 0 8px; padding: 0; display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+        @media (max-width: 1000px) { .pet-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 640px)  { .pet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        .pet-card { position: relative; text-align: center; padding: 10px 8px 8px;
+            background: var(--dc-bone); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); }
+        .pet-card-pic { height: 64px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+        .pet-card-pic img { max-height: 64px; max-width: 100%; image-rendering: pixelated; }
+        .pet-card-name { font-weight: 700; font-size: 0.9rem; line-height: 1.25; word-break: break-word; }
+        .pet-card-species, .pet-card-drop { font-size: 0.75rem; color: var(--dc-slate); line-height: 1.4; }
+        .pet-card-drop { color: var(--dc-ink); margin-top: 2px; }
+        .pet-card-drop .recipe-fit-group { display: inline-block; margin: 2px 0 0 4px; }
+        .pet-card-busy { font-family: var(--font-stamp); font-size: 0.55rem; letter-spacing: var(--tracking-stamp);
+            text-transform: uppercase; color: var(--dc-blood); margin-top: 3px; }
+        .pet-card-sel { width: 100%; margin: 6px 0 0; padding: 3px 4px; font-size: 0.75rem; }
+        .pet-card-x { position: absolute; top: 2px; right: 4px; background: none; border: 0; cursor: pointer;
+            color: var(--dc-slate); font-size: 1rem; line-height: 1; padding: 2px 4px; }
+        .pet-card-x:hover { color: var(--dc-blood); }
         .pet-add-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .pet-add-row select { width: auto; flex: 1 1 14rem; margin: 0; }
         .pet-add-row .dc-btn { width: auto; padding: 6px 16px; margin: 0; }
@@ -936,11 +955,17 @@
                         <p><strong>Only the Castle cares who you send.</strong> Every other area hands back the same loot whoever goes, so the pet is interchangeable and the only question is who you can spare. The Buried Castle is the exception: it takes four Devoted pets for a week and every one of them brings its own drop back on top of the area's loot.</p>
                     </div>
 
-                    <label for="petImportBox">Bring your pets in:</label>
-                    <p class="blurb">Open your pets page on Dungeon Coursers, view source, and paste the lot in here. It reads the species off each pet's image, so one you have renamed still comes through as what it actually is. Nothing leaves your browser.</p>
-                    <div class="info-box">
-                        <p><strong>More than one page?</strong> Paste them one after another, or all in one go, whichever suits. Pets are matched on their own id, so pasting the same page twice updates it rather than making copies, and it will tell you how many of your collection are still to come.</p>
+                    <h2 class="section-head">Bring your pets in</h2>
+                    <p class="blurb">Drag this up to your bookmarks bar, then click it on your Dungeon Coursers pets page. It reads the page you are standing on and sends the lot here. Runs in your browser, no AI.</p>
+                    <div class="pet-add-row">
+                        <a id="petBmAll" class="dc-btn auto" role="button">⬇ Import my pets</a>
                     </div>
+                    <div class="info-box">
+                        <p><strong>More than one page?</strong> Set the page size to 96, then click it once per page. Pets are matched on their own id, so clicking it twice on the same page updates them rather than making copies, and it will tell you how many of your collection are still to come.</p>
+                    </div>
+
+                    <label for="petImportBox">Or paste the page source:</label>
+                    <p class="blurb">If you would rather not use a bookmarklet, view source on your pets page and paste the lot in here. Either way it reads the species off each pet's image, so one you have renamed still comes through as what it actually is. Nothing leaves your browser.</p>
                     <textarea id="petImportBox" placeholder="Paste the page source from dungeon-coursers.com/pets"></textarea>
                     <div class="pet-add-row">
                         <button class="dc-btn" onclick="petDoImport()">Read my pets</button>
