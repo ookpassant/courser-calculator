@@ -9,8 +9,19 @@
 // works out is derived from these.
 // ===========================================================================
 
-// Bonding runs in this order, and an area asks for a rung on it.
-const PET_BONDING = ['Aloof', 'Friendly', 'Loyal', 'Devoted'];
+// Bonding runs in this order, and an area asks for a rung on it. A pet that has
+// never been attached to a courser sits at No Bonding; once earned, bonding
+// stays even if the pet is later unattached.
+//
+// Aloof, Friendly, Loyal and Devoted are ordered by the excursion requirements
+// themselves. Where Wary and Comfortable sit is a best guess from the names, so
+// if a Comfortable pet turns out to reach an Aloof-or-higher area, the fix is to
+// move one string in this list.
+const PET_BONDING = ['No Bonding', 'Wary', 'Aloof', 'Comfortable', 'Friendly', 'Loyal', 'Devoted'];
+const PET_BONDING_GUESSED = ['Wary', 'Comfortable'];
+
+// A pet already out on an excursion, or resting it off, cannot be sent anywhere.
+const PET_STATUS = ['Ready', 'Away', 'Resting'];
 
 const PET_AREAS = [
     { stage: 0, name: 'The Smithy',          hours: 2,   pets: 1, needs: null,      loot: 'Egg',
@@ -118,7 +129,13 @@ function getPets() { return PETS.map(p => Object.assign({}, p)); }
 // Where a bonding level sits on the ladder. -1 for anything unrecognised.
 function petBondingRank(level) { return PET_BONDING.indexOf(level); }
 
-// Can this pet go to this area? An area with no requirement takes anybody.
+// Is this pet free to be sent at all?
+function petIsReady(pet) {
+    return !pet || !pet.status || pet.status === 'Ready';
+}
+
+// Can this pet go to this area? An area with no requirement still needs a pet
+// that is actually free, and No Bonding sits below every requirement.
 function petCanGo(bonding, area) {
     if (!area || !area.needs) return true;
     return petBondingRank(bonding) >= petBondingRank(area.needs);
@@ -178,7 +195,9 @@ function petAllDrops() {
 // `wishlist` only matters at the Castle, the one place a pet's own drop is
 // guaranteed, so that area picks by drop rather than by sparing anybody.
 function petPlan(mine, wishlist) {
-    const pets = (mine || []).map(petResolve);
+    const all = (mine || []).map(petResolve);
+    const busy = all.filter(p => !petIsReady(p));
+    const pets = all.filter(petIsReady);
     const want = (wishlist || []).map(w => String(w).toLowerCase());
     const wanted = p => want.some(w => p.drop.toLowerCase().indexOf(w) !== -1);
     const taken = {};
@@ -206,7 +225,8 @@ function petPlan(mine, wishlist) {
 
     return {
         rows: PET_AREAS.map(a => assigned[a.stage]),
-        idle: pets.filter(p => !taken[p.name])
+        idle: pets.filter(p => !taken[p.name]),
+        busy: busy
     };
 }
 
@@ -260,10 +280,21 @@ function petAdd() {
     if (!sel || !sel.value) return;
     const list = petLoad();
     if (!list.some(p => p.name === sel.value)) {
-        list.push({ name: sel.value, bonding: (lvl && lvl.value) || PET_BONDING[0] });
+        list.push({
+            name: sel.value,
+            bonding: (lvl && lvl.value) || PET_BONDING[0],
+            status: 'Ready'
+        });
         petSave(list);
     }
     sel.value = '';
+    showPets();
+}
+
+function petSetStatus(name, status) {
+    const list = petLoad();
+    const hit = list.find(p => p.name === name);
+    if (hit) { hit.status = status; petSave(list); }
     showPets();
 }
 
@@ -295,6 +326,8 @@ function showPets() {
             const full = petResolve(p);
             const opts = PET_BONDING.map(b =>
                 `<option value="${petEsc(b)}"${b === p.bonding ? ' selected' : ''}>${petEsc(b)}</option>`).join('');
+            const statusOpts = PET_STATUS.map(st =>
+                `<option value="${petEsc(st)}"${st === (p.status || 'Ready') ? ' selected' : ''}>${petEsc(st)}</option>`).join('');
             return `<li class="recipe-fit">
                 <div class="recipe-fit-head">
                     <strong>${petEsc(p.name)}</strong>
@@ -306,6 +339,8 @@ function showPets() {
                 <div class="pet-controls">
                     <span class="pet-label">Bonding</span>
                     <select onchange="petSetBonding('${petEsc(p.name).replace(/'/g, "\\'")}', this.value)">${opts}</select>
+                    <span class="pet-label">Status</span>
+                    <select onchange="petSetStatus('${petEsc(p.name).replace(/'/g, "\\'")}', this.value)">${statusOpts}</select>
                     <button class="dc-btn" onclick="petRemove('${petEsc(p.name).replace(/'/g, "\\'")}')">Remove</button>
                 </div>
             </li>`;
@@ -334,7 +369,15 @@ function showPets() {
     }).join('');
 
     const idle = plan.idle.length
-        ? `<p class="recipe-stable-blurb">Sitting out: ${plan.idle.map(p => petEsc(p.name)).join(', ')}.</p>`
+        ? `<p class="recipe-stable-blurb">Free but not needed: ${plan.idle.map(p => petEsc(p.name)).join(', ')}.</p>`
+        : '';
+    const busy = plan.busy.length
+        ? `<p class="recipe-stable-blurb">Not available: ${plan.busy.map(p => `${petEsc(p.name)} (${petEsc(p.status)})`).join(', ')}.</p>`
+        : '';
+    // Two rungs of the ladder are a guess, so say so where it could bite.
+    const usesGuessed = mine.some(p => PET_BONDING_GUESSED.indexOf(p.bonding) !== -1);
+    const ladderNote = usesGuessed
+        ? `<p class="recipe-stable-blurb">One thing worth knowing: the excursions only ever name Aloof, Friendly, Loyal and Devoted, so where ${PET_BONDING_GUESSED.join(' and ')} sit among them is my guess. I have put the ladder in this order, lowest first: ${PET_BONDING.join(', ')}. If a ${PET_BONDING_GUESSED[1]} pet turns out to reach somewhere this says it cannot, that guess is what to blame.</p>`
         : '';
 
     // Reverse lookup for whatever is in the wishlist box.
@@ -351,5 +394,5 @@ function showPets() {
             <ul class="recipe-near-list">${lookups}</ul></div>` : ''}
         <div class="recipe-stable"><h3 class="recipe-head">Where to send them</h3>
             <p class="recipe-stable-blurb">One pet can only be on one excursion, so this hands them out across all seven at once. The strict areas get first refusal, and everywhere else takes the least-bonded pet that still qualifies, which keeps your Devoted ones free for the Castle.</p>
-            <ul class="recipe-fit-list">${rows}</ul>${idle}</div>`;
+            <ul class="recipe-fit-list">${rows}</ul>${idle}${busy}${ladderNote}</div>`;
 }
