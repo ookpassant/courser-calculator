@@ -224,9 +224,9 @@ function petPlan(mine, wishlist) {
     const taken = {};
 
     // A pet that is away is away somewhere, and that somewhere is an excursion
-    // already running. Its area is that much less free, so the Castle with two
-    // of its four out only needs two more, and an area with its one pet out
-    // needs nobody.
+    // already running. An area runs one at a time, and the Castle's team of
+    // four goes and comes home together, so anybody out means the area is busy
+    // and wants nobody, however many of them are showing.
     const outAt = {};
     busy.forEach((p) => {
         const where = String(p.away || '').trim().toLowerCase();
@@ -239,7 +239,7 @@ function petPlan(mine, wishlist) {
     const assigned = {};
     order.forEach((area) => {
         const already = outAt[area.name.toLowerCase()] || [];
-        const room = Math.max(0, area.pets - already.length);
+        const room = already.length ? 0 : area.pets;
         const free = room ? pets.filter(p => !taken[petKey(p)] && petCanGo(p.bonding, area)) : [];
         let pick;
         if (area.guaranteesDrops) {
@@ -249,7 +249,6 @@ function petPlan(mine, wishlist) {
             const got = {};
             const rank = p => (wanted(p) ? 0 : 2) + (got[p.drop] ? 1 : 0);
             const pool = free.slice();
-            already.forEach(p => { got[p.drop] = true; });
             pick = [];
             while (pick.length < room && pool.length) {
                 pool.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
@@ -513,7 +512,7 @@ function showPets() {
                 <button class="dc-btn pet-row-btn" onclick="petBringBack(${r.area.stage})">They're back</button></div>`
             : '';
         const who = r.pick.length
-            ? `<div class="recipe-fit-meta">${r.out.length ? 'Room for ' : 'Send '}${r.pick.map(one).join(', ')}${
+            ? `<div class="recipe-fit-meta">Send ${r.pick.map(one).join(', ')}${
                 r.short ? ` <span class="recipe-fit-miss">short ${r.short}</span>` : ''}
                 <button class="dc-btn pet-row-btn" onclick="petSendTeam(${r.area.stage})">Sent them</button></div>`
             : (r.out.length
