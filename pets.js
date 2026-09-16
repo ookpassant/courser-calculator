@@ -223,12 +223,24 @@ function petPlan(mine, wishlist) {
     const wanted = p => want.some(w => p.drop.toLowerCase().indexOf(w) !== -1);
     const taken = {};
 
+    // A pet that is away is away somewhere, and that somewhere is an excursion
+    // already running. Its area is that much less free, so the Castle with two
+    // of its four out only needs two more, and an area with its one pet out
+    // needs nobody.
+    const outAt = {};
+    busy.forEach((p) => {
+        const where = String(p.away || '').trim().toLowerCase();
+        if (p.status === 'Away' && where) (outAt[where] = outAt[where] || []).push(p);
+    });
+
     const order = PET_AREAS.slice().sort((a, b) =>
         petBondingRank(b.needs) - petBondingRank(a.needs) || b.stage - a.stage);
 
     const assigned = {};
     order.forEach((area) => {
-        const free = pets.filter(p => !taken[petKey(p)] && petCanGo(p.bonding, area));
+        const already = outAt[area.name.toLowerCase()] || [];
+        const room = Math.max(0, area.pets - already.length);
+        const free = room ? pets.filter(p => !taken[petKey(p)] && petCanGo(p.bonding, area)) : [];
         let pick;
         if (area.guaranteesDrops) {
             // Every pet here brings its own drop, so a team of four identical
@@ -237,8 +249,9 @@ function petPlan(mine, wishlist) {
             const got = {};
             const rank = p => (wanted(p) ? 0 : 2) + (got[p.drop] ? 1 : 0);
             const pool = free.slice();
+            already.forEach(p => { got[p.drop] = true; });
             pick = [];
-            while (pick.length < area.pets && pool.length) {
+            while (pick.length < room && pool.length) {
                 pool.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
                 const next = pool.shift();
                 got[next.drop] = true;
@@ -248,14 +261,15 @@ function petPlan(mine, wishlist) {
             // Everywhere else, spend the least-bonded pet you can.
             free.sort((a, b) => petBondingRank(a.bonding) - petBondingRank(b.bonding) ||
                 a.name.localeCompare(b.name));
-            pick = free.slice(0, area.pets);
+            pick = free.slice(0, room);
         }
         pick.forEach(p => { taken[petKey(p)] = true; });
         assigned[area.stage] = {
             area: area,
             pick: pick.map(p => Object.assign({ wanted: wanted(p) }, p)),
+            out: already,
             eligible: pets.filter(p => petCanGo(p.bonding, area)),
-            short: Math.max(0, area.pets - pick.length)
+            short: Math.max(0, room - pick.length)
         };
     });
 
@@ -333,6 +347,43 @@ function petSetStatus(id, status) {
     const hit = list.find(p => petKey(p) === id);
     if (hit) { hit.status = status; petSave(list); }
     showPets();
+}
+
+// Once you have actually sent the team the page suggested, this marks the lot
+// of them away in one go rather than card by card. The area then reads as
+// running, and its pets stop being offered anywhere else.
+function petSendTeam(stage) {
+    const plan = petPlan(petLoad(), petWishlist());
+    const row = plan.rows.find(r => r.area.stage === Number(stage));
+    if (!row || !row.pick.length) return;
+    const going = {};
+    row.pick.forEach(p => { going[petKey(p)] = true; });
+    petSave(petLoad().map(p => going[petKey(p)]
+        ? Object.assign({}, p, { status: 'Away', away: row.area.name })
+        : p));
+    showPets();
+}
+
+// And the other way, for when they come home.
+function petBringBack(stage) {
+    const area = PET_AREAS.find(a => a.stage === Number(stage));
+    if (!area) return;
+    const here = area.name.toLowerCase();
+    petSave(petLoad().map(p => (String(p.away || '').trim().toLowerCase() === here)
+        ? Object.assign({}, p, { status: 'Ready', away: '' })
+        : p));
+    showPets();
+}
+
+// Everyone home at once, for the morning after a reset.
+function petAllBack() {
+    petSave(petLoad().map(p => Object.assign({}, p, { status: 'Ready', away: '' })));
+    showPets();
+}
+
+function petWishlist() {
+    const raw = (document.getElementById('petWishlist') || {}).value || '';
+    return raw.split(',').map(s => s.trim()).filter(Boolean);
 }
 
 function petClearAll() {
@@ -415,7 +466,7 @@ function petCardHtml(p, recipeItems) {
 
     return `<li class="pet-card">
         <button class="pet-card-x" title="Remove ${petEsc(full.name)}" onclick="petRemove('${key}')">&times;</button>
-        ${img ? `<div class="pet-card-pic"><img src="${petEsc(img)}" alt="" loading="lazy"
+        ${img ? `<div class="pet-card-pic"><img src="${petEsc(img)}" alt=""
             referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></div>` : ''}
         <div class="pet-card-name">${petEsc(full.name)}</div>
         <div class="pet-card-species">${named ? petEsc(full.species) + ' &middot; ' : ''}${petEsc(full.rarity)}</div>
@@ -436,8 +487,7 @@ function showPets() {
     petsRefreshRoster();
 
     const mine = petLoad();
-    const wishRaw = (document.getElementById('petWishlist') || {}).value || '';
-    const wishlist = wishRaw.split(',').map(s => s.trim()).filter(Boolean);
+    const wishlist = petWishlist();
     const recipeItems = petRecipeItems();
 
     // Your pets, with their bonding and status editable in place. Sorted so the
@@ -448,16 +498,27 @@ function showPets() {
     const yours = mine.length
         ? `<ul class="pet-grid">${sorted.map(p => petCardHtml(p, recipeItems)).join('')}</ul>
         <p class="recipe-stable-blurb">${petProgressText(mine.length)}
-            <button class="dc-btn" onclick="petClearAll()">Clear them all</button></p>`
+            <button class="dc-btn pet-row-btn" onclick="petClearAll()">Clear them all</button></p>`
         : '<p class="recipe-stable-empty">No pets yet. Paste your pets page above, or add them one at a time.</p>';
 
     // The allocation.
     const plan = petPlan(mine, wishlist);
     const rows = plan.rows.map((r) => {
+        const one = p => `<strong>${petEsc(p.name)}</strong> <span class="recipe-fit-temp">${petEsc(p.bonding)}</span>` +
+            (r.area.guaranteesDrops ? ` <span class="recipe-fit-x">brings</span> ${petEsc(p.drop)}${p.wanted ? ' <span class="recipe-fit-group">on your list</span>' : ''}` : '');
+        // An excursion already running is reported, not re-planned. If there is
+        // still room, whoever fills it is suggested underneath.
+        const running = r.out.length
+            ? `<div class="recipe-fit-meta">Out now: ${r.out.map(one).join(', ')}
+                <button class="dc-btn pet-row-btn" onclick="petBringBack(${r.area.stage})">They're back</button></div>`
+            : '';
         const who = r.pick.length
-            ? r.pick.map(p => `<strong>${petEsc(p.name)}</strong> <span class="recipe-fit-temp">${petEsc(p.bonding)}</span>` +
-                (r.area.guaranteesDrops ? ` <span class="recipe-fit-x">brings</span> ${petEsc(p.drop)}${p.wanted ? ' <span class="recipe-fit-group">on your list</span>' : ''}` : '')).join(', ')
-            : '<span class="recipe-fit-miss">nobody spare</span>';
+            ? `<div class="recipe-fit-meta">${r.out.length ? 'Room for ' : 'Send '}${r.pick.map(one).join(', ')}${
+                r.short ? ` <span class="recipe-fit-miss">short ${r.short}</span>` : ''}
+                <button class="dc-btn pet-row-btn" onclick="petSendTeam(${r.area.stage})">Sent them</button></div>`
+            : (r.out.length
+                ? ''
+                : `<div class="recipe-fit-meta"><span class="recipe-fit-miss">nobody spare</span></div>`);
         // Devoted is the top rung, so "Devoted or higher" reads as though there
         // were something above it.
         const top = petBondingRank(r.area.needs) === PET_BONDING.length - 1;
@@ -467,7 +528,7 @@ function showPets() {
                 <span class="recipe-fit-temp">${petHours(r.area.hours)}</span>
                 <span class="recipe-fit-temp">${r.area.pets} pet${r.area.pets === 1 ? '' : 's'}</span>
                 <span class="recipe-fit-temp">${need}</span></div>
-            <div class="recipe-fit-meta">${who}${r.short ? ` <span class="recipe-fit-miss">short ${r.short}</span>` : ''}</div>
+            ${running}${who}
             <div class="recipe-fit-meta">Brings back ${petEsc(r.area.loot)}. ${petEsc(r.area.note)}</div>
         </li>`;
     }).join('');
@@ -475,8 +536,16 @@ function showPets() {
     const idle = plan.idle.length
         ? `<p class="recipe-stable-blurb">Free but not needed: ${plan.idle.map(p => petEsc(p.name)).join(', ')}.</p>`
         : '';
+    // Anyone away on an excursion is already named on its row, so this only
+    // covers the ones nothing else accounts for: resting, or away somewhere the
+    // roster does not recognise.
+    const shown = {};
+    plan.rows.forEach(r => r.out.forEach(p => { shown[petKey(p)] = true; }));
+    const unaccounted = plan.busy.filter(p => !shown[petKey(p)]);
     const busy = plan.busy.length
-        ? `<p class="recipe-stable-blurb">Not available: ${plan.busy.map(p => `${petEsc(p.name)} (${petEsc(p.status)}${p.away ? ' at ' + petEsc(p.away) : ''})`).join(', ')}.</p>`
+        ? `<p class="recipe-stable-blurb">${unaccounted.length
+            ? 'Not available: ' + unaccounted.map(p => `${petEsc(p.name)} (${petEsc(p.status)}${p.away ? ' at ' + petEsc(p.away) : ''})`).join(', ') + '. '
+            : ''}<button class="dc-btn pet-row-btn" onclick="petAllBack()">Everyone's back</button></p>`
         : '';
 
 
