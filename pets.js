@@ -10,15 +10,9 @@
 // ===========================================================================
 
 // Bonding runs in this order, and an area asks for a rung on it. A pet that has
-// never been attached to a courser sits at No Bonding; once earned, bonding
-// stays even if the pet is later unattached.
-//
-// Aloof, Friendly, Loyal and Devoted are ordered by the excursion requirements
-// themselves. Where Wary and Comfortable sit is a best guess from the names, so
-// if a Comfortable pet turns out to reach an Aloof-or-higher area, the fix is to
-// move one string in this list.
+// never been attached to a courser sits at No Bonding, below the ladder proper;
+// once earned, bonding stays even if the pet is later unattached.
 const PET_BONDING = ['No Bonding', 'Wary', 'Aloof', 'Comfortable', 'Friendly', 'Loyal', 'Devoted'];
-const PET_BONDING_GUESSED = ['Wary', 'Comfortable'];
 
 // A pet already out on an excursion, or resting it off, cannot be sent anywhere.
 const PET_STATUS = ['Ready', 'Away', 'Resting'];
@@ -374,11 +368,7 @@ function showPets() {
     const busy = plan.busy.length
         ? `<p class="recipe-stable-blurb">Not available: ${plan.busy.map(p => `${petEsc(p.name)} (${petEsc(p.status)})`).join(', ')}.</p>`
         : '';
-    // Two rungs of the ladder are a guess, so say so where it could bite.
-    const usesGuessed = mine.some(p => PET_BONDING_GUESSED.indexOf(p.bonding) !== -1);
-    const ladderNote = usesGuessed
-        ? `<p class="recipe-stable-blurb">One thing worth knowing: the excursions only ever name Aloof, Friendly, Loyal and Devoted, so where ${PET_BONDING_GUESSED.join(' and ')} sit among them is my guess. I have put the ladder in this order, lowest first: ${PET_BONDING.join(', ')}. If a ${PET_BONDING_GUESSED[1]} pet turns out to reach somewhere this says it cannot, that guess is what to blame.</p>`
-        : '';
+
 
     // Reverse lookup for whatever is in the wishlist box.
     const lookups = wishlist.map((w) => {
@@ -394,5 +384,5 @@ function showPets() {
             <ul class="recipe-near-list">${lookups}</ul></div>` : ''}
         <div class="recipe-stable"><h3 class="recipe-head">Where to send them</h3>
             <p class="recipe-stable-blurb">One pet can only be on one excursion, so this hands them out across all seven at once. The strict areas get first refusal, and everywhere else takes the least-bonded pet that still qualifies, which keeps your Devoted ones free for the Castle.</p>
-            <ul class="recipe-fit-list">${rows}</ul>${idle}${busy}${ladderNote}</div>`;
+            <ul class="recipe-fit-list">${rows}</ul>${idle}${busy}</div>`;
 }
