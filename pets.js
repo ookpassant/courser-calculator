@@ -145,6 +145,14 @@ function petCanGo(bonding, area) {
 // ===========================================================================
 
 const PET_STORE_KEY = 'bloodline.pets.v1';
+// How many the site says you own, so the page can tell you when a paste has
+// only covered part of a multi-page collection.
+const PET_TOTAL_KEY = 'bloodline.pets.total.v1';
+
+function petTotalOwned() {
+    const n = Number(localStorage.getItem(PET_TOTAL_KEY));
+    return n > 0 ? n : 0;
+}
 
 function petLoad() {
     try {
@@ -329,6 +337,7 @@ function petSetStatus(id, status) {
 
 function petClearAll() {
     petSave([]);
+    try { localStorage.removeItem(PET_TOTAL_KEY); } catch (e) { /* not fatal */ }
     showPets();
 }
 
@@ -339,11 +348,8 @@ function petDoImport() {
     const res = petImport(box.value);
     if (out) {
         out.innerHTML = (res.added || res.updated)
-            ? `<p class="recipe-stable-blurb">Read ${res.added} new pet${res.added === 1 ? '' : 's'}${res.updated ? ' and updated ' + res.updated : ''}.` +
-              (res.total && res.total > res.added + res.updated
-                ? ` Your collection has ${res.total}, so page through and paste the rest.`
-                : '') + '</p>'
-            : '<p class="recipe-stable-blurb">Nothing recognisable in there. Paste the whole page source from your pets page, not the text of it.</p>';
+            ? `<p class="recipe-stable-blurb">${petImportText(res)} ${petProgressText(petLoad().length)}</p>`
+            : '<p class="recipe-stable-blurb">Nothing recognisable in there. Paste the page source from your pets page, not the text of it.</p>';
     }
     box.value = '';
     showPets();
@@ -359,6 +365,23 @@ function petSetBonding(id, level) {
     const hit = list.find(p => petKey(p) === id);
     if (hit) { hit.bonding = level; petSave(list); }
     showPets();
+}
+
+// What a paste just did. A page you have already pasted is all updates and no
+// additions, so say that rather than "read 0 new pets".
+function petImportText(res) {
+    const pets = n => n + ' pet' + (n === 1 ? '' : 's');
+    if (!res.added) return 'That page was already in, so ' + pets(res.updated) + ' got refreshed.';
+    if (!res.updated) return 'Read ' + pets(res.added) + '.';
+    return 'Read ' + pets(res.added) + ' and refreshed ' + res.updated + ' already in.';
+}
+
+// "30 pets" on its own, or "30 of your 119" when a paste has told us the size.
+function petProgressText(have) {
+    const owned = petTotalOwned();
+    if (!owned || owned <= have) return have + ' pet' + (have === 1 ? '' : 's') + '.';
+    return have + ' of your ' + owned + ' pets. Paste the next page to bring in the other ' +
+        (owned - have) + '.';
 }
 
 function showPets() {
@@ -404,7 +427,7 @@ function showPets() {
                 </div>
             </li>`;
         }).join('')}</ul>
-        <p class="recipe-stable-blurb">${mine.length} pet${mine.length === 1 ? '' : 's'}.
+        <p class="recipe-stable-blurb">${petProgressText(mine.length)}
             <button class="dc-btn" onclick="petClearAll()">Clear them all</button></p>`
         : '<p class="recipe-stable-empty">No pets yet. Paste your pets page above, or add them one at a time.</p>';
 
@@ -465,12 +488,12 @@ function showPets() {
 // ===========================================================================
 
 function petParseCollection(html) {
-    const out = { pets: [], skipped: 0, pages: 0 };
+    const out = { pets: [], skipped: 0, owned: 0 };
     const text = String(html || '');
     if (!text.trim()) return out;
 
     const total = text.match(/Showing\s+\d+[–\-]\d+\s+of\s+(\d+)/i);
-    if (total) out.pages = Number(total[1]);
+    if (total) out.owned = Number(total[1]);
 
     // One card per pet. Splitting on the wrapper keeps each card's fields together.
     const cards = text.split(/class="[^"]*inventory-pet[^"]*"/i).slice(1);
@@ -509,7 +532,7 @@ function petParseCollection(html) {
 // second paste updates rather than duplicates.
 function petImport(html) {
     const parsed = petParseCollection(html);
-    if (!parsed.pets.length) return { added: 0, updated: 0, skipped: parsed.skipped, total: parsed.pages };
+    if (!parsed.pets.length) return { added: 0, updated: 0, skipped: parsed.skipped, total: parsed.owned };
     const list = petLoad();
     let added = 0, updated = 0;
     parsed.pets.forEach((p) => {
@@ -518,5 +541,10 @@ function petImport(html) {
         else { list.push(p); added++; }
     });
     petSave(list);
-    return { added: added, updated: updated, skipped: parsed.skipped, total: parsed.pages };
+    // Remember what the site said the collection size was, so the page can keep
+    // saying how much of it is in.
+    if (parsed.owned) {
+        try { localStorage.setItem(PET_TOTAL_KEY, String(parsed.owned)); } catch (e) { /* not fatal */ }
+    }
+    return { added: added, updated: updated, skipped: parsed.skipped, total: parsed.owned };
 }
