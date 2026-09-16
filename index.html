@@ -426,6 +426,19 @@
         .recipe-fit, .recipe-near-list li { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-uncommon); border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 8px; font-size: 0.92rem; line-height: 1.55; }
         .recipe-near-list li { border-left-color: var(--dc-slate); }
         .recipe-fit-head strong { color: var(--dc-ink); }
+        /* Pet Excursions. The bonding picker and Remove sit on one line, since
+           a full-width button per pet turns the list into a wall of green. */
+        .pet-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+        .pet-controls select { width: auto; min-width: 8.5rem; margin: 0; }
+        .pet-controls .dc-btn { width: auto; padding: 4px 12px; font-size: 0.7rem; margin: 0; }
+        .pet-controls .pet-label { font-size: 0.8rem; color: var(--dc-slate); }
+        .pet-add-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pet-add-row select { width: auto; flex: 1 1 14rem; margin: 0; }
+        .pet-add-row .dc-btn { width: auto; padding: 6px 16px; margin: 0; }
+        .pet-add-row { margin-bottom: 14px; }
+        .recipe-fit-group { font-family: var(--font-stamp); font-size: 0.55rem; letter-spacing: var(--tracking-stamp);
+            text-transform: uppercase; color: var(--dc-moss); border: 1px solid var(--dc-moss);
+            padding: 1px 5px; margin-left: 6px; white-space: nowrap; }
         .recipe-fit-temp { font-family: var(--font-stamp); font-size: 0.6rem; letter-spacing: var(--tracking-stamp); color: var(--dc-slate); text-transform: uppercase; margin-left: 4px; }
         .recipe-fit-x { color: var(--dc-slate); margin: 0 6px; }
         .recipe-fit-meta { font-size: 0.88rem; color: var(--dc-slate); margin-top: 4px; }
@@ -912,6 +925,35 @@
 
                     <div class="recipe-result" id="recipeResult" style="display:none;"></div>
                 </section>
+                <!-- Area: Pet Excursions. Deliberately not in the nav: reachable
+                     by #pets only, so it stays out of the way until it earns a
+                     place there. -->
+                <section class="area" id="area-pets">
+                    <h1 class="page-title">Pet Excursions</h1>
+                    <p class="blurb">Tell me which pets you have and how bonded each one is, and I'll work out who goes where. One pet can only be on one excursion, so this hands them out across all seven areas at once rather than one area at a time.</p>
+
+                    <div class="info-box">
+                        <p><strong>Only the Castle cares who you send.</strong> Every other area hands back the same loot whoever goes, so the pet is interchangeable and the only question is who you can spare. The Buried Castle is the exception: it takes four Devoted pets for a week and every one of them brings its own drop back on top of the area's loot.</p>
+                    </div>
+
+                    <label for="petAddName">Add a pet:</label>
+                    <div class="pet-add-row">
+                        <select id="petAddName"><option value="">Pick a pet…</option></select>
+                        <select id="petAddBonding">
+                            <option value="Aloof">Aloof</option>
+                            <option value="Friendly">Friendly</option>
+                            <option value="Loyal">Loyal</option>
+                            <option value="Devoted">Devoted</option>
+                        </select>
+                        <button class="dc-btn" onclick="petAdd()">Add</button>
+                    </div>
+
+                    <label for="petWishlist">Anything you're after? (comma separated)</label>
+                    <input type="text" id="petWishlist" placeholder="e.g. Cave Root, Strong Root, Bunch of Grapes" oninput="showPets()">
+
+                    <div id="petResult" class="recipe-result"></div>
+                </section>
+
 
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->
                 <section class="area" id="area-chimera">
@@ -1071,6 +1113,7 @@
          workflow rewrites it to the commit SHA on every deploy, so this value
          is only what local checkouts see — no need to bump it by hand. -->
     <script src="group-horses.js?v=20260820a"></script>
+    <script src="pets.js?v=20260820a"></script>
     <script src="breeding-calculator.js?v=20260820a"></script>
     <script src="app.js?v=20260820a"></script>
 </body>

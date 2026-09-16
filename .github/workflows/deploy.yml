@@ -55,12 +55,12 @@ jobs:
             # which is fine — the git reset above wipes it before the next
             # stamping.
             SHA="$(git rev-parse --short HEAD)"
-            sed -i -E "s#(src=\"(app|breeding-calculator|group-horses)\.js)\?v=[^\"]*\"#\1?v=${SHA}\"#g" index.html
+            sed -i -E "s#(src=\"(app|breeding-calculator|group-horses|pets)\.js)\?v=[^\"]*\"#\1?v=${SHA}\"#g" index.html
 
             # Fail loudly rather than silently serving an unstamped page.
             STAMPED="$(grep -c "\.js?v=${SHA}\"" index.html || true)"
-            if [ "$STAMPED" -ne 3 ]; then
-              echo "Expected 3 stamped script tags, found ${STAMPED}." >&2
+            if [ "$STAMPED" -ne 4 ]; then
+              echo "Expected 4 stamped script tags, found ${STAMPED}." >&2
               grep -n '<script src=' index.html >&2 || true
               exit 1
             fi

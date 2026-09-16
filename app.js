@@ -205,7 +205,9 @@
     translate: { label: 'Translate', crumb: 'Translate' },
     layers: { label: 'Layers', crumb: 'Layers' },
     somatic: { label: 'Somatic', crumb: 'Somatic' },
-    collection: { label: 'Collection', crumb: 'Collection' }
+    collection: { label: 'Collection', crumb: 'Collection' },
+    // Not in the nav on purpose. Reachable at #pets only.
+    pets: { label: 'Pet Excursions', crumb: 'Pet Excursions', unlisted: true }
   };
 
   // =========================================================================
@@ -300,6 +302,7 @@
     if (area === 'translate' && window.populateTranslateCollectionSelect) window.populateTranslateCollectionSelect();
     if (area === 'layers' && window.populateLayersCollectionSelect) window.populateLayersCollectionSelect();
     if (area === 'somatic' && window.populateSomaticCollectionSelect) window.populateSomaticCollectionSelect();
+    if (area === 'pets' && window.showPets) window.showPets();
     // Privacy-first analytics: record which tool was opened, nothing else.
     // No-op unless a PostHog key is set in index.html.
     if (window.posthog) window.posthog.capture('tool_opened', { tool: area });
@@ -983,6 +986,15 @@
     return true;
   }
 
+  // #pets and the like. Only areas this script knows about are honoured, so a
+  // stray hash cannot route anywhere unexpected.
+  function openAreaFromHash() {
+    const name = (window.location.hash || '').replace(/^#\/?/, '').trim().toLowerCase();
+    if (!name || !AREAS[name]) return false;
+    showArea(name);
+    return true;
+  }
+
   // =========================================================================
   // Init
   // =========================================================================
@@ -1010,6 +1022,11 @@
     if (didQuery || didBulk) {
       history.replaceState({}, '', window.location.pathname);
     }
+
+    // A tool can be reached by putting its name in the hash. That is the only
+    // way into an unlisted one, since it has no nav link to click.
+    openAreaFromHash();
+    window.addEventListener('hashchange', openAreaFromHash);
 
     // Offline support was removed (it cached stale versions). Tear down any
     // previously-installed service worker + its caches so nothing is pinned.
