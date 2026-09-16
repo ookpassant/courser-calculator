@@ -416,7 +416,7 @@ function petCardHtml(p, recipeItems) {
     return `<li class="pet-card">
         <button class="pet-card-x" title="Remove ${petEsc(full.name)}" onclick="petRemove('${key}')">&times;</button>
         ${img ? `<div class="pet-card-pic"><img src="${petEsc(img)}" alt="" loading="lazy"
-            onerror="this.parentNode.remove()"></div>` : ''}
+            referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></div>` : ''}
         <div class="pet-card-name">${petEsc(full.name)}</div>
         <div class="pet-card-species">${named ? petEsc(full.species) + ' &middot; ' : ''}${petEsc(full.rarity)}</div>
         <div class="pet-card-drop">${petEsc(full.drop)}${
