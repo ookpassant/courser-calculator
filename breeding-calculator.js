@@ -402,8 +402,37 @@ const WHITE_MARKING_NAMES = {
 // Normalising here (not just in the phenotype namer) means breeding, lethal
 // checks and validation all agree on the same allele pair.
 const GENE_TOKEN_ALIASES = { 'patn': 'npatn' };
+
+// Two alleles sharing one locus can be written either way round, and the game
+// is not consistent about which: a horse may come through with OpPr where the
+// tables here say PrOp. Rather than list every spelling by hand and keep
+// missing some, each compound the engine knows gets its mirror registered
+// automatically. Built on first use so it cannot depend on declaration order,
+// and it never overwrites a spelling that already means something.
+let _geneTokenMirrors = null;
+function geneTokenMirrors() {
+    if (_geneTokenMirrors) return _geneTokenMirrors;
+    const mirrors = {};
+    const keys = [].concat(
+        Object.keys(DILUTION_NAMES), Object.keys(MODIFIER_NAMES), Object.keys(WHITE_MARKING_NAMES));
+    const known = new Set(keys);
+    keys.forEach((key) => {
+        const pair = getGeneAlleles(key);
+        if (pair.length !== 2) return;
+        const a = pair[0], b = pair[1];
+        // Only two different real alleles can be written the other way round.
+        if (a === b || a === 'n' || b === 'n') return;
+        const mirror = b + a;
+        if (mirror !== key && !known.has(mirror) && !mirrors[mirror]) mirrors[mirror] = key;
+    });
+    _geneTokenMirrors = mirrors;
+    return mirrors;
+}
+
 function normalizeGeneToken(tok) {
-    return Object.prototype.hasOwnProperty.call(GENE_TOKEN_ALIASES, tok) ? GENE_TOKEN_ALIASES[tok] : tok;
+    if (Object.prototype.hasOwnProperty.call(GENE_TOKEN_ALIASES, tok)) return GENE_TOKEN_ALIASES[tok];
+    const mirrors = geneTokenMirrors();
+    return Object.prototype.hasOwnProperty.call(mirrors, tok) ? mirrors[tok] : tok;
 }
 
 function parseGenotype(genoString) {

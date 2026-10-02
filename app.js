@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '2 Oct 2026', items: [
+      'Fixed: a shared locus written the other way round was thrown away as a typo. OpPr, CwCu, spLu, erCh, prlCr, CrTp and prlTp now read the same as PrOp, CuCw, Lusp, Cher, Crprl, TpCr and Tpprl, so a horse with any of them translates, searches and breeds properly instead of quietly losing a gene. Ta Sasha!'
+    ] },
     { date: '15 Sep 2026', items: [
       'Group horses are in. All 44 now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, with the Juicy Berry or Juicy Apple each one costs counted in the price. GG Tower for the amazing sheet!',
       'Recipe suggests a Creation Scroll when no pair can breed your target, and prices it at the Wizard\'s rates: the scroll, which potion each leftover trait takes, and what it all comes to.',
