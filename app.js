@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '5 Oct 2026', items: [
+      'New Modifier: Counterpoint (nCp, Uncommon) swaps a bay-based coat round, so the body takes the mane, tail and stocking colour and they take the body\'s, with optional black-and-tan patterning. Every tool knows it, and a scroll charges 2 Modifier Potions for it.'
+    ] },
     { date: '2 Oct 2026', items: [
       'Fixed: a shared locus written the other way round was thrown away as a typo. OpPr, CwCu, spLu, erCh, prlCr, CrTp and prlTp now read the same as PrOp, CuCw, Lusp, Cher, Crprl, TpCr and Tpprl, so a horse with any of them translates, searches and breeds properly instead of quietly losing a gene. Ta Sasha!'
     ] },

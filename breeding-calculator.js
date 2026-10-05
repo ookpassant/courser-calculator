@@ -329,6 +329,9 @@ const MODIFIER_NAMES = {
     'GPt': 'Gray Pitch', 'PtG': 'Gray Pitch',
     // Ingot recolours every white marking one metallic colour. Dominant.
     'nIn': 'Ingot', 'InIn': 'Ingot',
+    // Counterpoint swaps a bay-based coat's body colour with its mane, tail and
+    // stockings. Dominant, and on a locus of its own.
+    'nCp': 'Counterpoint', 'CpCp': 'Counterpoint',
     // Mithril is a recessive gloss over the whole coat: it needs both copies.
     'nmt': 'Carrying Mithril', 'mtmt': 'Mithril',
     // Damascus shares Dun's locus and only shows when paired WITH Dun (DmD), so
@@ -362,7 +365,7 @@ const TRAITS_AFTER_COAT = [
     // Gr/Ap compound
     'Greaves Apron',
     // Modifiers that read after the coat
-    'Ingot', 'Damascus', 'Mithril',
+    'Ingot', 'Damascus', 'Mithril', 'Counterpoint',
     // Carrier traits — the "I swear it's in my bloodline" genes
     'Carries Ether', 'Carries Patn', 'Carries Pearl', 'Carries Damascus', 'Carrying Mithril'
 ];
@@ -877,6 +880,7 @@ const MODIFIER_DESC = {
     'Prism': "Prism recolours the horse's Pangare or Sooty into any distinguishable colour, never white, and may carry several colours blended evenly together with no hard edges or patterns. It takes one or the other, never both on the same horse, and covers whichever it takes completely rather than in part. It also lets Pangare or Sooty show on an undiluted black, including the black stockings of a bay-based coat. With neither Pangare nor Sooty in the genotype it stays unseen.",
     'Starfield': "Starfield turns all of the horse's white markings into a night sky, black or dark blue or a blend of the two, optionally with little round spots of the original colour showing through.",
     'Ingot': "Ingot turns every one of the horse's white markings a single metallic colour, the same one across the whole horse, optionally with a metallic shine. Where a marking reaches the mane or tail, that goes metallic too. It leaves skin, eyes and hooves alone, and sits below Starfield and Opal, so those show over the top of it. It counts as a metallic trait, so Lacquer can recolour it. With no white marking or Free White to land on it stays in the genotype, unseen.",
+    'Counterpoint': "Counterpoint swaps a bay-based coat round: the body takes the colour the mane, tail and stockings would have been, and they take the body's. It can also lay a symmetrical, natural-looking pattern over the belly, chest, legs and face, the way a black-and-tan dog is marked, anywhere from nothing at all to its full spread. Its edges may be crisp, blended or both. Traits that work on the mane and tail, such as Silver, Flaxen and Pennant, still cover what they always covered, and Ether and Nacre sheens keep their own colour and spread. It needs a bay base (E_ A_) to show, so on anything else it stays in the genotype, unseen.",
     'Mithril': "Mithril is a glossy, reflective shine over the whole coat, mane and tail, evenly. It changes no colours: the horse's own coat and traits stay clearly visible underneath. Skin, eyes and hooves are untouched. It is recessive, so it needs both copies to show.",
     'Damascus': "Damascus lets Dun's primitive marks escape their usual limits, branching into irregular streaks, swirls, webbing or blotches over up to a quarter of the coat. It is always the same colour as the other Dun marks, always grows out of one of them, and its edges may be crisp or blended. It never maps and never makes deliberate-looking shapes or repeating stripes.",
     'Lacquer': "Lacquer shifts the horse's metallic traits (Gilt, Ingot, Kintsugi and Swarf) outside their usual metallic range into any unnatural colour. It can recolour every metallic trait or only some of them, give each its own colour, and carry several colours at once, blending them evenly where they meet on one trait, with no hard edges or patterns and the trait's own boundaries still clear. It covers a trait completely or not at all, can be hidden entirely, and never matches the coat. It sits above Illuminated and Sepulchered and can override them on Gilt skin and hooves, and Signet is unaffected. Recessive, so it needs both copies to show.",
@@ -1182,6 +1186,9 @@ const LAYER_COLORS_MARKINGS = [
     { traits: ['Prism'] },
     { group: 'Mane/Tail Modifiers', traits: ['Silver', 'Flaxen', 'Pangare'] },
     { group: 'Coat Modifiers', traits: ['Tabard', 'Damascus', 'Dun', 'Sooty', 'Dapple'] },
+    // Counterpoint swaps which colour goes where, so it reads under everything
+    // laid on top of the coat and over the base itself.
+    { traits: ['Counterpoint'] },
     { traits: ['Pennant'] },
     { base: true }
 ];
@@ -1224,7 +1231,7 @@ const TRAIT_PAGE_IDS = {
     // White markings
     'Cuirass': 29, 'Harlequin': 30, 'Blanched': 31, 'Filigree': 32, 'Free White': 33, 'Crowned': 34, 'Splash': 35, 'Roan': 36, 'Tobiano': 37, 'Snowflake': 38, 'Overo': 39, 'Blanket': 40, 'Leopard': 41, 'Snowcap': 42, 'Varnish Roan': 43, 'Fewspot': 44, 'Sabino': 45, 'Dominant White': 46, 'Rabicano': 47, 'False Leopard': 48, 'Shroud': 79, 'Ossuary': 80, 'Girdle': 91, 'Collar': 92, 'Apron': 99, 'Greaves': 100,
     // Modifiers
-    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101, 'Damascus': 114, 'Mithril': 115, 'Ingot': 116,
+    'Dun': 49, 'Pangare': 50, 'Sooty': 51, 'Gray': 52, 'Tabard': 53, 'Opal': 54, 'Flaxen': 55, 'Silver': 56, 'Illuminated': 57, 'Gilt': 58, 'Prism': 88, 'Sepulchered': 89, 'Vellum': 90, 'Starfield': 94, 'Lacquer': 97, 'Pitch': 101, 'Damascus': 114, 'Mithril': 115, 'Ingot': 116, 'Counterpoint': 122,
     // Anomalies
     'Bend-or Spots': 59, 'Birdcatcher Spots': 60, 'Brindle': 61, 'Chimera': 62, 'Geode': 63, 'Ore': 64, 'Stained Glass': 65, 'Kintsugi': 66, 'Swarf': 67, 'Vitiligo': 68, 'Oracle': 74, 'Signet': 75, 'Pennant': 76, 'Pastiche': 77, 'Fresco': 87, 'Lantern': 95,
     // Free markings the engine doesn't model but may name
@@ -1473,6 +1480,7 @@ function getGeneAlleles(gene) {
     // Compound heterozygous genes — the odd couples of the genetic world
     if (gene === 'PtPt') return ['Pt', 'Pt'];
     if (gene === 'InIn') return ['In', 'In'];
+    if (gene === 'CpCp') return ['Cp', 'Cp'];
     if (gene === 'mtmt') return ['mt', 'mt'];
     if (gene === 'DmDm') return ['Dm', 'Dm'];
     if (gene === 'DmD' || gene === 'DDm') return ['Dm', 'D'];
@@ -1559,6 +1567,7 @@ function combineAlleles(allele1, allele2) {
         if (allele1 === 'Op') return 'OpOp';
         if (allele1 === 'Pt') return 'PtPt';
         if (allele1 === 'In') return 'InIn';
+        if (allele1 === 'Cp') return 'CpCp';
         if (allele1 === 'mt') return 'mtmt';
         if (allele1 === 'Dm') return 'DmDm';
         if (allele1 === 'Ap') return 'ApAp';
@@ -1800,6 +1809,7 @@ function generateFoal(parent1, parent2, variation) {
     const independentModifiers = [
         { pattern: /^(nP|PP)$/, name: 'P' },
         { pattern: /^(nIn|InIn)$/, name: 'In' },
+        { pattern: /^(nCp|CpCp)$/, name: 'Cp' },
         { pattern: /^(nmt|mtmt)$/, name: 'mt' },
         { pattern: /^(nSty|StySty)$/, name: 'Sty' },
         { pattern: /^(nf|ff)$/, name: 'f' },
@@ -2174,6 +2184,7 @@ const GENE_RARITY = {
     'nDm': TIER_UNCOMMON, 'DmDm': TIER_UNCOMMON, 'DmD': TIER_UNCOMMON, 'DDm': TIER_UNCOMMON,
     'nmt': TIER_EPIC, 'mtmt': TIER_EPIC,
     'nIn': TIER_LEGENDARY, 'InIn': TIER_LEGENDARY,
+    'nCp': TIER_UNCOMMON, 'CpCp': TIER_UNCOMMON,
     'ff': TIER_UNCOMMON,
     'nZ': TIER_UNCOMMON, 'ZZ': TIER_UNCOMMON,
     'nLu': TIER_UNCOMMON, 'LuLu': TIER_UNCOMMON, 'Lusp': TIER_UNCOMMON,
@@ -2361,7 +2372,7 @@ const RARITY_GENES = {
             { baseCoat: 'Chestnut', genes: ['ee', 'AA', 'nTp'] } // Weld
         ],
         markings: ['nCu', 'nCw', 'nO', 'nLp patn', 'nSb', 'nGi', 'nCo'],
-        modifiers: ['nf', 'nZ', 'nLu', 'nsp', 'DmD']
+        modifiers: ['nf', 'nZ', 'nLu', 'nsp', 'DmD', 'nCp']
     },
     common: {
         coatColors: [
@@ -2744,6 +2755,7 @@ function extractTraitsFromQuery(query) {
     if (workingQuery.includes('blanched')) traits.push('Blanched');
     if (workingQuery.includes('pitch')) traits.push('Pitch');
     if (workingQuery.includes('ingot')) traits.push('Ingot');
+    if (workingQuery.includes('counterpoint')) traits.push('Counterpoint');
     if (workingQuery.includes('mithril')) traits.push('Mithril');
     if (workingQuery.includes('damascus')) traits.push('Damascus');
     if (workingQuery.includes('apron')) traits.push('Apron');
@@ -3261,6 +3273,8 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (pairCarries('Pt')) traitsScores.push(80);
         } else if (traitLower === 'ingot') {
             if (pairCarries('In')) traitsScores.push(80);
+        } else if (traitLower === 'counterpoint') {
+            if (pairCarries('Cp')) traitsScores.push(80);
         } else if (traitLower === 'mithril') {
             if (pairCarries('mt')) traitsScores.push(80);
         } else if (traitLower === 'damascus') {
@@ -3556,6 +3570,7 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         { pattern: /^(nTd|TdTd)$/, allele: 'Td', name: 'Tabard' },
         { pattern: /^(nGl|GlGl)$/, allele: 'Gl', name: 'Gilt' },
         { pattern: /^(nIn|InIn)$/, allele: 'In', name: 'Ingot' },
+        { pattern: /^(nCp|CpCp)$/, allele: 'Cp', name: 'Counterpoint' },
         { pattern: /^(nV|VV)$/, allele: 'V', name: 'Vellum' },
     ];
 
@@ -4311,6 +4326,8 @@ const SOMATIC_SWITCH_OFF = {
     'GG':     [{ trait: 'Gray', becomes: null }],
     'nIn':    [{ trait: 'Ingot', becomes: null }],
     'InIn':   [{ trait: 'Ingot', becomes: null }],
+    'nCp':    [{ trait: 'Counterpoint', becomes: null }],
+    'CpCp':   [{ trait: 'Counterpoint', becomes: null }],
     'mtmt':   [{ trait: 'Mithril', becomes: null }],
     'DmD':    [{ trait: 'Damascus', becomes: 'nD' }, { trait: 'Dun', becomes: 'nDm' }],
     'DDm':    [{ trait: 'Damascus', becomes: 'nD' }, { trait: 'Dun', becomes: 'nDm' }],
