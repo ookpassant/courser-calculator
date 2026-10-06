@@ -66,6 +66,8 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '7 Oct 2026', items: [
+      'Smart Search has the same "just the coat" tickbox. Search for a coat with a marking and it used to drop every pair that could not do both; tick the box and it shows the ones that can throw the coat, saying what each can and cannot add and what else it might bring along.',
+      'Fixed: the Probability on each search result was guesswork, comparing the first three letters of a trait name against the genotype text, which almost never matched. Nearly every pair read as "Low (~5-10%)" however good it was. It now breeds the pair and counts, so a pairing that really throws Woad a quarter of the time says so.',
       'Recipe has a "just the coat" tickbox. Tick it and it stops trying to keep every other gene out, so it finds pairs that can throw the coat and tells you what markings, modifiers and anomalies each one might bring along for the ride. Usually more pairs and much better odds, since nothing is spent blocking.'
     ] },
     { date: '6 Oct 2026', items: [

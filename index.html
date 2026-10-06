@@ -816,6 +816,10 @@
                         <label for="breedingQuery">What are you trying to breed?</label>
                         <input type="text" id="breedingQuery" placeholder='e.g. "Amber Champagne", "fewspot and starfield", or "carries filigree"'>
                         <div class="recent-queries" id="recentQueries"></div>
+                        <label class="recipe-coat-only">
+                            <input type="checkbox" id="searchCoatOnly">
+                            <span>Just the coat. Show me pairs that can throw it even if they miss the rest.</span>
+                        </label>
                         <button class="dc-btn mauve" onclick="searchBreeding()">Search my stable</button>
 
                         <div id="searchResults" style="margin-top: 20px; display: none;">

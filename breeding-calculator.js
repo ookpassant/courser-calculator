@@ -2552,19 +2552,37 @@ function searchBreeding() {
         return;
     }
 
+    // On coat alone, only the coats have to be matched; the rest of the query
+    // becomes a wish list that each pair is reported against.
+    const coatBox = document.getElementById('searchCoatOnly');
+    const coatOnly = !!(coatBox && coatBox.checked);
+    const split = searchSplitTraits(targetTraits);
+    const onCoat = coatOnly && split.coats.length > 0;
+    if (onCoat) trackUse('search_coat_only');
+    const matchOn = onCoat ? split.coats : targetTraits;
+    lastSearchWanted = targetTraits;
+    lastSearchOnCoat = onCoat;
+
     // Send the matchmaking algorithm into the collection to find compatible pairs
-    const matches = findBreedingMatches(targetTraits);
+    const matches = findBreedingMatches(matchOn);
 
     if (matches.length === 0) {
         trackUse('search_no_matches');
-        resultsContent.innerHTML = `<p style="color: #6f6877;">No breeding pairs found in your collection that can produce: <strong style="color: #5d4b60;">${targetTraits.join(', ')}</strong></p>`;
+        resultsContent.innerHTML = `<p style="color: #6f6877;">No breeding pairs found in your collection that can produce: <strong style="color: #5d4b60;">${matchOn.join(', ')}</strong>` +
+            (!onCoat && split.coats.length && split.extras.length
+                ? `. Tick <em>just the coat</em> and I'll show pairs that can throw ${split.coats.join(', ')} even if they miss ${split.extras.join(', ')}.`
+                : '') + `</p>`;
     } else {
         // Stash these matches for the grand reveal in the modal
         lastSearchMatches = matches;
-        lastSearchTraits = targetTraits;
+        lastSearchTraits = matchOn;
 
-        resultsContent.innerHTML = `
-            <p style="color: #6f6877; margin-bottom: 15px;">Found <strong style="color: #5d4b60;">${matches.length}</strong> possible breeding pair(s) for: <strong style="color: #5d4b60;">${targetTraits.join(', ')}</strong></p>
+        const modeNote = onCoat
+            ? `<p style="color: #6f6877; margin-bottom: 10px;">Going on coat alone, so these are pairs that can throw <strong style="color: #5d4b60;">${split.coats.join(', ')}</strong>.` +
+              (split.extras.length ? ` Each one says whether it can manage ${split.extras.join(', ')} as well.` : '') + `</p>`
+            : (coatOnly ? `<p style="color: #6f6877; margin-bottom: 10px;">There is no coat in that search, so there was nothing to narrow to and everything you asked for still has to match.</p>` : '');
+        resultsContent.innerHTML = modeNote + `
+            <p style="color: #6f6877; margin-bottom: 15px;">Found <strong style="color: #5d4b60;">${matches.length}</strong> possible breeding pair(s) for: <strong style="color: #5d4b60;">${matchOn.join(', ')}</strong></p>
             <button onclick="openSearchModal()"
                     style="padding: 12px 24px; background: var(--dc-mauve); color: #fff; border: 1px solid var(--dc-mauve); border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-stamp); text-transform: uppercase; letter-spacing: var(--tracking-stamp); font-size: 0.9em; letter-spacing: 1px; transition: all 0.2s;">
                 View All Results
@@ -2583,6 +2601,10 @@ function searchBreeding() {
 
 let lastSearchMatches = [];
 let lastSearchTraits = [];
+// Everything the query asked for, and whether only the coat had to match, so
+// the results can say what each pair does and does not cover.
+let lastSearchWanted = [];
+let lastSearchOnCoat = false;
 const RESULTS_PER_PAGE = 10;
 let currentModalPage = 0;
 
@@ -2610,12 +2632,36 @@ function renderModalPage() {
         `Results for: ${lastSearchTraits.join(', ')} (${lastSearchMatches.length} pairs)`;
 
     modalBody.innerHTML = '';
+    // Odds are measured by breeding the pair, so only the page on screen is
+    // worked out rather than every match in the list.
     pageMatches.forEach(match => {
         const item = document.createElement('div');
         item.className = 'search-result-item';
         item.style.cursor = 'pointer';
         const p1Pheno = genotypeToPhenotype(match.parent1.genotype);
         const p2Pheno = genotypeToPhenotype(match.parent2.genotype);
+
+        // What this pair covers of everything the query asked for, and what it
+        // misses. Worth saying either way round: on coat alone a miss is fine,
+        // and otherwise it should not be a miss at all.
+        const wanted = lastSearchWanted.length ? lastSearchWanted : lastSearchTraits;
+        const covers = searchCovers(match.parent1, match.parent2, wanted);
+        const misses = wanted.filter(t => covers.indexOf(t) === -1);
+        const coverLine = misses.length
+            ? `<p style="color: #6f6877; font-size: 0.85em; margin: 6px 0 0;">Gives you <strong style="color:#5d4b60;">${covers.join(', ') || 'none of it'}</strong>. Cannot add <strong>${misses.join(', ')}</strong>.</p>`
+            : `<p style="color: #6f6877; font-size: 0.85em; margin: 6px 0 0;">Covers everything you asked for.</p>`;
+
+        // Everything else these two could hand down, for when the coat is the
+        // point and the rest is a bonus.
+        const extras = (typeof recipePairExtras === 'function')
+            ? recipePairExtras(searchCoatRecipe(wanted), match.parent1, match.parent2)
+                .filter(n => wanted.indexOf(n) === -1)
+            : [];
+        const extraLine = (lastSearchOnCoat && extras.length)
+            ? `<p style="color: #6f6877; font-size: 0.85em; margin: 4px 0 0;">May also bring: ${extras.slice(0, 12).join(', ')}${extras.length > 12 ? ', and more' : ''}.</p>`
+            : '';
+
+        const rate = searchRealOdds(match.parent1, match.parent2, covers);
         item.innerHTML = `
             <h4>${match.parent1.name} &times; ${match.parent2.name}</h4>
             <p><strong>Parent 1:</strong> ${match.parent1.id} - ${match.parent1.temperament}</p>
@@ -2624,7 +2670,8 @@ function renderModalPage() {
             <p><strong>Parent 2:</strong> ${match.parent2.id} - ${match.parent2.temperament}</p>
             <p style="color: #5d4b60; font-size: 0.85em; margin: 4px 0;">${p2Pheno}</p>
             <span class="geno">${match.parent2.genotype}</span>
-            <p style="margin-top: 10px;"><strong style="color: #5d4b60;">Match Score:</strong> ${match.score} | <strong style="color: #5d4b60;">Probability:</strong> ${match.probability}</p>
+            ${coverLine}${extraLine}
+            <p style="margin-top: 10px;"><strong style="color: #5d4b60;">How often:</strong> ${searchOddsText(rate)}</p>
         `;
         item.addEventListener('click', function() {
             fillParents(match.parent1, match.parent2);
@@ -2766,6 +2813,42 @@ function extractTraitsFromQuery(query) {
     if (workingQuery.includes('crowned')) traits.push('Crowned');
 
     return traits;
+}
+
+// Is this searched term a coat, or a marking/modifier riding on one?
+function searchIsCoat(trait) {
+    return CANONICAL_COATS.has(String(trait).toLowerCase()) || !!COAT_FAMILIES[trait];
+}
+
+// On coat alone, the markings and modifiers stop being requirements and become
+// a maybe, so a pair that throws the coat is shown whether or not it can manage
+// the rest. What it can and cannot add is then said per pair.
+function searchSplitTraits(targetTraits) {
+    const coats = targetTraits.filter(searchIsCoat);
+    const extras = targetTraits.filter(t => !searchIsCoat(t));
+    return { coats: coats, extras: extras };
+}
+
+// The coat being searched for, as a recipe, so "what else might this pair
+// bring" does not count the coat's own genes as a bonus.
+let _searchCoatRecipe = { key: null, value: { loci: [] } };
+function searchCoatRecipe(traits) {
+    const coats = (traits || []).filter(searchIsCoat);
+    const key = coats.join('|');
+    if (_searchCoatRecipe.key === key) return _searchCoatRecipe.value;
+    let value = { loci: [] };
+    if (coats.length) {
+        const built = recipeFromEnglish('a ' + String(coats[0]).toLowerCase());
+        if (built && built.genotype) value = computeRecipe(built.genotype, { coatOnly: true });
+    }
+    _searchCoatRecipe = { key: key, value: value };
+    return value;
+}
+
+// Which of the traits asked for this pair can actually deliver, judged by the
+// same scorer the search itself uses, so the two can never disagree.
+function searchCovers(p1, p2, traits) {
+    return traits.filter(t => calculateMatchScore(p1, p2, [t]) > 0);
 }
 
 function findBreedingMatches(targetTraits) {
@@ -3341,6 +3424,65 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         return traitsScores.reduce((sum, s) => sum + s, 0);
     }
     return 0; // Can't make all those traits in one foal — even dungeon magic has limits
+}
+
+// How often this pair really throws everything asked for, measured by breeding
+// them rather than guessed. The old version compared the first three letters of
+// a trait name against the genotype text, which almost never matched, so nearly
+// every pair was reported as "Low (~5-10%)" however good it was.
+// Enough rolls to be worth printing, few enough that a page of ten does not
+// keep anyone waiting. Each answer is kept, so paging back and forth is free.
+const SEARCH_TRIALS = 1000;
+const _searchOddsCache = {};
+function searchRealOdds(parent1, parent2, traits) {
+    if (!traits.length) return null;
+    const cacheKey = (parent1.genotype || '') + '|' + (parent2.genotype || '') + '|' + traits.join(',');
+    if (Object.prototype.hasOwnProperty.call(_searchOddsCache, cacheKey)) return _searchOddsCache[cacheKey];
+    const p1 = { name: 'a', genotype: parent1.genotype, temperament: 'Choleric', variant: parent1.variant || 'Standard' };
+    const p2 = { name: 'b', genotype: parent2.genotype, temperament: 'Sanguine', variant: parent2.variant || 'Standard' };
+    const wantCoats = traits.filter(searchIsCoat).map(t => String(t).toLowerCase());
+    const wantRest = traits.filter(t => !searchIsCoat(t)).map(t => String(t).toLowerCase());
+
+    // Breeding rolls on Math.random, so asking the same question twice would
+    // give two different answers and the figure on screen would wander every
+    // time the results were opened. Seed it for the length of the measurement
+    // and put it back afterwards, so a given pair always reads the same.
+    const realRandom = Math.random;
+    let seed = 0;
+    const tag = (parent1.genotype || '') + '|' + (parent2.genotype || '');
+    for (let i = 0; i < tag.length; i++) seed = (seed * 31 + tag.charCodeAt(i)) & 0x7fffffff;
+    seed = seed || 1;
+    Math.random = function () {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed / 0x7fffffff;
+    };
+
+    let hit = 0;
+    try {
+        for (let i = 0; i < SEARCH_TRIALS; i++) {
+            const foal = resolveTraits(generateFoal(p1, p2, i).genotype);
+            const coat = String(foal.coatColor || '').toLowerCase();
+            const has = (foal.allTraits || []).map(t => String(t).toLowerCase());
+            const coatOk = !wantCoats.length || wantCoats.some(c =>
+                c === coat || (COAT_FAMILIES[c] || []).some(m => String(m).toLowerCase() === coat) ||
+                coat.indexOf(c) !== -1);
+            const restOk = wantRest.every(t => has.some(h => h === t || h.indexOf(t) !== -1));
+            if (coatOk && restOk) hit++;
+        }
+    } finally {
+        Math.random = realRandom;
+    }
+    _searchOddsCache[cacheKey] = hit / SEARCH_TRIALS;
+    return _searchOddsCache[cacheKey];
+}
+
+// Per foal option, so the number means the same thing Recipe's does.
+function searchOddsText(rate) {
+    if (rate === null) return 'unknown';
+    if (rate <= 0) return 'not from this pair';
+    if (rate >= 1) return 'every foal option';
+    const roll = recipeChanceInRoll(rate, RECIPE_OPTIONS_PER_ROLL);
+    return recipePercent(roll) + ' of rolls (' + recipePercent(rate) + ' per option)';
 }
 
 function estimateProbability(parent1, parent2, targetTraits) {
