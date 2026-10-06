@@ -4791,26 +4791,65 @@ function recipeBestCarrier(allele) {
 // to hand down nothing and pays an item to block anything it is carrying.
 const RECIPE_ANY = '*';
 
-// The base coat is a phenotype, not an exact pair of alleles. A bay shows with
-// one A or two, a horse showing E can be EE or Ee, and on a chestnut the A
-// locus never reaches the coat at all. Recipe used to demand whichever exact
-// pair the coat tables happen to be written with, so a target generated as
-// "Ee AA prlprl Cher" rejected every courser that could only pass a, even
-// though Ee Aa is just as much a Cerulean Bay Nacre. Only the recessive
-// homozygotes, ee and aa, genuinely need the allele from both parents.
-function recipeRelaxBaseCoat(token, genes) {
-    const isE = /^[Ee]{2}$/.test(token);
-    const isA = /^[Aa]{2}$/.test(token);
-    if (!isE && !isA) return null;
-    if (token === 'ee') return null;                     // chestnut needs e from both
-    if (isA && genes.some(g => g === 'ee')) {
-        return [RECIPE_ANY, RECIPE_ANY];                 // chestnut: A does not show
-    }
-    if (token === 'aa') return null;                     // black needs a from both
-    return [isE ? 'E' : 'A', RECIPE_ANY];                // E_ or A_: one copy is enough
+// A target is one spelling of a horse, not the only one. Another pair at the
+// same locus often gives a horse that looks exactly the same: Woad is written
+// nTp and TpTp is just as Woad, Champagne shows on one copy or two, a bay shows
+// on Aa or AA, and a chestnut looks the same whatever sits at A. Recipe used to
+// insist on the spelling it was handed, which called real pairings impossible:
+// Cerulean Bay Nacre is written "Ee AA", so a courser that could only pass a
+// was rejected even though Ee Aa is just as much a Cerulean Bay Nacre.
+//
+// None of those equivalences is listed here. Each is put to the engine: swap
+// the pair for another at that locus, ask what the horse now looks like, and if
+// nothing changed the requirement can be loosened. So a dilution that IS dose
+// dependent stays strict on its own evidence, Cream being the one that matters
+// (nCr is a Buckskin and CrCr a Perlino), and a gene added later is covered
+// without anyone revisiting this.
+function recipeLooks(genes) {
+    const r = resolveTraits(genes.join(' '));
+    return r.coatColor + '|' + (r.allTraits || []).slice().sort().join(',');
 }
 
-function recipeForToken(token, genes) {
+// Every spelling the engine knows for one locus, plus leaving it out entirely.
+function recipeLocusSpellings(token) {
+    if (/^[Ee]{2}$/.test(token)) return ['ee', 'Ee', 'EE'];
+    if (/^[Aa]{2}$/.test(token)) return ['aa', 'Aa', 'AA'];
+    const here = recipeLocusOfToken(token);
+    if (!here) return [token];
+    const out = [null];                                   // the locus left out
+    [DILUTION_NAMES, MODIFIER_NAMES, WHITE_MARKING_NAMES].forEach((table) => {
+        Object.keys(table).forEach((t) => {
+            if (getGeneAlleles(t).length === 2 && recipeLocusOfToken(t) === here) out.push(t);
+        });
+    });
+    return out;
+}
+
+// Every allele pair at this locus that leaves the horse looking the same, the
+// target's own among them. A pair is the unit because both alleles matter: at a
+// shared locus like Champagne/Ether, "one Ch and whatever" is not safe, since
+// the other parent handing over er makes a different horse. Woad is the case
+// that needs this, written nTp but just as Woad as TpTp, while nothing else at
+// that address (TpCr, Tpprl) will do.
+function recipeAcceptablePairs(token, genes, index) {
+    const want = recipeLooks(genes);
+    const out = [];
+    const seen = {};
+    recipeLocusSpellings(token).forEach((spelling) => {
+        const g = genes.slice();
+        if (spelling === null) g.splice(index, 1); else g[index] = spelling;
+        if (recipeLooks(g) !== want) return;
+        const pair = spelling === null ? ['n', 'n'] : getGeneAlleles(spelling);
+        if (pair.length !== 2) return;
+        const key = pair.slice().sort().join('/');
+        if (seen[key]) return;
+        seen[key] = true;
+        out.push(pair);
+    });
+    return out.length ? out : [getGeneAlleles(token)];
+}
+
+function recipeForToken(token, genes, index) {
     const alleles = getGeneAlleles(token);
     if (alleles.length !== 2) return null;     // unknown token; flagged separately
 
@@ -4819,8 +4858,7 @@ function recipeForToken(token, genes) {
     const real = alleles[0] === 'n' ? alleles[1] : alleles[0];
     const locus = RECIPE_LOCUS_OF[real];
 
-    const relaxed = genes ? recipeRelaxBaseCoat(token, genes) : null;
-    const [x, y] = relaxed || alleles;
+    const [x, y] = alleles;
 
     function side(allele) {
         if (allele === RECIPE_ANY) {
@@ -4849,6 +4887,9 @@ function recipeForToken(token, genes) {
         locus,
         label: recipeTokenLabel(token),
         a, b,
+        // Every pair at this locus that gives the same horse, the written one
+        // included. The pair matcher may satisfy the target with any of them.
+        accept: genes ? recipeAcceptablePairs(token, genes, index) : [alleles],
         // Each parent hands down its side independently, so the pair's odds are
         // just the two multiplied.
         chance: a.chance * b.chance,
@@ -4914,9 +4955,9 @@ function computeRecipe(genoString) {
     // splits into two alleles (nZZZ looks like n + ZZZ), so it has to be dropped
     // here as well or it would drag the odds to zero after being reported as
     // left out.
-    parsed.genes.forEach((token) => {
+    parsed.genes.forEach((token, index) => {
         if (!isKnownGeneToken(token)) return;
-        const entry = recipeForToken(token, parsed.genes);
+        const entry = recipeForToken(token, parsed.genes, index);
         if (!entry) return;
         result.loci.push(entry);
         result.geneChance *= entry.chance;
@@ -5453,6 +5494,9 @@ function recipeEvaluateHorse(horse, roleReq) {
             const alleles = getGeneAlleles(token);
             const nCount = alleles.filter(a => a === 'n').length;
             const stray = alleles.find(a => a !== 'n');
+            // Nothing spare to pass means this horse always hands the gene down,
+            // and no item changes that.
+            if (!nCount) { res.feasible = false; res.missing.push(stray); return; }
             const key = recipeRootFor(stray);
             res.items.push({
                 item: RECIPE_ITEMS[key], mode: 'block', allele: stray,
@@ -5502,10 +5546,17 @@ function recipeLocusCost(token, want) {
         const alleles = getGeneAlleles(token);
         const stray = alleles.find(a => a !== 'n');
         if (!stray) return out;
+        // A root forces an allele the horse already has; it cannot conjure one.
+        // So a parent with nothing spare at this locus, homozygous or a compound
+        // like TpCr, must hand a gene down and the target can never be clean.
+        // This used to come back chance 0 but still feasible, which offered
+        // pairings that could not work however much you spent on them.
+        const spare = alleles.filter(a => a === 'n').length;
+        if (!spare) { out.ok = false; return out; }
         const key = recipeRootFor(stray);
         out.item = { item: RECIPE_ITEMS[key], mode: 'block', allele: stray, trait: recipeAlleleLabel(stray), token };
         out.coin = RECIPE_ITEMS[key].weight;
-        out.chance = alleles.filter(a => a === 'n').length / 2;   // 0 if homozygous
+        out.chance = spare / 2;
         return out;
     }
     if (!token) { out.ok = false; return out; }
@@ -5530,32 +5581,37 @@ function recipePairEvaluate(recipe, h1, h2) {
     const m1 = recipeHorseLoci(h1.genotype), m2 = recipeHorseLoci(h2.genotype);
     const res = { feasible: true, items: [], coin: 0, chance: 1, missing: [] };
 
-    const wanted = {};
+    const wanted = {}, written = {};
     recipe.loci.forEach((e) => {
-        wanted[e.locus] = [e.p1 ? e.p1.allele : 'n', e.p2 ? e.p2.allele : 'n'];
+        wanted[e.locus] = e.accept || [[e.p1 ? e.p1.allele : 'n', e.p2 ? e.p2.allele : 'n']];
+        written[e.locus] = [e.p1 ? e.p1.allele : 'n', e.p2 ? e.p2.allele : 'n'];
     });
     // Anything either horse carries that the target never mentioned has to be
     // kept out of the foal, so it counts as a locus wanting nothing.
-    [m1, m2].forEach(m => Object.keys(m).forEach(l => { if (!(l in wanted)) wanted[l] = ['n', 'n']; }));
+    [m1, m2].forEach(m => Object.keys(m).forEach(l => {
+        if (!(l in wanted)) { wanted[l] = [['n', 'n']]; written[l] = ['n', 'n']; }
+    }));
 
     Object.keys(wanted).forEach((locus) => {
-        const [x, y] = wanted[locus];
         const t1 = m1[locus], t2 = m2[locus];
-        // Either orientation is legal; take whichever is cheaper, then likelier.
-        const a = { one: recipeLocusCost(t1, x), two: recipeLocusCost(t2, y) };
-        const b = { one: recipeLocusCost(t1, y), two: recipeLocusCost(t2, x) };
-        const score = o => (o.one.ok && o.two.ok)
-            ? { ok: true, coin: o.one.coin + o.two.coin, chance: o.one.chance * o.two.chance, items: [o.one.item, o.two.item].filter(Boolean) }
-            : { ok: false };
-        const sa = score(a), sb = score(b);
+        // Any pair that gives the same horse will do, in either orientation.
+        // Take whichever comes out cheapest, then likeliest.
         let pick = null;
-        if (sa.ok && sb.ok) {
-            const better = sb.coin < sa.coin || (sb.coin === sa.coin && sb.chance > sa.chance);
-            pick = better ? sb : sa;
-        } else if (sa.ok) pick = sa;
-        else if (sb.ok) pick = sb;
+        wanted[locus].forEach(([x, y]) => {
+            [[x, y], [y, x]].forEach(([u, v]) => {
+                const one = recipeLocusCost(t1, u), two = recipeLocusCost(t2, v);
+                if (!one.ok || !two.ok) return;
+                const cand = {
+                    coin: one.coin + two.coin,
+                    chance: one.chance * two.chance,
+                    items: [one.item, two.item].filter(Boolean)
+                };
+                if (!pick || cand.coin < pick.coin || (cand.coin === pick.coin && cand.chance > pick.chance)) pick = cand;
+            });
+        });
         if (!pick) {
             res.feasible = false;
+            const [x, y] = written[locus];
             if (x !== 'n' && x !== RECIPE_ANY) res.missing.push(x);
             if (y !== 'n' && y !== RECIPE_ANY && y !== x) res.missing.push(y);
             return;

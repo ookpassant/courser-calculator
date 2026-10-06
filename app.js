@@ -66,7 +66,8 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '6 Oct 2026', items: [
-      'Fixed: Recipe called real pairings impossible because it demanded the exact base-coat pair the coat tables are written with. A bay shows on one A or two, a horse showing E can be EE or Ee, and on a chestnut the A locus never touches the coat, so it now asks for the coat rather than one spelling of it. Cerulean Bay and Rose Gold Nacre were the ones that showed it up: Moritz x Salvia really does breed all three Nacres. Ta Sasha!'
+      'Fixed: Recipe called real pairings impossible because it demanded the exact pair of alleles the target happened to be written with. A bay shows on one A or two, a chestnut looks the same whatever sits at A, and Woad is nTp or TpTp alike. It now works out for itself which spellings give the same horse, so Cream stays strict (nCr is a Buckskin, CrCr a Perlino) while the rest loosen. Moritz x Salvia really does breed all three Nacres. Ta Sasha!',
+      'Fixed: Recipe offered pairings that could never work, where a parent had no spare allele to pass and so always handed down a gene the target did not want. A root can force an allele a horse carries but never create one, so those are gone from the list rather than sitting there at zero.'
     ] },
     { date: '5 Oct 2026', items: [
       'New Modifier: Counterpoint (nCp, Uncommon) swaps a bay-based coat round, so the body takes the mane, tail and stocking colour and they take the body\'s, with optional black-and-tan patterning. Every tool knows it, and a scroll charges 2 Modifier Potions for it.'
