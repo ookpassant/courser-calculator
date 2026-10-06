@@ -4787,14 +4787,46 @@ function recipeBestCarrier(allele) {
 
 // Work out the two parents for one target pair. Returns the role each parent
 // plays, the ideal pair for it, and the odds that ideal pair delivers.
-function recipeForToken(token) {
+// A side that asks for nothing at all. Distinct from 'n', which asks a parent
+// to hand down nothing and pays an item to block anything it is carrying.
+const RECIPE_ANY = '*';
+
+// The base coat is a phenotype, not an exact pair of alleles. A bay shows with
+// one A or two, a horse showing E can be EE or Ee, and on a chestnut the A
+// locus never reaches the coat at all. Recipe used to demand whichever exact
+// pair the coat tables happen to be written with, so a target generated as
+// "Ee AA prlprl Cher" rejected every courser that could only pass a, even
+// though Ee Aa is just as much a Cerulean Bay Nacre. Only the recessive
+// homozygotes, ee and aa, genuinely need the allele from both parents.
+function recipeRelaxBaseCoat(token, genes) {
+    const isE = /^[Ee]{2}$/.test(token);
+    const isA = /^[Aa]{2}$/.test(token);
+    if (!isE && !isA) return null;
+    if (token === 'ee') return null;                     // chestnut needs e from both
+    if (isA && genes.some(g => g === 'ee')) {
+        return [RECIPE_ANY, RECIPE_ANY];                 // chestnut: A does not show
+    }
+    if (token === 'aa') return null;                     // black needs a from both
+    return [isE ? 'E' : 'A', RECIPE_ANY];                // E_ or A_: one copy is enough
+}
+
+function recipeForToken(token, genes) {
     const alleles = getGeneAlleles(token);
     if (alleles.length !== 2) return null;     // unknown token; flagged separately
 
-    const [x, y] = alleles;
-    const locus = RECIPE_LOCUS_OF[x === 'n' ? y : x];
+    // The locus is always read off the real alleles, never the relaxed ones, so
+    // a side relaxed to "anything" still lands on the locus it belongs to.
+    const real = alleles[0] === 'n' ? alleles[1] : alleles[0];
+    const locus = RECIPE_LOCUS_OF[real];
+
+    const relaxed = genes ? recipeRelaxBaseCoat(token, genes) : null;
+    const [x, y] = relaxed || alleles;
 
     function side(allele) {
+        if (allele === RECIPE_ANY) {
+            // Nothing is asked of this side, so any parent satisfies it for free.
+            return { allele: RECIPE_ANY, ideal: null, chance: 1, carriers: [] };
+        }
         if (allele === 'n') {
             // "Passes nothing at this locus" — a parent with no pair here at all
             // is clean every time, so this side is free.
@@ -4884,7 +4916,7 @@ function computeRecipe(genoString) {
     // left out.
     parsed.genes.forEach((token) => {
         if (!isKnownGeneToken(token)) return;
-        const entry = recipeForToken(token);
+        const entry = recipeForToken(token, parsed.genes);
         if (!entry) return;
         result.loci.push(entry);
         result.geneChance *= entry.chance;
@@ -5414,6 +5446,7 @@ function recipeEvaluateHorse(horse, roleReq) {
         const want = loci[locus];
         const token = mine[locus];
 
+        if (want === RECIPE_ANY) return;        // nothing asked of this side
         if (want === 'n') {
             // Must hand down nothing here. No pair at this locus is already clean.
             if (!token) return;
@@ -5463,6 +5496,7 @@ const RECIPE_FRUIT = {
 // is without help. `want` of 'n' means it must hand down nothing here.
 function recipeLocusCost(token, want) {
     const out = { ok: true, chance: 1, item: null, coin: 0 };
+    if (want === RECIPE_ANY) return out;        // nothing asked of this side
     if (want === 'n') {
         if (!token) return out;                     // nothing at this locus already
         const alleles = getGeneAlleles(token);
@@ -5522,8 +5556,8 @@ function recipePairEvaluate(recipe, h1, h2) {
         else if (sb.ok) pick = sb;
         if (!pick) {
             res.feasible = false;
-            if (x !== 'n') res.missing.push(x);
-            if (y !== 'n' && y !== x) res.missing.push(y);
+            if (x !== 'n' && x !== RECIPE_ANY) res.missing.push(x);
+            if (y !== 'n' && y !== RECIPE_ANY && y !== x) res.missing.push(y);
             return;
         }
         res.coin += pick.coin;
