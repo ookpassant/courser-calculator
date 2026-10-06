@@ -4897,6 +4897,34 @@ function recipeForToken(token, genes, index) {
     };
 }
 
+// On coat alone, the genes the target never asked for stop being a problem and
+// become a maybe. This is what a given pair could hand down on top of the coat,
+// named the way the rest of the engine names things. Anything that needs two
+// copies is only listed when both parents can supply one.
+function recipePairExtras(recipe, h1, h2) {
+    const asked = {};
+    (recipe.loci || []).forEach(e => { asked[e.locus] = true; });
+    const m1 = recipeHorseLoci(h1.genotype || ''), m2 = recipeHorseLoci(h2.genotype || '');
+    const names = [];
+    const seen = {};
+    Object.keys(m1).concat(Object.keys(m2)).forEach((locus) => {
+        if (asked[locus] || seen[locus]) return;
+        seen[locus] = true;
+        [m1[locus], m2[locus]].forEach((token) => {
+            if (!token) return;
+            const label = recipeTokenLabel(token);
+            if (label && label !== 'Base coat' && names.indexOf(label) === -1) names.push(label);
+        });
+    });
+    // Anomalies ride along the same way.
+    [h1, h2].forEach((h) => {
+        parseGenotype(h.genotype || '').anomalies.forEach((a) => {
+            if (a && names.indexOf(a) === -1) names.push(a);
+        });
+    });
+    return names.sort();
+}
+
 // The trait name the engine already uses for a pair, so Recipe never invents
 // its own vocabulary.
 function recipeTokenLabel(token) {
@@ -4927,13 +4955,31 @@ function recipeAnomalyChance(name) {
     return fromParents + (1 - fromParents) * wild;
 }
 
-function computeRecipe(genoString) {
+// Which of the target's genes the coat actually depends on. Asked of the
+// engine rather than assumed: take the gene out, and if the coat is still
+// called the same thing, the coat never needed it.
+function recipeCoatOnlyGenes(genes) {
+    const coat = resolveTraits(genes.join(' ')).coatColor;
+    return genes.filter((tok, i) => {
+        const without = genes.slice();
+        without.splice(i, 1);
+        return resolveTraits(without.join(' ')).coatColor !== coat;
+    });
+}
+
+// `coatOnly` means the markings and modifiers are not the point: find pairs
+// that can throw this coat and let whatever else they carry come along.
+function computeRecipe(genoString, opts) {
+    const coatOnly = !!(opts && opts.coatOnly);
     const parsed = parseGenotype(genoString);
+    if (coatOnly) parsed.genes = recipeCoatOnlyGenes(parsed.genes);
     const result = {
         loci: [], anomalies: [], free: [],
         parent1: [], parent2: [],
         geneChance: 1, blocked: null, notes: [],
-        target: genoString
+        coatOnly: coatOnly,
+        target: genoString,
+        coatTarget: parsed.genes.join(' ')
     };
 
     // A foal you can't have is not a foal you can plan for.
@@ -5050,7 +5096,10 @@ function showRecipe() {
             : '';
         readHtml = `<p class="recipe-read">I read that as <code>${esc(target)}</code>. Not quite it? Edit the box and run again.${dropped}</p>`;
     }
-    const data = computeRecipe(target);
+    const coatBox = document.getElementById('recipeCoatOnly');
+    const coatOnly = !!(coatBox && coatBox.checked);
+    const data = computeRecipe(target, { coatOnly: coatOnly });
+    if (coatOnly) trackUse('recipe_coat_only');
 
     // Same unknown-token warning Translate, Layers and Somatic give, so a typo
     // can't quietly drop a trait out of the recipe.
@@ -5080,7 +5129,11 @@ function showRecipe() {
     // What each ideal parent actually is, in words, so you know what to look for.
     const reads = g => g && g !== 'no genes at all' ? `<div class="recipe-parent-reads">${esc(genotypeToPhenotype(g))}</div>` : '';
 
-    const head = `<p class="recipe-lead">To breed <strong>${esc(looks)}</strong>, you need two parents who between them can hand down every pair below. ` +
+    const coatNote = data.coatOnly
+        ? `<p class="recipe-read">Going on coat alone, so only <code>${esc(data.coatTarget)}</code> has to come through. ` +
+          `Whatever else the parents carry is welcome to tag along.</p>`
+        : '';
+    const head = coatNote + `<p class="recipe-lead">To breed <strong>${esc(looks)}</strong>, you need two parents who between them can hand down every pair below. ` +
         `Each parent gives one allele per locus, so the two sides of every pair have to come from <em>different</em> parents.</p>`;
 
     // The headline pair: what to aim for, and what it's worth. A roll gives two
@@ -5105,7 +5158,9 @@ function showRecipe() {
             </div>
         </div>
         <p class="recipe-odds">${odds}</p>
-        <p class="recipe-strict">Those two carry <strong>nothing else</strong>. Any extra gene either parent has can land in the foal too, and then it isn't this exact genotype any more. Their temperaments only need to differ from each other.</p>`;
+        <p class="recipe-strict">${data.coatOnly
+            ? 'Those two are the bare minimum for the coat. Anything else either parent carries can land in the foal as well, which is the point of going on coat alone. Their temperaments only need to differ from each other.'
+            : 'Those two carry <strong>nothing else</strong>. Any extra gene either parent has can land in the foal too, and then it isn\'t this exact genotype any more. Their temperaments only need to differ from each other.'}</p>`;
 
     // Per-locus breakdown: the requirement, and every pair that satisfies it.
     const rows = data.loci.map((e) => {
@@ -5247,6 +5302,12 @@ function showRecipe() {
                     ? `<li>${esc(it.item.name)}, ${esc(it.trait)} <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`
                     : `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`).join('')}</ul>`
                 : '';
+            // On coat alone the extras are no longer a problem to be blocked, so
+            // say what they are instead: this is what else the foal might get.
+            const extras = data.coatOnly ? recipePairExtras(data, p.a, p.b) : [];
+            const extraLine = extras.length
+                ? `<div class="recipe-extras">May also bring: <strong>${extras.map(esc).join(', ')}</strong>.</div>`
+                : (data.coatOnly ? '<div class="recipe-extras">Brings nothing else along.</div>' : '');
             return `<li class="recipe-fit">
                     <div class="recipe-fit-head">
                         ${who(p.a)}
@@ -5254,11 +5315,14 @@ function showRecipe() {
                         ${who(p.b)}
                     </div>
                     <div class="recipe-fit-meta">${cost}, ${odds}</div>
+                    ${extraLine}
                     ${itemList}
                 </li>`;
         }).join('');
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">Pairs from ${pool} that can supply every allele the target needs, fewest items first. A root can force an allele a horse carries but never create one, so everything below is a pairing you could really field.</p>
+            <p class="recipe-stable-blurb">${data.coatOnly
+                ? `Pairs from ${pool} that can throw this coat, fewest items first. Nothing is spent keeping their other genes out, so each one says what else it might bring.`
+                : `Pairs from ${pool} that can supply every allele the target needs, fewest items first. A root can force an allele a horse carries but never create one, so everything below is a pairing you could really field.`}</p>
             <ul class="recipe-fit-list">${rows}</ul></div>`;
     } else if (stable.nearMisses.length) {
         const rows = stable.nearMisses.map(m =>
@@ -5473,7 +5537,7 @@ function recipeHorseLoci(genoString) {
 }
 
 // What one horse would cost to stand in a given role.
-function recipeEvaluateHorse(horse, roleReq) {
+function recipeEvaluateHorse(horse, roleReq, coatOnly) {
     const mine = recipeHorseLoci(horse.genotype);
     const res = { horse, feasible: true, missing: [], items: [], coin: 0, chance: 1, blocks: 0, forces: 0 };
 
@@ -5481,7 +5545,7 @@ function recipeEvaluateHorse(horse, roleReq) {
     // the target never mentioned (those can leak into the foal).
     const loci = {};
     Object.keys(roleReq).forEach(l => { loci[l] = roleReq[l]; });
-    Object.keys(mine).forEach(l => { if (!(l in loci)) loci[l] = 'n'; });
+    if (!coatOnly) Object.keys(mine).forEach(l => { if (!(l in loci)) loci[l] = 'n'; });
 
     Object.keys(loci).forEach((locus) => {
         const want = loci[locus];
@@ -5587,10 +5651,13 @@ function recipePairEvaluate(recipe, h1, h2) {
         written[e.locus] = [e.p1 ? e.p1.allele : 'n', e.p2 ? e.p2.allele : 'n'];
     });
     // Anything either horse carries that the target never mentioned has to be
-    // kept out of the foal, so it counts as a locus wanting nothing.
-    [m1, m2].forEach(m => Object.keys(m).forEach(l => {
-        if (!(l in wanted)) { wanted[l] = [['n', 'n']]; written[l] = ['n', 'n']; }
-    }));
+    // kept out of the foal, so it counts as a locus wanting nothing. Unless the
+    // coat is all that was asked for, in which case the extras are welcome.
+    if (!recipe.coatOnly) {
+        [m1, m2].forEach(m => Object.keys(m).forEach(l => {
+            if (!(l in wanted)) { wanted[l] = [['n', 'n']]; written[l] = ['n', 'n']; }
+        }));
+    }
 
     Object.keys(wanted).forEach((locus) => {
         const t1 = m1[locus], t2 = m2[locus];
@@ -5851,8 +5918,8 @@ function computeRecipeStable(recipe, collection) {
         if (e.p2) reqB[locus] = e.p2.allele;
     });
 
-    const asA = collection.map(h => recipeEvaluateHorse(h, reqA));
-    const asB = collection.map(h => recipeEvaluateHorse(h, reqB));
+    const asA = collection.map(h => recipeEvaluateHorse(h, reqA, recipe.coatOnly));
+    const asB = collection.map(h => recipeEvaluateHorse(h, reqB, recipe.coatOnly));
 
     // Parents still have to be two different horses with different temperaments.
     // Each pair is judged locus by locus, so the two sides are free to swap

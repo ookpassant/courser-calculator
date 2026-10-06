@@ -451,6 +451,11 @@
         .pet-card-x { position: absolute; top: 2px; right: 4px; background: none; border: 0; cursor: pointer;
             color: var(--dc-slate); font-size: 1rem; line-height: 1; padding: 2px 4px; }
         .pet-card-x:hover { color: var(--dc-blood); }
+        .recipe-coat-only { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 14px;
+            font-size: 0.92rem; color: var(--dc-ink); cursor: pointer; }
+        .recipe-coat-only input { width: auto; margin: 2px 0 0; flex: none; }
+        .recipe-extras { font-size: 0.85rem; color: var(--dc-slate); margin-top: 4px; }
+        .recipe-extras strong { color: var(--dc-ink); font-weight: 600; }
         .pet-row-btn { width: auto; padding: 2px 10px; font-size: 0.68rem; margin: 0 0 0 6px; vertical-align: middle; }
         .pet-add-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .pet-add-row select { width: auto; flex: 1 1 14rem; margin: 0; }
@@ -935,11 +940,16 @@
 
                     <div class="info-box">
                         <p><strong>One allele from each parent.</strong> Every pair in a genotype has one side from each parent, so a recipe is really a list of who has to carry what. Nothing here needs your collection. It's what the parents would have to be, whoever owns them.</p>
-                        <p><strong>Exact genotype.</strong> The pair below is aimed at this genotype precisely, so the parents carry nothing else. Anything extra they have can land in the foal too.</p>
+                        <p><strong>Exact genotype, unless you say otherwise.</strong> By default the pair below is aimed at this genotype precisely, so the parents carry nothing else and anything extra they have can land in the foal too. Tick the box if only the coat matters and you are happy to take whatever markings and modifiers come with it, which usually finds more pairs.</p>
                     </div>
 
                     <label for="recipeGeno">Foal you want:</label>
                     <textarea id="recipeGeno" placeholder="a cerulean bay nacre with tobiano, or Ee AA prlprl Cher nT"></textarea>
+
+                    <label class="recipe-coat-only">
+                        <input type="checkbox" id="recipeCoatOnly">
+                        <span>Just the coat. I don't mind what markings or modifiers come with it.</span>
+                    </label>
 
                     <button class="generate-btn" onclick="showRecipe()">Work out the parents</button>
 

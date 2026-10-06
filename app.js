@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '7 Oct 2026', items: [
+      'Recipe has a "just the coat" tickbox. Tick it and it stops trying to keep every other gene out, so it finds pairs that can throw the coat and tells you what markings, modifiers and anomalies each one might bring along for the ride. Usually more pairs and much better odds, since nothing is spent blocking.'
+    ] },
     { date: '6 Oct 2026', items: [
       'Fixed: Recipe called real pairings impossible because it demanded the exact pair of alleles the target happened to be written with. A bay shows on one A or two, a chestnut looks the same whatever sits at A, and Woad is nTp or TpTp alike. It now works out for itself which spellings give the same horse, so Cream stays strict (nCr is a Buckskin, CrCr a Perlino) while the rest loosen. Moritz x Salvia really does breed all three Nacres. Ta Sasha!',
       'Fixed: Recipe offered pairings that could never work, where a parent had no spare allele to pass and so always handed down a gene the target did not want. A root can force an allele a horse carries but never create one, so those are gone from the list rather than sitting there at zero.'
