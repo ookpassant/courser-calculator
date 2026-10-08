@@ -5427,7 +5427,9 @@ function showRecipe() {
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
             <p class="recipe-stable-empty">There is nothing to match against yet. Import your coursers in the <strong>Collection</strong> tab and this will fill in with the pairs you can actually field.</p></div>`;
     } else if (stable.pairs.length) {
-        const rows = stable.pairs.map((p) => {
+        // The cheapest pairing is the answer, so its list starts open. The rest
+        // stay folded, or the page is a wall of roots before you reach pair two.
+        const rows = stable.pairs.map((p, idx) => {
             const itemCount = p.items.length;
             const cost = itemCount === 0
                 ? '<span class="recipe-fit-free">no items needed</span>'
@@ -5439,11 +5441,7 @@ function showRecipe() {
                 : p.chance <= 0
                     ? 'and nothing but the items will get you there'
                     : `${recipePercent(recipeChanceInRoll(p.chance, RECIPE_OPTIONS_PER_ROLL))} of rolls match without them`;
-            const itemList = p.items.length
-                ? `<ul class="recipe-fit-items">${p.items.map(it => it.mode === 'slot'
-                    ? `<li>${esc(it.item.name)}, ${esc(it.trait)} <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`
-                    : `<li>${esc(it.item.name)}, ${it.mode === 'force' ? 'force' : 'block'} <code>${esc(it.allele)}</code> (${esc(it.trait)}) <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`).join('')}</ul>`
-                : '';
+            const itemList = recipeItemsHtml(p.items, idx === 0);
             // On coat alone the extras are no longer a problem to be blocked, so
             // say what they are instead: this is what else the foal might get.
             const extras = data.coatOnly ? recipePairExtras(data, p.a, p.b) : [];
@@ -5541,6 +5539,56 @@ function recipeItemTag(item) {
     const cost = recipeItemCost(item);
     if (cost.sold) return cost.coin + ' coin';
     return (item.rarity ? item.rarity + ', ' : '') + 'from gameplay';
+}
+
+// The shopping list under one pairing.
+//
+// A root does two opposite jobs. Forcing makes an allele pass; blocking keeps
+// one out. Printed as one flat grey list the two read identically, and a
+// thirteen-line list buries the pairing it belongs to. So: fold it away behind
+// a summary that counts each kind, then split it into those kinds, each with
+// its own colour, heading and tag. The fruit goes in a group of its own
+// because paying for a breeding slot is not a root at all.
+const RECIPE_ITEM_GROUPS = [
+    { mode: 'slot', label: 'Breeding slots', lead: 'what booking the pairing costs',
+      word: n => n + (n === 1 ? ' slot' : ' slots') },
+    { mode: 'force', label: 'Force', lead: 'make these pass to the foal',
+      word: n => n + ' to force' },
+    { mode: 'block', label: 'Block', lead: 'keep these out of the foal',
+      word: n => n + ' to block' }
+];
+
+function recipeItemsHtml(items, open) {
+    if (!items || !items.length) return '';
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const tally = [], body = [];
+    RECIPE_ITEM_GROUPS.forEach((g) => {
+        const mine = items.filter(it => it.mode === g.mode);
+        if (!mine.length) return;
+        tally.push(`<span class="recipe-tally-bit is-${g.mode}">${esc(g.word(mine.length))}</span>`);
+        const lines = mine.map((it) => {
+            let what;
+            if (!it.allele) {
+                // A fruit buys a slot and names no allele. The heading already
+                // says these are slots, so the line is just whose slot it is.
+                what = `<span class="recipe-item-trait">${esc(String(it.trait).replace(/^breeding slot to /, ''))}</span>`;
+            } else {
+                // "base coat e" next to a chip reading e says it twice.
+                const label = it.trait === 'base coat ' + it.allele ? 'base coat' : it.trait;
+                what = `<span class="recipe-item-tag is-${g.mode}">${esc(g.mode)}</span>`
+                    + `<code>${esc(it.allele)}</code> <span class="recipe-item-trait">${esc(label)}</span>`;
+            }
+            return `<li>${what}
+                <span class="recipe-item-src">${esc(it.item.name)}</span>
+                <span class="recipe-coin">${esc(recipeItemTag(it.item))}</span></li>`;
+        }).join('');
+        body.push(`<div class="recipe-item-group is-${g.mode}">
+            <div class="recipe-item-head">${esc(g.label)}<span class="recipe-item-lead">${esc(g.lead)}</span></div>
+            <ul class="recipe-fit-items">${lines}</ul></div>`);
+    });
+    return `<details class="recipe-items"${open ? ' open' : ''}>
+        <summary><span class="recipe-items-label">the items</span>${tally.join('')}</summary>
+        ${body.join('')}</details>`;
 }
 
 // The loci that between them make the coat. Bitter Seeds treats the coat as one

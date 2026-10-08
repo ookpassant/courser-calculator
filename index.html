@@ -473,6 +473,39 @@
         .recipe-fit-items li { font-size: 0.85rem; color: var(--dc-slate); line-height: 1.5; }
         .recipe-fit-items code, .recipe-near-list code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
         .recipe-fit-miss { color: var(--dc-slate); font-size: 0.88rem; display: block; margin-top: 2px; }
+        /* Item list under a pairing: folded away, and split by what each root does. */
+        .recipe-items { margin-top: 8px; }
+        .recipe-items > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+            font-family: var(--font-stamp); font-size: 0.62rem; letter-spacing: var(--tracking-stamp); text-transform: uppercase;
+            color: var(--dc-mauve-deep); padding: 3px 0; }
+        .recipe-items > summary::-webkit-details-marker { display: none; }
+        .recipe-items > summary::before { content: '▸'; color: var(--dc-slate); }
+        .recipe-items[open] > summary::before { content: '▾'; }
+        .recipe-items > summary:hover .recipe-items-label { text-decoration: underline dotted; }
+        .recipe-items-label::before { content: 'show '; }
+        .recipe-items[open] .recipe-items-label::before { content: 'hide '; }
+        .recipe-tally-bit { border-radius: 999px; padding: 2px 8px; border: 1px solid; }
+        .recipe-tally-bit.is-slot { color: var(--dc-legendary); border-color: var(--dc-legendary-edge); background: #fdf6e8; }
+        .recipe-tally-bit.is-force { color: var(--dc-uncommon); border-color: var(--dc-uncommon-edge); background: #f1f6ea; }
+        .recipe-tally-bit.is-block { color: var(--dc-blood); border-color: var(--dc-blood-edge); background: var(--dc-blood-bg); }
+        .recipe-item-group { margin-top: 10px; padding-left: 10px; border-left: 3px solid var(--dc-line); }
+        .recipe-item-group.is-slot { border-left-color: var(--dc-legendary); }
+        .recipe-item-group.is-force { border-left-color: var(--dc-uncommon); }
+        .recipe-item-group.is-block { border-left-color: var(--dc-blood); }
+        .recipe-item-group .recipe-fit-items { margin-top: 3px; padding-left: 0; border-left: 0; }
+        .recipe-item-head { font-family: var(--font-stamp); font-size: 0.62rem; letter-spacing: var(--tracking-stamp);
+            text-transform: uppercase; color: var(--dc-ink); }
+        .recipe-item-lead { font-family: var(--font-body); font-size: 0.8rem; text-transform: none; letter-spacing: 0;
+            color: var(--dc-slate); margin-left: 7px; }
+        .recipe-item-tag { font-family: var(--font-stamp); font-size: 0.52rem; letter-spacing: var(--tracking-stamp);
+            text-transform: uppercase; color: var(--dc-white); border-radius: 3px; padding: 1px 5px; margin-right: 6px;
+            vertical-align: 1px; }
+        .recipe-item-tag.is-slot { background: var(--dc-legendary); }
+        .recipe-item-tag.is-force { background: var(--dc-uncommon); }
+        .recipe-item-tag.is-block { background: var(--dc-blood); }
+        .recipe-item-trait { color: var(--dc-ink); margin-left: 4px; }
+        .recipe-item-src { color: var(--dc-slate); }
+        .recipe-item-src::before { content: '· '; }
         .recipe-read { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve-soft); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.9rem; color: var(--dc-ink); line-height: 1.55; margin: 0 0 16px; }
         .recipe-read code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
         .recipe-read-drop { color: var(--dc-blood); }
