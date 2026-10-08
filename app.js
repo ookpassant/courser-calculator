@@ -66,6 +66,7 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
     { date: '8 Oct 2026', items: [
+      'Checked the whole group roster against Tower\'s latest sheet. Two had moved: Inkwell is a Classic Champagne rather than a Smoky Black, and Calen is an Ombre Ash Ether rather than an Ombre Ether, which costs a Juicy Apple now instead of a Berry. Everything else matches. Ta Tower!',
       'Fixed: Mobberley had Sepulchered as a carried copy when his page shows it on him. Tower\'s sheet writes it "Sepulchered (Recessive)", which read as carried, but nsp is carried and spsp is expressed, so he has both. Ta Springfoss!',
       'Fixed: a scroll charged nothing at all for Sepulchered or Flaxen. The rarity pools list the carried spelling, so the expressed trait had no rarity and no price. Both now cost 2 Modifier Potions, same as any Uncommon modifier.'
     ] },
