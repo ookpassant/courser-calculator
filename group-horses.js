@@ -2,12 +2,10 @@
 // Group Horses
 // ---------------------------------------------------------------------------
 // Coursers anybody can breed to, compiled by Tower (Crowned_Ladybug) and used
-// here with permission. Genotypes are converted from Tower's directory, where
-// "(Recessive)" marks how a trait is inherited, not how much of it a horse has:
-// it is a note that the trait needs a copy from each parent to show, and the
-// horse has it. A horse that merely carried one would be written "carries X",
-// which no row is. So those traits are homozygous here. 'cost' is the fruit
-// that a breeding with that courser costs.
+// here with permission. Every genotype below is checked gene for gene against
+// the Group Horse Masterlist on the Dungeon Coursers site, GH01 to GH44, so
+// that is the spelling to keep if the two ever disagree. 'cost' is the fruit
+// that a breeding with that courser costs, which the masterlist does not list.
 //
 // Data only. Updating the roster never means touching code.
 // ===========================================================================
@@ -21,7 +19,7 @@ const GROUP_HORSES = [
     { id: 'group-terrence', name: 'Terrence', genotype: 'Ee aa TpCr nGl + Geode, Stained Glass', temperament: 'Sanguine', variant: 'Standard', cost: 'Berry', group: true },
     { id: 'group-tyffyn', name: 'Tyffyn', genotype: 'Ee Aa Crprl nRb + Swarf', temperament: 'Sanguine', variant: 'Heraldic', cost: 'Apple', group: true },
     { id: 'group-lollihops', name: 'Lollihops', genotype: 'Ee aa Tpprl nFl nSty nZ nGl + Geode, Stained Glass', temperament: 'Melancholic', variant: 'Standard', cost: 'Apple', group: true },
-    { id: 'group-alcyone', name: 'Alcyone', genotype: 'Ee aa TRn + Chimera, Stained Glass, Swarf', temperament: 'Choleric', variant: 'Heraldic', cost: 'Berry', group: true },
+    { id: 'group-alcyone', name: 'Alcyone', genotype: 'Ee aa RnT + Chimera, Stained Glass, Swarf', temperament: 'Choleric', variant: 'Heraldic', cost: 'Berry', group: true },
     { id: 'group-titter', name: 'Titter', genotype: 'ee Aa TpTp nHq + Chimera', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-robin', name: 'Robin', genotype: 'ee aa nCr nT nGl', temperament: 'Phlegmatic', variant: 'Puck', cost: 'Berry', group: true },
     { id: 'group-calix', name: 'Calix', genotype: 'Ee aa TT fefe nCw', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
@@ -45,7 +43,7 @@ const GROUP_HORSES = [
     { id: 'group-bastion', name: 'Bastion', genotype: 'Ee aa erer nCw nSh ff spsp + Pennant, Stained Glass', temperament: 'Sanguine', variant: 'Heraldic', cost: 'Berry', group: true },
     { id: 'group-honey-darling', name: 'Honey Darling', genotype: 'ee Aa prlprl nT nP nV + Pastiche', temperament: 'Sanguine', variant: 'Standard', cost: 'Berry', group: true },
     { id: 'group-tiger', name: 'Tiger', genotype: 'Ee Aa + Brindle, Stained Glass', temperament: 'Sanguine', variant: 'Heraldic', cost: 'Berry', group: true },
-    { id: 'group-bold', name: 'Bold', genotype: 'ee Aa nCr ner TRn nSty + Pastiche, Signet', temperament: 'Phlegmatic', variant: 'Heraldic', cost: 'Berry', group: true },
+    { id: 'group-bold', name: 'Bold', genotype: 'ee Aa nCr ner RnT nSty + Pastiche, Signet', temperament: 'Phlegmatic', variant: 'Heraldic', cost: 'Berry', group: true },
     { id: 'group-celestine', name: 'Celestine', genotype: 'ee Aa erer nHq nCo nSty nLu nGl + Swarf', temperament: 'Sanguine', variant: 'Cavedweller', cost: 'Apple', group: true },
     { id: 'group-belamy', name: 'Belamy', genotype: 'Ee Aa TpCr nCh nSpl + Birdcatcher Spots, Pastiche', temperament: 'Sanguine', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-mabel', name: 'Mabel', genotype: 'Ee Aa CrCr ner nW nLp npatn nOp nLu + Oracle, Signet', temperament: 'Choleric', variant: 'Cavedweller', cost: 'Apple', group: true },
