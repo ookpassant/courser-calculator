@@ -65,6 +65,10 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '8 Oct 2026', items: [
+      'Fixed: Mobberley had Sepulchered as a carried copy when his page shows it on him. Tower\'s sheet writes it "Sepulchered (Recessive)", which read as carried, but nsp is carried and spsp is expressed, so he has both. Ta Springfoss!',
+      'Fixed: a scroll charged nothing at all for Sepulchered or Flaxen. The rarity pools list the carried spelling, so the expressed trait had no rarity and no price. Both now cost 2 Modifier Potions, same as any Uncommon modifier.'
+    ] },
     { date: '7 Oct 2026', items: [
       'Smart Search has the same "just the coat" tickbox. Search for a coat with a marking and it used to drop every pair that could not do both; tick the box and it shows the ones that can throw the coat, saying what each can and cannot add and what else it might bring along.',
       'Fixed: the Probability on each search result was guesswork, comparing the first three letters of a trait name against the genotype text, which almost never matched. Nearly every pair read as "Low (~5-10%)" however good it was. It now breeds the pair and counts, so a pairing that really throws Woad a quarter of the time says so.',

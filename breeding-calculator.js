@@ -5863,15 +5863,41 @@ const RECIPE_COAT_TIER = (function () {
 
 // Trait name -> its tier. Derived by asking the engine what each pool entry
 // actually produces, rather than by restating the trait lists a second time.
+// A pool lists the spelling the Scroll Generator rolls, which for a recessive
+// is the carrier: nsp, not spsp. Resolving that names "Carrying Sepulchered"
+// and nothing else, so the trait itself came out with no tier and no kind, and
+// a scroll quietly costed it at nothing. Both spellings are registered here, at
+// the tier the pool gave. The pools themselves are untouched, so what a scroll
+// can roll has not changed.
+function recipePoolNames(tokens) {
+    const plain = resolveTraits('Ee Aa').allTraits;
+    const names = [];
+    const add = (geno) => resolveTraits('Ee Aa ' + geno).allTraits
+        .filter(n => plain.indexOf(n) === -1)
+        .forEach(n => { if (names.indexOf(n) === -1) names.push(n); });
+    add(tokens);
+    // Only a true carrier gets its expressed form registered too, and the test
+    // is the engine's own naming: a carrier is the pair it calls "Carrying X".
+    // Everything else that happens to be written nX already shows the trait, so
+    // doubling it would mean something different (nLp is a Snowflake, LpLp a
+    // Varnish Roan) or nothing at all (OO and WW are lethal).
+    if (names.length && names.every(n => /^(Carrying|Carries)\s/.test(n))) {
+        const doubled = String(tokens).split(/\s+/).map((t) => {
+            const m = /^n([A-Za-z]+)$/.exec(t);
+            return (m && isKnownGeneToken(m[1] + m[1])) ? m[1] + m[1] : t;
+        }).join(' ');
+        if (doubled !== tokens) add(doubled);
+    }
+    return names;
+}
+
 const RECIPE_TRAIT_TIER = (function () {
     const out = {};
     const plain = resolveTraits('Ee Aa').allTraits;
     RECIPE_TIER_ORDER.forEach((tier) => {
         const v = RARITY_GENES[tier] || {};
         (v.markings || []).concat(v.modifiers || []).forEach((tokens) => {
-            resolveTraits('Ee Aa ' + tokens).allTraits
-                .filter(name => plain.indexOf(name) === -1)
-                .forEach(name => { if (!(name in out)) out[name] = tier; });
+            recipePoolNames(tokens).forEach(name => { if (!(name in out)) out[name] = tier; });
         });
     });
     return out;
@@ -5886,9 +5912,7 @@ const RECIPE_TRAIT_KIND = (function () {
         const v = RARITY_GENES[tier] || {};
         [['marking', v.markings || []], ['modifier', v.modifiers || []]].forEach(function (pair) {
             pair[1].forEach((tokens) => {
-                resolveTraits('Ee Aa ' + tokens).allTraits
-                    .filter(name => plain.indexOf(name) === -1)
-                    .forEach(name => { if (!(name in out)) out[name] = pair[0]; });
+                recipePoolNames(tokens).forEach(name => { if (!(name in out)) out[name] = pair[0]; });
             });
         });
     });

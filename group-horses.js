@@ -50,7 +50,10 @@ const GROUP_HORSES = [
     { id: 'group-brian', name: 'Brian', genotype: 'Ee Aa Cher nT nSty nPr + Bend-or Spots, Pennant', temperament: 'Melancholic', variant: 'Heraldic', cost: 'Apple', group: true },
     { id: 'group-anni', name: 'Anni', genotype: 'ee aa nCr erer nW nSty nPr + Chimera, Pastiche', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-clio', name: 'Clio', genotype: 'Ee Aa TpCr nCo nO + Bend-or Spots, Stained Glass', temperament: 'Sanguine', variant: 'Cavedweller', cost: 'Berry', group: true },
-    { id: 'group-mobberley', name: 'Mobberley', genotype: 'Ee aa nCr ner nO nT nLp nG nsp nV + Oracle, Pastiche', temperament: 'Choleric', variant: 'Heraldic', cost: 'Berry', group: true },
+    // Tower's sheet writes this one "Sepulchered (Recessive)", which read as a
+    // single carried copy, but his character page shows Sepulchered on him, so
+    // he has both. Reported by Springfoss.
+    { id: 'group-mobberley', name: 'Mobberley', genotype: 'Ee aa nCr ner nO nT nLp nG spsp nV + Oracle, Pastiche', temperament: 'Choleric', variant: 'Heraldic', cost: 'Berry', group: true },
     { id: 'group-salvia', name: 'Salvia', genotype: 'Ee Aa Tpprl nCh nCw nT nZ nD nGl + Pastiche, Signet', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-yrjana', name: 'Yrjänä', genotype: 'Ee Aa Crprl erer nLp npatn + Oracle, Vitiligo', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-sullivan', name: 'Sullivan', genotype: 'Ee Aa erer nRb nSb nLp', temperament: 'Choleric', variant: 'Cavedweller', cost: 'Berry', group: true }
