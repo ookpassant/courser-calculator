@@ -24,7 +24,7 @@ const GROUP_HORSES = [
     { id: 'group-alcyone', name: 'Alcyone', genotype: 'Ee aa TRn + Chimera, Stained Glass, Swarf', temperament: 'Choleric', variant: 'Heraldic', cost: 'Berry', group: true },
     { id: 'group-titter', name: 'Titter', genotype: 'ee Aa TpTp nHq + Chimera', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-robin', name: 'Robin', genotype: 'ee aa nCr nT nGl', temperament: 'Phlegmatic', variant: 'Puck', cost: 'Berry', group: true },
-    { id: 'group-calix', name: 'Calix', genotype: 'Ee aa fefe nT nCw', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
+    { id: 'group-calix', name: 'Calix', genotype: 'Ee aa TT fefe nCw', temperament: 'Phlegmatic', variant: 'Standard', cost: 'Apple', group: true },
     { id: 'group-cerridwen', name: 'Cerridwen', genotype: 'ee Aa nCu nSb ff', temperament: 'Choleric', variant: 'Standard', cost: 'Berry', group: true },
     { id: 'group-goud', name: 'Goud', genotype: 'ee aa TpTp nGl ff + Stained Glass', temperament: 'Melancholic', variant: 'Standard', cost: 'Berry', group: true },
     { id: 'group-everard', name: 'Everard', genotype: 'EE aa Tpprl', temperament: 'Melancholic', variant: 'Puck', cost: 'Apple', group: true },
