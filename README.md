@@ -212,6 +212,10 @@ A static site, no build step:
 - `app.js`: the app shell: routing, landing page, toasts, the
   localStorage-backed collection, import wizard, the courser-import bookmarklets,
   and recent searches. It talks to the engine through small optional hooks.
+- `pets.js`, `chat.js`: two unlisted pages, the pet excursion planner at
+  `#pets` and the chat builder at `#chat`. Left out of the nav on purpose.
+- `tests/`: the test suite. `node tests/run.js` runs the lot, no dependencies.
+  See [`tests/README.md`](tests/README.md).
 - `manifest.webmanifest`, `icon.svg`: basic install metadata.
 - `sw.js`: a retired service worker (kill-switch). Offline support was removed
   because it served stale cached versions; this file just unregisters any old

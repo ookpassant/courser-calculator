@@ -1075,10 +1075,11 @@
                 <!-- Area: Group Chat Builder (unlisted, #chat) -->
                 <section class="area" id="area-chat">
                     <h1 class="page-title">Group Chat Builder</h1>
-                    <p class="blurb">Write a group chat as plain text and get HTML you can paste straight into a Dungeon Coursers post. What you type is kept in this browser and goes nowhere else.</p>
+                    <p class="blurb">Write a chat as plain text and get HTML you can paste straight into a Dungeon Coursers post. One piece can hold as many chats as it likes, group or one to one. What you type is kept in this browser and goes nowhere else.</p>
 
                     <div class="info-box">
-                        <p><strong>Posting it:</strong> press <em>Copy the HTML</em>, open the site's editor, switch it to source view with the <code>&lt;&gt;</code> button, and paste. Pictures need a web address, not a file off your computer.</p>
+                        <p><strong>Posting it:</strong> press <em>Copy the HTML</em>, open the site's editor, switch it to source view with the <code>&lt;&gt;</code> button, and paste.</p>
+                        <p><strong>Pictures:</strong> <code>[photo ...]</code> describes one in words and needs no file at all, which is usually what you want. <code>[img ...]</code> shows a real one, and that needs a web address rather than a file off your computer.</p>
                     </div>
 
                     <details class="chat-cheat">
@@ -1086,9 +1087,12 @@
                         <table class="chat-cheat-table">
                             <tr><td><code>group: Name</code></td><td>the group's name in the header</td></tr>
                             <tr><td><code>me: Name</code></td><td>whose phone we are looking at. Their messages go on the right in green. Leave it out for nobody</td></tr>
-                            <tr><td><code>theme: paper</code></td><td><code>paper</code>, <code>dark</code> or <code>green</code></td></tr>
-                            <tr><td><code>cast: Name = red</code></td><td>one line each. Colours: gold, blue, grey, red, purple, green, teal, pink, orange, brown, black, or a hex like <code>#ff6600</code>. Add <code>, X</code> on the end to choose the avatar letter</td></tr>
-                            <tr><td><code>members: a, b, c</code></td><td>optional, the small line under the group name. Defaults to the cast</td></tr>
+                            <tr><td><code>theme: paper</code></td><td><code>paper</code>, <code>dark</code>, <code>green</code> or <code>goth</code> (black and blood red, and <code>emo</code> works too)</td></tr>
+                            <tr><td><code>cast: Moon = white, M, i am not your autumn moon</code></td><td>one line each: the name they go by in the chat, a colour, the avatar letters, and optionally a full name, which only feeds the small line under the group name. Colours: gold, blue, grey, red, purple, green, teal, pink, orange, brown, black, white, yellow, navy, or a hex like <code>#ff6600</code></td></tr>
+                            <tr><td><code>members: a, b, c</code></td><td>optional, the small line under the group name. Defaults to the cast's full names</td></tr>
+                            <tr><td colspan="2" class="chat-cheat-head"><strong>Several chats in one piece.</strong> Each <code>===</code> line starts a new phone below the last, so a piece can cut between a group and a DM and back. The cast is shared by all of them.</td></tr>
+                            <tr><td><code>=== dm: Nightmare, Dead</code></td><td>a one to one chat between those two. No names on the bubbles, and the other person sits in the header. The second name holds the phone unless <code>me</code> is one of them</td></tr>
+                            <tr><td><code>=== group: name</code></td><td>starts, or switches back to, a group chat with that name. A <code>me:</code> line straight after a <code>===</code> applies to that chat only</td></tr>
                             <tr><td><code>banner: Name: text | 3 more</code></td><td>a lock screen notification, shown above the phone</td></tr>
                             <tr><td><code>--- Thursday</code></td><td>a date divider</td></tr>
                             <tr><td><code>--- unread 3</code></td><td>the "3 unread messages" line</td></tr>
@@ -1099,7 +1103,8 @@
                             <tr><td><code>typing: Name</code></td><td>the "..." typing bubble</td></tr>
                             <tr><td colspan="2" class="chat-cheat-head"><strong>Tags</strong> go at the start of a message, in square brackets. Several can be stacked.</td></tr>
                             <tr><td><code>[reply Name: quoted text]</code></td><td>quote someone above the reply</td></tr>
-                            <tr><td><code>[img URL]</code></td><td>a picture. Any text after the tag is the caption</td></tr>
+                            <tr><td><code>[photo a hoof, the polish chipped]</code></td><td>a photo described in words, with no image file needed. <code>[selfie ...]</code>, <code>[pic ...]</code> and <code>[video ...]</code> do the same. Any text after the tag is the caption</td></tr>
+                            <tr><td><code>[img URL]</code></td><td>a real picture from a web address. Any text after the tag is the caption</td></tr>
                             <tr><td><code>[voice 1:47]</code></td><td>a voice note of that length</td></tr>
                             <tr><td><code>[poll Question | Option 3 | Option 1]</code></td><td>a poll. The number on the end of each option is its votes</td></tr>
                             <tr><td><code>[link Title | description | site.name]</code></td><td>a link preview. The text after the tag is the link itself</td></tr>
