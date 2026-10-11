@@ -89,6 +89,37 @@ git push  ->  main  ->  GitHub Action  ->  ssh into VPS  ->  git reset --hard or
   `main` exactly — never edit files directly on the server, your changes would
   be wiped on the next deploy.
 
+## Cache headers
+
+The site must send `Cache-Control`. Without it browsers guess, each file ages
+separately, and a phone can end up running a fresh `index.html` against a
+cached `app.js`, or showing data that was corrected days ago. The `?v=<sha>`
+stamp on the script tags only helps if the page carrying it is itself fresh.
+
+Two ways to set them, and doing either is enough:
+
+- **`.htaccess`** in the clone root, already in the repo. Needs
+  `AllowOverride FileInfo` in the `<Directory>` block (it is in the config
+  fragment). Apache ignores an `.htaccess` in silence when overrides are off,
+  so a missing header means the override is not allowed.
+- **The vhost**, via the `FilesMatch` blocks in
+  [`deploy/courser-calc.apache.conf`](deploy/courser-calc.apache.conf).
+
+Either way `mod_headers` has to be on:
+
+```bash
+sudo a2enmod headers
+sudo apachectl configtest
+sudo systemctl reload apache2
+```
+
+Then check it actually took, because a silent miss is the whole problem:
+
+```bash
+curl -sI https://ook.monster/courser-calc/ | grep -i cache-control
+# expect:  cache-control: no-cache
+```
+
 ## Notes
 
 - The site is subpath-safe: assets are referenced relatively, so `/courser-calc`

@@ -1,0 +1,42 @@
+# Cache headers for the calculator, kept with the code so a deploy carries them.
+#
+# This only does anything if the <Directory> block for the clone allows it:
+#
+#     AllowOverride FileInfo
+#
+# Apache ignores an .htaccess silently when overrides are off, so if the site
+# is still answering without a Cache-Control header, that is the line to add
+# (deploy/courser-calc.apache.conf has it, and the same rules besides, for
+# anyone who would rather keep it all in the vhost and leave overrides off).
+
+<IfModule mod_headers.c>
+    # Always revalidate the app itself.
+    #
+    # With no Cache-Control at all, browsers fall back to heuristic caching and
+    # every file ages on its own. That is how a phone ends up running a fresh
+    # index.html against a cached app.js, or rendering a group horse whose
+    # genotype was corrected days ago: the versioned ?v= query only helps if
+    # the page carrying it is itself fresh.
+    #
+    # "no-cache" is not "do not cache". It means "ask me before reusing this".
+    # ETags are already on, so the ask is a 304 with no body: one round trip,
+    # no download, and the files can never again be served as a mismatched set.
+    <FilesMatch "\.(html|js|webmanifest|json)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+
+    # The service worker is a kill-switch for the retired one. A browser that
+    # cached it would never see a replacement, so it must never be held.
+    <Files "sw.js">
+        Header set Cache-Control "no-store"
+    </Files>
+
+    # Images and the icon change rarely and are not version-stamped, so a day
+    # is a fair trade and keeps the phone from refetching them every visit.
+    <FilesMatch "\.(svg|png|jpg|jpeg|gif|webp|ico)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>
+
+# Never serve the git metadata, whatever the vhost says.
+RedirectMatch 404 ^/courser-calc/\.git
