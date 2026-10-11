@@ -228,8 +228,9 @@
     layers: { label: 'Layers', crumb: 'Layers' },
     somatic: { label: 'Somatic', crumb: 'Somatic' },
     collection: { label: 'Collection', crumb: 'Collection' },
-    // Not in the nav on purpose. Reachable at #pets only.
-    pets: { label: 'Pet Excursions', crumb: 'Pet Excursions', unlisted: true }
+    // Not in the nav on purpose. Reachable at #pets and #chat only.
+    pets: { label: 'Pet Excursions', crumb: 'Pet Excursions', unlisted: true },
+    chat: { label: 'Group Chat Builder', crumb: 'Group Chat Builder', unlisted: true }
   };
 
   // =========================================================================
@@ -325,6 +326,7 @@
     if (area === 'layers' && window.populateLayersCollectionSelect) window.populateLayersCollectionSelect();
     if (area === 'somatic' && window.populateSomaticCollectionSelect) window.populateSomaticCollectionSelect();
     if (area === 'pets' && window.showPets) window.showPets();
+    if (area === 'chat' && window.showChat) window.showChat();
     // Privacy-first analytics: record which tool was opened, nothing else.
     // No-op unless a PostHog key is set in index.html.
     if (window.posthog) window.posthog.capture('tool_opened', { tool: area });

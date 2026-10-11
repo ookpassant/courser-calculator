@@ -506,6 +506,35 @@
         .recipe-item-trait { color: var(--dc-ink); margin-left: 4px; }
         .recipe-item-src { color: var(--dc-slate); }
         .recipe-item-src::before { content: '· '; }
+        /* ---- Group Chat Builder (unlisted, #chat) ---- */
+        .chat-cheat { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve);
+            border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 20px; }
+        .chat-cheat summary { font-family: var(--font-stamp); font-size: 0.72rem; letter-spacing: var(--tracking-stamp);
+            text-transform: uppercase; color: var(--dc-mauve-deep); cursor: pointer; }
+        .chat-cheat[open] summary { margin-bottom: 12px; }
+        .chat-cheat-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; line-height: 1.5; }
+        .chat-cheat-table td { padding: 4px 10px 4px 0; vertical-align: top; color: var(--dc-slate); }
+        .chat-cheat-table td:first-child { white-space: nowrap; }
+        .chat-cheat-table td.chat-cheat-head { padding-top: 14px; color: var(--dc-ink); white-space: normal; }
+        .chat-cheat code, .chat-actions + .chat-out, #area-chat .info-box code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
+        .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        .chat-col { min-width: 0; }
+        .chat-col .section-head { margin-top: 0; }
+        .chat-script { min-height: 60vh; font-size: 0.82rem; line-height: 1.5; }
+        /* The preview runs Bootstrap inside the frame, which is why it is a
+           frame: on this page that stylesheet would restyle the calculator. */
+        .chat-preview { width: 100%; min-height: 60vh; border: 1px solid var(--dc-line); border-radius: var(--radius-sm);
+            background: var(--dc-cloud); display: block; }
+        .chat-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+        .chat-actions .dc-btn { margin-bottom: 0; }
+        .chat-out { min-height: 180px; font-size: 0.72rem; line-height: 1.45; color: var(--dc-slate); }
+        @media (max-width: 860px) {
+            .chat-grid { grid-template-columns: 1fr; }
+            .chat-script { min-height: 40vh; }
+            .chat-cheat-table td { display: block; padding-right: 0; }
+            .chat-cheat-table td:first-child { padding-bottom: 0; }
+        }
+
         .recipe-read { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve-soft); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.9rem; color: var(--dc-ink); line-height: 1.55; margin: 0 0 16px; }
         .recipe-read code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
         .recipe-read-drop { color: var(--dc-blood); }
@@ -1043,6 +1072,64 @@
                 </section>
 
 
+                <!-- Area: Group Chat Builder (unlisted, #chat) -->
+                <section class="area" id="area-chat">
+                    <h1 class="page-title">Group Chat Builder</h1>
+                    <p class="blurb">Write a group chat as plain text and get HTML you can paste straight into a Dungeon Coursers post. What you type is kept in this browser and goes nowhere else.</p>
+
+                    <div class="info-box">
+                        <p><strong>Posting it:</strong> press <em>Copy the HTML</em>, open the site's editor, switch it to source view with the <code>&lt;&gt;</code> button, and paste. Pictures need a web address, not a file off your computer.</p>
+                    </div>
+
+                    <details class="chat-cheat">
+                        <summary>How to write it</summary>
+                        <table class="chat-cheat-table">
+                            <tr><td><code>group: Name</code></td><td>the group's name in the header</td></tr>
+                            <tr><td><code>me: Name</code></td><td>whose phone we are looking at. Their messages go on the right in green. Leave it out for nobody</td></tr>
+                            <tr><td><code>theme: paper</code></td><td><code>paper</code>, <code>dark</code> or <code>green</code></td></tr>
+                            <tr><td><code>cast: Name = red</code></td><td>one line each. Colours: gold, blue, grey, red, purple, green, teal, pink, orange, brown, black, or a hex like <code>#ff6600</code>. Add <code>, X</code> on the end to choose the avatar letter</td></tr>
+                            <tr><td><code>members: a, b, c</code></td><td>optional, the small line under the group name. Defaults to the cast</td></tr>
+                            <tr><td><code>banner: Name: text | 3 more</code></td><td>a lock screen notification, shown above the phone</td></tr>
+                            <tr><td><code>--- Thursday</code></td><td>a date divider</td></tr>
+                            <tr><td><code>--- unread 3</code></td><td>the "3 unread messages" line</td></tr>
+                            <tr><td><code>* Tealeaf added Sunday</code></td><td>a system line: created the group, added, left, removed, pinned, changed the name. Write whatever it should say</td></tr>
+                            <tr><td><code>! Missed call from Latte</code></td><td>a red system line</td></tr>
+                            <tr><td><code>Name 18:02: text</code></td><td>a message. The time is optional, so <code>Name: text</code> works too. Messages in a row from one person group together</td></tr>
+                            <tr><td><code>+ &#10084; 2, &#128064; 1</code></td><td>reactions under the message above</td></tr>
+                            <tr><td><code>typing: Name</code></td><td>the "..." typing bubble</td></tr>
+                            <tr><td colspan="2" class="chat-cheat-head"><strong>Tags</strong> go at the start of a message, in square brackets. Several can be stacked.</td></tr>
+                            <tr><td><code>[reply Name: quoted text]</code></td><td>quote someone above the reply</td></tr>
+                            <tr><td><code>[img URL]</code></td><td>a picture. Any text after the tag is the caption</td></tr>
+                            <tr><td><code>[voice 1:47]</code></td><td>a voice note of that length</td></tr>
+                            <tr><td><code>[poll Question | Option 3 | Option 1]</code></td><td>a poll. The number on the end of each option is its votes</td></tr>
+                            <tr><td><code>[link Title | description | site.name]</code></td><td>a link preview. The text after the tag is the link itself</td></tr>
+                            <tr><td><code>[forwarded]</code> <code>[edited]</code> <code>[deleted]</code></td><td>those states</td></tr>
+                            <tr><td><code>[sent]</code> <code>[delivered]</code> <code>[read]</code></td><td>ticks on your own messages. Read is the default</td></tr>
+                            <tr><td colspan="2" class="chat-cheat-head"><strong>Inside the text:</strong> <code>*bold*</code>, <code>_italic_</code>, <code>~struck~</code>, <code>@Name</code> highlights a cast member, <code>//</code> starts a new line. A line starting with <code>#</code> is a note to yourself and never shows.</td></tr>
+                        </table>
+                    </details>
+
+                    <div class="chat-grid">
+                        <div class="chat-col">
+                            <h2 class="section-head">The script</h2>
+                            <textarea id="chatScript" class="chat-script" spellcheck="false" placeholder="group: Thursday lot"></textarea>
+                        </div>
+                        <div class="chat-col">
+                            <h2 class="section-head">How it will look</h2>
+                            <iframe id="chatPreview" class="chat-preview" title="Preview of the chat"></iframe>
+                        </div>
+                    </div>
+
+                    <h2 class="section-head">The HTML</h2>
+                    <div class="chat-actions">
+                        <button class="dc-btn auto" id="chatCopyBtn">Copy the HTML</button>
+                        <button class="dc-btn auto mauve" id="chatDownloadBtn">Download .html</button>
+                        <button class="dc-btn auto outline" id="chatResetBtn" title="Put the example back">Reset to the example</button>
+                    </div>
+                    <textarea id="chatOut" class="chat-out" readonly spellcheck="false"></textarea>
+                </section>
+
+
                 <!-- Area: Chimera Calculator (standalone — no collection needed) -->
                 <section class="area" id="area-chimera">
                     <h1 class="page-title">Chimera Calculator</h1>
@@ -1202,6 +1289,7 @@
          is only what local checkouts see — no need to bump it by hand. -->
     <script src="group-horses.js?v=20260820a"></script>
     <script src="pets.js?v=20260820a"></script>
+    <script src="chat.js?v=20260820a"></script>
     <script src="breeding-calculator.js?v=20260820a"></script>
     <script src="app.js?v=20260820a"></script>
 </body>
