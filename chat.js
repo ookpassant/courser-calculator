@@ -23,6 +23,9 @@
 // ===========================================================================
 
 const CHAT_KEY = 'bloodline.chat.script.v1';
+// Reset throws the whole script away, which is the one way to lose work here.
+// The old one is kept under this so it can be put back.
+const CHAT_BACKUP_KEY = 'bloodline.chat.backup.v1';
 const CHAT_BOOTSTRAP = 'https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css';
 
 const CHAT_EXAMPLE = [
@@ -454,6 +457,49 @@ function chatRender(doc) {
     };
 }
 
+// How long the piece is.
+//
+// Counting the script would be the easy thing and the wrong one: it would
+// include the cast list, the tags, the URLs and the comments, none of which
+// appear in the finished post. A word count is for what a reader reads, and
+// on this site for what a submission is measured by, so this counts the words
+// that end up on screen and nothing else.
+function chatCounts(doc) {
+    let words = 0, messages = 0;
+    const add = (s) => {
+        const found = String(s == null ? '' : s)
+            .replace(/\/\//g, ' ')   // the line break marker is not a word
+            .match(/\S+/g);
+        if (found) words += found.length;
+    };
+    doc.sections.forEach((sec) => {
+        sec.items.forEach((it) => {
+            if (it.type === 'msg') {
+                messages++;
+                add(it.text);
+                const tags = it.tags;
+                // A quoted reply is on screen, so it counts.
+                if (tags.reply) add(String(tags.reply).replace(/^[^:]*:\s*/, ''));
+                CHAT_PHOTO_TAGS.forEach(k => { if (k in tags) add(tags[k]); });
+                // Bars are separators and the vote tallies are numbers.
+                if (tags.poll) add(String(tags.poll).replace(/\|/g, ' ').replace(/\b\d+\b/g, ' '));
+                if (tags.link) add(String(tags.link).replace(/\|/g, ' '));
+                return;
+            }
+            if (it.type === 'system' || it.type === 'date') { add(it.text); return; }
+            if (it.type === 'banner') { add(it.text); add(it.more); return; }
+        });
+    });
+    return { words: words, messages: messages, chats: doc.sections.length };
+}
+
+function chatCountText(c) {
+    const bit = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+    const parts = [bit(c.words, 'word', 'words'), bit(c.messages, 'message', 'messages')];
+    if (c.chats > 1) parts.push(bit(c.chats, 'chat', 'chats'));
+    return parts.join(' · ');
+}
+
 // ---------------------------------------------------------------------------
 // The page
 // ---------------------------------------------------------------------------
@@ -488,8 +534,11 @@ function chatSizeFrame() {
 function chatUpdate() {
     const box = document.getElementById('chatScript'), out = document.getElementById('chatOut');
     if (!box || !out) return;
-    const r = chatRender(chatParse(box.value));
+    const doc = chatParse(box.value);
+    const r = chatRender(doc);
     out.value = r.html;
+    const tally = document.getElementById('chatCount');
+    if (tally) tally.textContent = chatCountText(chatCounts(doc));
     const mount = chatMount();
     if (mount) {
         mount.ownerDocument.body.style.backgroundColor = r.page;
@@ -501,7 +550,7 @@ function chatUpdate() {
             img.addEventListener('error', chatSizeFrame);
         });
     }
-    try { localStorage.setItem(CHAT_KEY, box.value); } catch (e) { /* private mode, not fatal */ }
+    chatStash(CHAT_KEY, box.value);
 }
 
 // Typing redraws every phone in the piece, so wait for a pause rather than
@@ -534,12 +583,40 @@ function chatDownload() {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+function chatStash(key, value) {
+    try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); }
+    catch (e) { /* private mode, not fatal */ }
+}
+function chatStashed(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+
+// The undo button only exists when there is something to undo.
+function chatRefreshUndo() {
+    const btn = document.getElementById('chatUndoBtn');
+    if (btn) btn.hidden = chatStashed(CHAT_BACKUP_KEY) === null;
+}
+
 function chatReset() {
     const box = document.getElementById('chatScript');
     if (!box) return;
-    if (!confirm('Replace what you have written with the example?')) return;
+    if (!confirm('Replace what you have written with the example? You can undo it afterwards.')) return;
+    chatStash(CHAT_BACKUP_KEY, box.value);
     box.value = CHAT_EXAMPLE;
     chatUpdate();
+    chatRefreshUndo();
+    if (window.toast) window.toast('Example put back. Your own script is kept, press Undo to get it again.', 'success', 6000);
+}
+
+function chatUndo() {
+    const box = document.getElementById('chatScript');
+    const prev = chatStashed(CHAT_BACKUP_KEY);
+    if (!box || prev === null) return;
+    box.value = prev;
+    chatStash(CHAT_BACKUP_KEY, null);
+    chatUpdate();
+    chatRefreshUndo();
+    if (window.toast) window.toast('Your script is back.', 'success');
 }
 
 let _chatStarted = false;
@@ -548,15 +625,16 @@ function showChat() {
     if (!box) return;
     if (!_chatStarted) {
         _chatStarted = true;
-        let saved = null;
-        try { saved = localStorage.getItem(CHAT_KEY); } catch (e) { /* private mode */ }
-        box.value = saved || CHAT_EXAMPLE;
+        const saved = chatStashed(CHAT_KEY);
+        box.value = saved === null ? CHAT_EXAMPLE : saved;
         box.addEventListener('input', chatQueueUpdate);
         const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
         bind('chatCopyBtn', chatCopy);
         bind('chatDownloadBtn', chatDownload);
         bind('chatResetBtn', chatReset);
+        bind('chatUndoBtn', chatUndo);
     }
+    chatRefreshUndo();
     chatUpdate();
 }
 

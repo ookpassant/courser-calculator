@@ -1,6 +1,7 @@
 // The group chat builder: does a script turn into the markup it should.
 const { load, suite } = require('./harness');
-const A = load(['chat.js'], '{ chatParse, chatRender, chatFmt, CHAT_EXAMPLE, CHAT_THEMES }');
+const A = load(['chat.js'],
+    '{ chatParse, chatRender, chatFmt, chatCounts, chatCountText, CHAT_EXAMPLE, CHAT_THEMES }');
 const t = suite('chat');
 const ok = (l, c) => t.ok(l, c);
 const build = s => A.chatRender(A.chatParse(s));
@@ -167,6 +168,48 @@ ok('a described photo is escaped too',
 // --- unreadable lines are reported, not dropped ---------------------------
 ok('a line that parses as nothing is flagged',
    build('group: G\nthis line has no colon').html.indexOf("couldn't read this line") !== -1);
+
+// --- how long the piece is ------------------------------------------------
+// The count is for what a reader reads, and on this site for what a
+// submission is measured by, so the scaffolding must not inflate it.
+const counts = s => A.chatCounts(A.chatParse(s));
+let c = counts('group: G\ncast: A = red\nA: one two three');
+t.eq('three words counted', c.words, 3);
+t.eq('one message counted', c.messages, 1);
+t.eq('one chat counted', c.chats, 1);
+
+c = counts(['# a comment nobody reads', 'group: a group name', 'me: A', 'theme: goth',
+    'cast: A = red, A, a long full name here', 'members: not counted either',
+    'A: four words right here'].join('\n'));
+t.eq('the cast, settings and comments are not words', c.words, 4);
+
+c = counts('cast: A = red\ncast: B = blue\n=== dm: A, B\nA: one\n=== group: Two\nB: two');
+t.eq('both chats are counted', c.chats, 2);
+t.eq('and messages across them', c.messages, 2);
+t.eq('and their words', c.words, 2);
+
+c = counts('group: G\ncast: A = red\n* A left the group\n--- Thursday\n! Missed call from A\nbanner: A: come back | 2 more');
+ok('system lines count', c.words >= 4);
+t.eq('but none of them is a message', c.messages, 0);
+
+c = counts('group: G\ncast: A = red\nA: [photo a hoof held up] look at this');
+t.eq('a described photo counts, and so does its caption', c.words, 7);
+
+c = counts('group: G\ncast: A = red\nA: [poll pick one | yes 3 | no 1]');
+t.eq('a poll counts its question and options, not the votes', c.words, 4);
+
+c = counts('group: G\ncast: A = red\nA: [img https://example.com/a.png] a caption');
+t.eq('a URL is not words, the caption is', c.words, 2);
+
+c = counts('group: G\ncast: A = red\ncast: B = blue\nB: first thing\nA: [reply B: first thing] yes');
+t.eq('a quoted reply is on screen, so it counts', c.words, 5);
+
+t.eq('a line break marker is not a word', counts('group: G\ncast: A = red\nA: one // two').words, 2);
+t.eq('an empty script counts nothing', counts('').words, 0);
+t.eq('and says so without crashing', A.chatCountText(counts('')), '0 words · 0 messages');
+ok('one of something is singular', A.chatCountText({ words: 1, messages: 1, chats: 1 }) === '1 word · 1 message');
+ok('and the chat count only shows when there are several',
+    A.chatCountText({ words: 2, messages: 2, chats: 2 }).indexOf('2 chats') !== -1);
 
 // --- the example itself ---------------------------------------------------
 const ex = build(A.CHAT_EXAMPLE);

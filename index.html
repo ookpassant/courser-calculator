@@ -541,9 +541,21 @@
         .chat-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
         .chat-actions .dc-btn { margin-bottom: 0; }
         .chat-out { min-height: 180px; font-size: 0.72rem; line-height: 1.45; color: var(--dc-slate); }
+        .chat-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;
+            margin: -6px 0 16px; font-size: 0.82rem; color: var(--dc-slate); }
+        .chat-count { font-family: var(--font-stamp); font-size: 0.66rem; letter-spacing: var(--tracking-stamp);
+            text-transform: uppercase; color: var(--dc-mauve-deep); }
+        .chat-saved { font-size: 0.8rem; }
         @media (max-width: 860px) {
             .chat-grid { grid-template-columns: 1fr; }
-            .chat-script { min-height: 40vh; }
+            /* Sasha writes these on a phone, where the box was the one thing
+               that got smaller. It is the part you actually work in. */
+            .chat-script { min-height: 62vh; }
+            /* The preview is sized to its contents, which for a long piece can
+               run to thousands of pixels. On a phone that put a mile of
+               scrolling between the script and the Copy button, so it scrolls
+               inside itself here instead. */
+            .chat-preview { max-height: 70vh; }
             .chat-cheat-table td { display: block; padding-right: 0; }
             .chat-cheat-table td:first-child { padding-bottom: 0; }
         }
@@ -1131,6 +1143,10 @@
                         <div class="chat-col">
                             <h2 class="section-head">The script</h2>
                             <textarea id="chatScript" class="chat-script" spellcheck="false" placeholder="group: Thursday lot"></textarea>
+                            <div class="chat-meta">
+                                <span class="chat-count" id="chatCount"></span>
+                                <span class="chat-saved">Saved in this browser as you type, so going back or closing the tab will not lose it.</span>
+                            </div>
                         </div>
                         <div class="chat-col">
                             <h2 class="section-head">How it will look</h2>
@@ -1143,6 +1159,7 @@
                         <button class="dc-btn auto" id="chatCopyBtn">Copy the HTML</button>
                         <button class="dc-btn auto mauve" id="chatDownloadBtn">Download .html</button>
                         <button class="dc-btn auto outline" id="chatResetBtn" title="Put the example back">Reset to the example</button>
+                        <button class="dc-btn auto outline" id="chatUndoBtn" title="Put your own script back" hidden>Undo the reset</button>
                     </div>
                     <textarea id="chatOut" class="chat-out" readonly spellcheck="false"></textarea>
                 </section>
