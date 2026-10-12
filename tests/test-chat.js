@@ -169,6 +169,38 @@ ok('a described photo is escaped too',
 ok('a line that parses as nothing is flagged',
    build('group: G\nthis line has no colon').html.indexOf("couldn't read this line") !== -1);
 
+// --- a sponsored message ---------------------------------------------------
+const adDoc = A.chatParse('group: G\ncast: A = red\nA: before\n' +
+    'ad: Juicy Berries, two for one | This week only. | Wizard\'s Emporium | Visit the stall\nA: after');
+const ad = adDoc.sections[0].items.filter(i => i.type === 'ad')[0];
+ok('an ad: line is its own kind of item', !!ad);
+t.eq('headline read', ad.title, 'Juicy Berries, two for one');
+t.eq('body read', ad.body, 'This week only.');
+t.eq('advertiser read', ad.who, "Wizard's Emporium");
+t.eq('button read', ad.cta, 'Visit the stall');
+const adh = A.chatRender(adDoc).html;
+ok('it is marked as sponsored', adh.indexOf('Sponsored') !== -1);
+ok('the headline renders', adh.indexOf('Juicy Berries, two for one') !== -1);
+ok('the advertiser renders', adh.indexOf('Emporium') !== -1);
+ok('the button renders', adh.indexOf('Visit the stall') !== -1);
+// The advert block itself carries no avatar: it is the app talking.
+const adBlock = adh.slice(adh.indexOf('Sponsored') - 400, adh.indexOf('Visit the stall') + 40);
+ok('it wears no avatar', adBlock.indexOf('rounded-circle') === -1);
+ok('an advert is not a message', A.chatCounts(adDoc).messages === 2);
+// It interrupts a run, so the speaker is named again underneath it.
+// The full name keeps the header subtitle from matching the sender name.
+const runAd = A.chatRender(A.chatParse('group: G\ncast: Zed = red, Z, Zedediah\nZed: one\nad: buy things\nZed: two')).html;
+t.eq('the speaker is named again after an advert', (runAd.match(/>Zed<\/div>/g) || []).length, 2);
+// Everything past the headline is optional.
+const bare = A.chatParse('group: G\nad: just this').sections[0].items[0];
+t.eq('a one line advert keeps its headline', bare.title, 'just this');
+ok('and renders without the rest', A.chatRender(A.chatParse('group: G\nad: just this')).html.indexOf('just this') !== -1);
+ok('an advert is escaped like everything else',
+   A.chatRender(A.chatParse('group: G\nad: <script>x</script>')).html.indexOf('<script>x') === -1);
+// A cast member called Ad still gets to speak.
+const adName = A.chatParse('cast: Ad = red\ngroup: G\nAd: I am a person');
+t.eq('a character called Ad is not an advert', adName.sections[0].items[0].type, 'msg');
+
 // --- how long the piece is ------------------------------------------------
 // The count is for what a reader reads, and on this site for what a
 // submission is measured by, so the scaffolding must not inflate it.
@@ -187,6 +219,10 @@ c = counts('cast: A = red\ncast: B = blue\n=== dm: A, B\nA: one\n=== group: Two\
 t.eq('both chats are counted', c.chats, 2);
 t.eq('and messages across them', c.messages, 2);
 t.eq('and their words', c.words, 2);
+
+c = counts('group: G\nad: four words right here | two more | one | Button');
+t.eq('an advert counts its words, but not its button', c.words, 7);
+t.eq('and is not counted as a message', c.messages, 0);
 
 c = counts('group: G\ncast: A = red\n* A left the group\n--- Thursday\n! Missed call from A\nbanner: A: come back | 2 more');
 ok('system lines count', c.words >= 4);

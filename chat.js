@@ -82,6 +82,7 @@ const CHAT_EXAMPLE = [
     '! Missed voice call from HM · 01:20',
     'HM 01:21: [voice 2:03]',
     'Chrome 01:30: [poll are we doing the thing on saturday | yes 2 | no 1 | what thing 4]',
+    'ad: Juicy Berries, two for one | This week only at the Wizard\'s stall. Breeding slots sold separately. | Wizard\'s Emporium | Visit the stall',
     'Moon 01:31: [photo a blurry picture of a very large black dog, taken from too close. One ear up, one ear down]',
     'Dead 01:32: [forwarded] ten songs to cry to',
     'Dead: [deleted]',
@@ -214,7 +215,7 @@ function chatParse(src) {
             return;
         }
 
-        if ((m = line.match(/^(group|me|theme|members|cast|banner|typing)\s*:\s*(.*)$/i))
+        if ((m = line.match(/^(group|me|theme|members|cast|banner|typing|ad)\s*:\s*(.*)$/i))
             && (m[1] === m[1].toLowerCase() || !named[m[1].toLowerCase()])) {
             const k = m[1].toLowerCase(), v = m[2].trim();
             if (k === 'group') { cur.name = v; cur.type = 'group'; return; }
@@ -233,6 +234,11 @@ function chatParse(src) {
                 cur.items.push({ type: 'banner', sender: bm ? bm[1] : '', text: bm ? bm[2] : v, more: (bm && bm[3]) || '' });
             } else if (k === 'typing') {
                 cur.items.push({ type: 'typing', sender: v });
+            } else if (k === 'ad') {
+                // headline | body | advertiser | button. Everything past the
+                // headline is optional, so a one-line advert is just the text.
+                const ap = v.split(/\s*\|\s*/);
+                cur.items.push({ type: 'ad', title: ap[0] || '', body: ap[1] || '', who: ap[2] || '', cta: ap[3] || '' });
             } else { doc[k] = v; }
             return;
         }
@@ -317,6 +323,25 @@ function chatRenderSection(sec, doc, T, cast, get) {
             return;
         }
         if (it.type === 'system') { prev = null; thread.push(chatPill(chatFmt(it.text, cast), T, it.alert)); return; }
+        if (it.type === 'ad') {
+            // An advert is the app talking, not a person, so it wears no
+            // avatar and no bubble and sits full width, like the system lines.
+            // It is marked SPONSORED because the whole joke of one of these is
+            // that it turned up uninvited between two of your friends.
+            prev = null;
+            thread.push('<div class="rounded mb-2 px-3 py-2" style="background-color: ' + T.sysBg +
+                '; border: 1px solid ' + T.sysBorder + '; color: ' + T.text + ';">' +
+                '<div class="text-uppercase" style="font-family: \'courier new\', monospace; font-size: 0.62em; letter-spacing: 2px; color: ' + T.sysText + ';">Sponsored</div>' +
+                (it.title ? '<div style="font-size: 0.95em; font-weight: bold; line-height: 1.35;">' + chatFmt(it.title, cast) + '</div>' : '') +
+                (it.body ? '<div style="font-size: 0.86em; line-height: 1.4; color: ' + T.sysText + ';">' + chatFmt(it.body, cast) + '</div>' : '') +
+                ((it.who || it.cta) ? '<div class="d-flex justify-content-between align-items-center mt-1" style="gap: 8px;">' +
+                    '<span style="font-size: 0.72em; color: ' + T.muted + ';">' + chatEsc(it.who) + '</span>' +
+                    (it.cta ? '<span class="rounded-pill px-2 flex-shrink-0" style="background-color: ' + T.sendBg +
+                        '; color: #ffffff; font-size: 0.72em; line-height: 1.7;">' + chatEsc(it.cta) + '</span>' : '') +
+                    '</div>' : '') +
+                '</div>');
+            return;
+        }
         if (it.type === 'note') { prev = null; thread.push(chatPill('<em>(couldn\'t read this line: ' + chatEsc(it.text) + ')</em>', T, true)); return; }
         if (it.type === 'react') {
             const pills = it.text.split(/\s*,\s*/).filter(Boolean).map(r =>
@@ -488,6 +513,9 @@ function chatCounts(doc) {
             }
             if (it.type === 'system' || it.type === 'date') { add(it.text); return; }
             if (it.type === 'banner') { add(it.text); add(it.more); return; }
+            // An advert is on screen and you wrote it, so it counts, same as a
+            // system line. The button is a label rather than prose, so it does not.
+            if (it.type === 'ad') { add(it.title); add(it.body); add(it.who); return; }
         });
     });
     return { words: words, messages: messages, chats: doc.sections.length };
