@@ -1,7 +1,7 @@
 // The group chat builder: does a script turn into the markup it should.
 const { load, suite } = require('./harness');
 const A = load(['chat.js'],
-    '{ chatParse, chatRender, chatFmt, chatCounts, chatCountText, CHAT_EXAMPLE, CHAT_THEMES }');
+    '{ chatParse, chatRender, chatFmt, chatCounts, chatCountText, chatFileName, CHAT_EXAMPLE, CHAT_THEMES }');
 const t = suite('chat');
 const ok = (l, c) => t.ok(l, c);
 const build = s => A.chatRender(A.chatParse(s));
@@ -246,6 +246,22 @@ t.eq('and says so without crashing', A.chatCountText(counts('')), '0 words · 0 
 ok('one of something is singular', A.chatCountText({ words: 1, messages: 1, chats: 1 }) === '1 word · 1 message');
 ok('and the chat count only shows when there are several',
     A.chatCountText({ words: 2, messages: 2, chats: 2 }).indexOf('2 chats') !== -1);
+
+// --- naming a downloaded file ---------------------------------------------
+// Keeping drafts is only useful if you can tell them apart in a folder.
+const fname = (script, ext) => A.chatFileName(A.chatParse(script), ext || 'txt');
+const today = new Date();
+const stamp = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+t.eq('named after the chat', fname('group: the world is on fire'), 'the-world-is-on-fire-' + stamp + '.txt');
+t.eq('the extension is asked for', fname('group: Thursday lot', 'html'), 'thursday-lot-' + stamp + '.html');
+t.eq('a dm is named after both of them', fname('=== dm: Nightmare, Dead'), 'nightmare-and-dead-' + stamp + '.txt');
+t.eq('punctuation is dropped', fname("group: Wizard's Emporium!! (closed)"), 'wizard-s-emporium-closed-' + stamp + '.txt');
+t.eq('an unnamed chat still gets a filename', fname('cast: A = red\nA: hi'), 'chat-' + stamp + '.txt');
+t.eq('and so does an empty script', fname(''), 'chat-' + stamp + '.txt');
+ok('a very long name is cut short', fname('group: ' + 'ab '.repeat(80)).length < 70);
+ok('the name never has a path in it', fname('group: ../../etc/passwd').indexOf('/') === -1);
+ok('nor a stray dot', fname('group: ...').indexOf('..') === -1);
 
 // --- the example itself ---------------------------------------------------
 const ex = build(A.CHAT_EXAMPLE);

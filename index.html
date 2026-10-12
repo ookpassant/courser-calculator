@@ -546,6 +546,8 @@
         .chat-count { font-family: var(--font-stamp); font-size: 0.66rem; letter-spacing: var(--tracking-stamp);
             text-transform: uppercase; color: var(--dc-mauve-deep); }
         .chat-saved { font-size: 0.8rem; }
+        .chat-draft-actions { margin: -8px 0 18px; }
+        .chat-draft-actions .dc-btn { font-size: 0.7rem; padding: 8px 12px; }
         @media (max-width: 860px) {
             .chat-grid { grid-template-columns: 1fr; }
             /* Sasha writes these on a phone, where the box was the one thing
@@ -1146,7 +1148,12 @@
                             <textarea id="chatScript" class="chat-script" spellcheck="false" placeholder="group: Thursday lot"></textarea>
                             <div class="chat-meta">
                                 <span class="chat-count" id="chatCount"></span>
-                                <span class="chat-saved">Saved in this browser as you type, so going back or closing the tab will not lose it.</span>
+                                <span class="chat-saved">Saved in this browser as you type, so going back or closing the tab will not lose it. The browser holds one script at a time, so download a draft to keep a piece you have finished with.</span>
+                            </div>
+                            <div class="chat-actions chat-draft-actions">
+                                <button class="dc-btn auto outline" id="chatDraftBtn">Download the draft</button>
+                                <button class="dc-btn auto outline" id="chatOpenBtn">Open a draft</button>
+                                <input type="file" id="chatOpenFile" accept=".txt,.md,text/plain" hidden>
                             </div>
                         </div>
                         <div class="chat-col">
@@ -1158,7 +1165,7 @@
                     <h2 class="section-head">The HTML</h2>
                     <div class="chat-actions">
                         <button class="dc-btn auto" id="chatCopyBtn">Copy the HTML</button>
-                        <button class="dc-btn auto mauve" id="chatDownloadBtn">Download .html</button>
+                        <button class="dc-btn auto mauve" id="chatDownloadBtn">Download the HTML</button>
                         <button class="dc-btn auto outline" id="chatResetBtn" title="Put the example back">Reset to the example</button>
                         <button class="dc-btn auto outline" id="chatUndoBtn" title="Put your own script back" hidden>Undo the reset</button>
                     </div>

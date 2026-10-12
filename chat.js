@@ -598,17 +598,73 @@ function chatCopy() {
     else fallback();
 }
 
-function chatDownload() {
-    const out = document.getElementById('chatOut');
-    if (!out) return;
-    const blob = new Blob([out.value], { type: 'text/html' });
+// Name a downloaded file after the chat it holds, since the whole point of
+// keeping drafts is having several and being able to tell them apart.
+function chatFileName(doc, ext) {
+    const first = doc && doc.sections && doc.sections[0];
+    const from = first ? (first.type === 'dm' ? first.people.join(' and ') : first.name) : '';
+    const slug = String(from || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 50);
+    const d = new Date();
+    const stamp = d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    return (slug && slug !== 'group-name' ? slug : 'chat') + '-' + stamp + '.' + ext;
+}
+
+function chatSaveFile(text, name, mime) {
+    const blob = new Blob([text], { type: mime });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'group-chat.html';
+    a.download = name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function chatDownload() {
+    const out = document.getElementById('chatOut'), box = document.getElementById('chatScript');
+    if (!out || !box) return;
+    chatSaveFile(out.value, chatFileName(chatParse(box.value), 'html'), 'text/html');
+}
+
+// The draft is the script, saved exactly as typed so it comes back byte for
+// byte. The browser only holds one script at a time, so this is how a finished
+// piece gets kept.
+function chatDownloadDraft() {
+    const box = document.getElementById('chatScript');
+    if (!box) return;
+    chatSaveFile(box.value, chatFileName(chatParse(box.value), 'txt'), 'text/plain');
+    if (window.toast) window.toast('Draft saved. Open it again with the button beside this one.', 'success', 5000);
+}
+
+// A download you cannot load back is a trap, so this is the way in. What was
+// in the box goes to the same place Reset puts it, so Undo gets it back.
+const CHAT_DRAFT_LIMIT = 1024 * 1024;
+function chatOpenDraft(file) {
+    const box = document.getElementById('chatScript');
+    if (!box || !file) return;
+    if (file.size > CHAT_DRAFT_LIMIT) {
+        if (window.toast) window.toast('That file is too big to be a chat script, so I have left it alone.', 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => { if (window.toast) window.toast('That file could not be read.', 'error'); };
+    reader.onload = () => {
+        const text = String(reader.result == null ? '' : reader.result);
+        if (box.value.trim() && box.value !== text &&
+            !confirm('Replace what is in the box with ' + file.name + '? You can undo it afterwards.')) return;
+        chatStash(CHAT_BACKUP_KEY, box.value);
+        box.value = text;
+        chatUpdate();
+        chatRefreshUndo();
+        if (window.toast) window.toast('Opened ' + file.name + '.', 'success');
+    };
+    reader.readAsText(file);
 }
 
 function chatStash(key, value) {
@@ -659,8 +715,17 @@ function showChat() {
         const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
         bind('chatCopyBtn', chatCopy);
         bind('chatDownloadBtn', chatDownload);
+        bind('chatDraftBtn', chatDownloadDraft);
         bind('chatResetBtn', chatReset);
         bind('chatUndoBtn', chatUndo);
+        // The file input does the work; the button is just something to press.
+        const picker = document.getElementById('chatOpenFile');
+        bind('chatOpenBtn', () => { if (picker) picker.click(); });
+        if (picker) picker.addEventListener('change', () => {
+            chatOpenDraft(picker.files && picker.files[0]);
+            // Cleared so opening the same file twice in a row still fires.
+            picker.value = '';
+        });
     }
     chatRefreshUndo();
     chatUpdate();
