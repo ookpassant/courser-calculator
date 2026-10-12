@@ -5429,7 +5429,7 @@ function showRecipe() {
     } else if (stable.pairs.length) {
         // The cheapest pairing is the answer, so its list starts open. The rest
         // stay folded, or the page is a wall of roots before you reach pair two.
-        const rows = stable.pairs.map((p, idx) => {
+        const row = (p, idx) => {
             const itemCount = p.items.length;
             const cost = itemCount === 0
                 ? '<span class="recipe-fit-free">no items needed</span>'
@@ -5458,12 +5458,28 @@ function showRecipe() {
                     ${extraLine}
                     ${itemList}
                 </li>`;
-        }).join('');
+        };
+        // Only the first few sit above the fold. Everything else used to be cut
+        // off here without a word, so a pairing that works read as one that
+        // does not. The rest are folded away now, and counted on the way in.
+        const top = stable.pairs.slice(0, RECIPE_PAIRS_SHOWN).map(row).join('');
+        const rest = stable.pairs.slice(RECIPE_PAIRS_SHOWN);
+        const total = stable.pairTotal || stable.pairs.length;
+        const trimmed = total - stable.pairs.length;
+        const more = rest.length
+            ? `<details class="recipe-more"><summary><span class="recipe-more-label">the other ${rest.length}
+                    ${rest.length === 1 ? 'pairing' : 'pairings'} that can do it</span></summary>
+                <ul class="recipe-fit-list">${rest.map((p, i) => row(p, i + RECIPE_PAIRS_SHOWN)).join('')}</ul>
+                ${trimmed ? `<p class="recipe-more-note">${trimmed} more beyond these, not listed.</p>` : ''}</details>`
+            : '';
+        const count = total === 1
+            ? 'One pairing can do it.'
+            : `${total} pairings can do it` + (rest.length ? `, ${RECIPE_PAIRS_SHOWN} of them below.` : '.');
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">${data.coatOnly
-                ? `Pairs from ${pool} that can throw this coat, fewest items first. Nothing is spent keeping their other genes out, so each one says what else it might bring.`
-                : `Pairs from ${pool} that can supply every allele the target needs, fewest items first. A root can force an allele a horse carries but never create one, so everything below is a pairing you could really field.`}</p>
-            <ul class="recipe-fit-list">${rows}</ul></div>`;
+            <p class="recipe-stable-blurb">${count} ${data.coatOnly
+                ? `From ${pool}, fewest items first. Nothing is spent keeping their other genes out, so each one says what else it might bring.`
+                : `From ${pool}, fewest items first. A root can force an allele a horse carries but never create one, so everything here is a pairing you could really field.`}</p>
+            <ul class="recipe-fit-list">${top}</ul>${more}</div>`;
     } else if (stable.nearMisses.length) {
         const rows = stable.nearMisses.map(m =>
             `<li>${who(m.horse)}
@@ -5606,6 +5622,14 @@ const RECIPE_COAT_LOCI = (function () {
 // counts as a win if any one of them matches.
 const RECIPE_OPTIONS_PER_ROLL = 2;
 const RECIPE_OPTIONS_WITH_GRAPES = 3;
+
+// How many pairings are kept to be rendered. A big stable can throw up
+// hundreds of workable pairs and nobody reads the three hundredth, but the
+// count before trimming is kept too, so the page can say how many were left
+// out rather than quietly implying there were none.
+const RECIPE_MAX_PAIRS = 40;
+// How many sit above the fold. The rest are a click away.
+const RECIPE_PAIRS_SHOWN = 5;
 
 // Rarity is stored per allele pair, so look the allele up in both the carrier
 // and the doubled spelling before falling back to Common.
@@ -6159,8 +6183,16 @@ function computeRecipeStable(recipe, collection) {
         }
     }
 
-    // Cheapest first, then whichever needs the least luck.
-    out.pairs.sort((x, y) => (x.coin - y.coin) || (y.chance - x.chance));
+    // Fewest items first, then whichever needs the least luck.
+    //
+    // This used to rank on coin, which is the truer cost: it weighs a root by
+    // its rarity and knows a Juicy Apple is dearer than a Berry. The trouble
+    // is that coin is never shown. A card says "5 items" and "23% of rolls
+    // match", so a list ordered by something else reads as unsorted, and the
+    // plainly best pairing turning up third makes the whole thing look broken.
+    // Rank on what the reader can see; coin stays as the tiebreak.
+    out.pairs.sort((x, y) =>
+        (x.items.length - y.items.length) || (y.chance - x.chance) || (x.coin - y.coin));
 
     // Drop mirrored duplicates of the same two horses.
     const seen = {};
@@ -6169,7 +6201,14 @@ function computeRecipeStable(recipe, collection) {
         if (seen[k]) return false;
         seen[k] = true;
         return true;
-    }).slice(0, 5);
+    });
+
+    // How many there really are, before any trimming, because the page has to
+    // be able to say so. Showing five of twenty without a word is how a pair
+    // that works gets read as a pair that cannot: Harlan x Calen really does
+    // throw a Cold Ash Ether, it was just fourteenth. Ta Sasha.
+    out.pairTotal = out.pairs.length;
+    out.pairs = out.pairs.slice(0, RECIPE_MAX_PAIRS);
 
     // Horses that would work but for one or two alleles they simply lack.
     if (!out.pairs.length) {

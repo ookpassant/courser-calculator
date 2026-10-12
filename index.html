@@ -506,6 +506,19 @@
         .recipe-item-trait { color: var(--dc-ink); margin-left: 4px; }
         .recipe-item-src { color: var(--dc-slate); }
         .recipe-item-src::before { content: '· '; }
+        /* The pairings past the first few, folded away rather than cut off. */
+        .recipe-more { margin-top: 4px; }
+        .recipe-more > summary { list-style: none; cursor: pointer; font-family: var(--font-stamp); font-size: 0.68rem;
+            letter-spacing: var(--tracking-stamp); text-transform: uppercase; color: var(--dc-mauve-deep);
+            padding: 8px 0; display: flex; align-items: center; gap: 7px; }
+        .recipe-more > summary::-webkit-details-marker { display: none; }
+        .recipe-more > summary::before { content: '▸'; color: var(--dc-slate); }
+        .recipe-more[open] > summary::before { content: '▾'; }
+        .recipe-more > summary:hover .recipe-more-label { text-decoration: underline dotted; }
+        .recipe-more-label::before { content: 'show '; }
+        .recipe-more[open] .recipe-more-label::before { content: 'hide '; }
+        .recipe-more-note { font-size: 0.85rem; color: var(--dc-slate); margin: 4px 0 0; }
+
         /* ---- Group Chat Builder (unlisted, #chat) ---- */
         .chat-cheat { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve);
             border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 20px; }

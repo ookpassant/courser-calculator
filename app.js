@@ -65,6 +65,10 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '12 Oct 2026', items: [
+      'Fixed: Recipe only ever showed five pairings and never said there were more, so a pair that works read as a pair that cannot. Harlan and Calen really do breed a Cold Ash Ether, about one foal in eight, and they were fourteenth on a list cut off at five. It now says how many pairings can do it and folds the rest away a click below. Ta Sasha!',
+      'The pairings are sorted by what the card actually shows, fewest items then best odds. It used to rank them on a coin total that was never on screen, which put the plainly best pairing third and made the whole list look unsorted.'
+    ] },
     { date: '8 Oct 2026', items: [
       'Fixed: ten group horses had a recessive trait down as a hidden copy when they actually have it. Tower marks those "(Recessive)" to say the trait needs a copy from each parent to show, and I read it as meaning the horse only carried one. Flaxen on Moritz, Cerridwen and Goud, Filigree on Calix, and Sepulchered on Inkwell, Calen, Caldera, Bastion, Aurelia and Mobberley all show properly now. Ta Springfoss for spotting it and Tower for setting me straight!',
       'Checked the whole group roster against Tower\'s latest sheet while I was in there. Inkwell is a Classic Champagne rather than a Smoky Black, and Calen is an Ombre Ash Ether rather than an Ombre Ether, so he costs a Juicy Apple now instead of a Berry. Everything else matches.',
