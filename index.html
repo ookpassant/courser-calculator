@@ -526,8 +526,13 @@
             text-transform: uppercase; color: var(--dc-mauve-deep); cursor: pointer; }
         .chat-cheat[open] summary { margin-bottom: 12px; }
         .chat-cheat-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; line-height: 1.5; }
-        .chat-cheat-table td { padding: 4px 10px 4px 0; vertical-align: top; color: var(--dc-slate); }
-        .chat-cheat-table td:first-child { white-space: nowrap; }
+        .chat-cheat-table { table-layout: fixed; }
+        .chat-cheat-table td { padding: 4px 10px 4px 0; vertical-align: top; color: var(--dc-slate);
+            overflow-wrap: break-word; }
+        /* The column is wide enough that a short code never wraps. The advert
+           example is long enough that it must, and holding it on one line made
+           it run out over the description beside it. */
+        .chat-cheat-table td:first-child { width: 40%; }
         .chat-cheat-table td.chat-cheat-head { padding-top: 14px; color: var(--dc-ink); white-space: normal; }
         .chat-cheat code, .chat-actions + .chat-out, #area-chat .info-box code { font-family: var(--font-mono); color: var(--dc-mauve-deep); }
         .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
@@ -558,8 +563,14 @@
                scrolling between the script and the Copy button, so it scrolls
                inside itself here instead. */
             .chat-preview { max-height: 70vh; }
-            .chat-cheat-table td { display: block; padding-right: 0; }
-            .chat-cheat-table td:first-child { padding-bottom: 0; }
+            /* Blocks, so the fixed column width from the desktop layout has to
+               go with it or every cell gets squeezed into 40% of the screen. */
+            .chat-cheat-table td { display: block; padding-right: 0; width: auto; }
+            /* The first column is held on one line on a desktop, where there is
+               room for it. On a phone that made the longest example in the
+               table, the advert one, wider than the screen and shoved the whole
+               page sideways. */
+            .chat-cheat-table td:first-child { padding-bottom: 0; width: auto; }
         }
 
         .recipe-read { background: var(--dc-bone); border: 1px solid var(--dc-line); border-left: 3px solid var(--dc-mauve-soft); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.9rem; color: var(--dc-ink); line-height: 1.55; margin: 0 0 16px; }

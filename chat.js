@@ -334,10 +334,14 @@ function chatRenderSection(sec, doc, T, cast, get) {
                 '<div class="text-uppercase" style="font-family: \'courier new\', monospace; font-size: 0.62em; letter-spacing: 2px; color: ' + T.sysText + ';">Sponsored</div>' +
                 (it.title ? '<div style="font-size: 0.95em; font-weight: bold; line-height: 1.35;">' + chatFmt(it.title, cast) + '</div>' : '') +
                 (it.body ? '<div style="font-size: 0.86em; line-height: 1.4; color: ' + T.sysText + ';">' + chatFmt(it.body, cast) + '</div>' : '') +
-                ((it.who || it.cta) ? '<div class="d-flex justify-content-between align-items-center mt-1" style="gap: 8px;">' +
-                    '<span style="font-size: 0.72em; color: ' + T.muted + ';">' + chatEsc(it.who) + '</span>' +
-                    (it.cta ? '<span class="rounded-pill px-2 flex-shrink-0" style="background-color: ' + T.sendBg +
-                        '; color: #ffffff; font-size: 0.72em; line-height: 1.7;">' + chatEsc(it.cta) + '</span>' : '') +
+                // Wrapping, because a real advert will happily write "click
+                // here to learn more" next to a long domain, and a row that
+                // cannot wrap pushes the button out through the side of the
+                // card and off the screen with it.
+                ((it.who || it.cta) ? '<div class="d-flex justify-content-between align-items-center mt-1" style="gap: 4px 8px; flex-wrap: wrap;">' +
+                    '<span style="font-size: 0.72em; color: ' + T.muted + '; min-width: 0; overflow-wrap: anywhere;">' + chatFmt(it.who, cast) + '</span>' +
+                    (it.cta ? '<span class="rounded-pill px-2" style="background-color: ' + T.sendBg +
+                        '; color: #ffffff; font-size: 0.72em; line-height: 1.7; overflow-wrap: anywhere;">' + chatFmt(it.cta, cast) + '</span>' : '') +
                     '</div>' : '') +
                 '</div>');
             return;
@@ -431,8 +435,10 @@ function chatRenderSection(sec, doc, T, cast, get) {
         }
         if (meta) inner += '<div class="text-right" style="font-size: 0.66em; color: ' + mu + ';">' + meta + '</div>';
 
+        // break-word on both kinds, not just the narrow one. A long URL in a
+        // caption used to walk a wide bubble out through the side of the phone.
         const bubble = '<div class="rounded ' + (wide ? 'p-2' : 'px-2 py-1') + '" style="background-color: ' + bg + '; border: 1px solid ' + bd +
-            '; color: ' + T.text + '; max-width: 78%;' + (wide ? ' width: 78%;' : ' word-wrap: break-word;') + '">' + inner + '</div>';
+            '; color: ' + T.text + '; max-width: 78%; word-wrap: break-word;' + (wide ? ' width: 78%;' : '') + '">' + inner + '</div>';
         if (mine) thread.push('<div class="d-flex justify-content-end mb-1">' + bubble + '</div>');
         else thread.push('<div class="d-flex align-items-end mb-1">' + (isDm ? '' : (first ? chatAvatar(c, 30) : chatSpacer())) + bubble + '</div>');
     });

@@ -197,6 +197,23 @@ t.eq('a one line advert keeps its headline', bare.title, 'just this');
 ok('and renders without the rest', A.chatRender(A.chatParse('group: G\nad: just this')).html.indexOf('just this') !== -1);
 ok('an advert is escaped like everything else',
    A.chatRender(A.chatParse('group: G\nad: <script>x</script>')).html.indexOf('<script>x') === -1);
+// Every field takes formatting, not just the headline and body. Writing
+// *bold* in the advertiser used to come out with the asterisks showing.
+const fancy = A.chatRender(A.chatParse('group: G\nad: *loud* | _quiet_ | *who is paying* | *press me*')).html;
+t.eq('all four advert fields take formatting', (fancy.match(/<strong>/g) || []).length, 3);
+ok('and the italic one too', fancy.indexOf('<em>quiet</em>') !== -1);
+ok('the advertiser is still escaped',
+   A.chatRender(A.chatParse('group: G\nad: a | b | <script>x</script>')).html.indexOf('<script>x') === -1);
+// A long advertiser next to a long button must be able to wrap, or the
+// button walks out through the side of the card and takes the page with it.
+ok('the advert footer can wrap', fancy.indexOf('flex-wrap: wrap') !== -1);
+// And a wide bubble breaks long words, which it did not before: a URL in a
+// caption used to push the bubble off the screen.
+ok('a wide bubble breaks long words',
+   A.chatRender(A.chatParse('group: G\ncast: A = red\nA: [img http://e.com/a.png] x')).html
+     .indexOf('width: 78%') !== -1 &&
+   A.chatRender(A.chatParse('group: G\ncast: A = red\nA: [img http://e.com/a.png] x')).html
+     .indexOf('word-wrap: break-word') !== -1);
 // A cast member called Ad still gets to speak.
 const adName = A.chatParse('cast: Ad = red\ngroup: G\nAd: I am a person');
 t.eq('a character called Ad is not an advert', adName.sections[0].items[0].type, 'msg');
