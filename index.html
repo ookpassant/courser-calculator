@@ -233,6 +233,27 @@
         .scroll-result-card .result-section { margin-bottom: 16px; padding: 14px; background: var(--dc-bone); border-left: 3px solid var(--dc-moss); border-radius: var(--radius-sm); }
         .scroll-result-card .result-section h4 { color: var(--dc-slate); margin-bottom: 8px; font-family: var(--font-stamp); font-size: 0.7rem; text-transform: uppercase; letter-spacing: var(--tracking-stamp); font-weight: 400; }
         .scroll-result-card .phenotype { color: var(--dc-ink); font-size: 1.1rem; font-weight: 700; text-align: center; padding: 10px; background: var(--dc-white); border: 1px solid var(--dc-line); border-radius: var(--radius-sm); }
+        /* ---- Scroll add-ons ---- */
+        .scroll-addons { margin-bottom: 20px; }
+        .scroll-addon-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 10px; }
+        .scroll-addon-row label { margin: 0; min-width: 84px; font-weight: 700; }
+        .scroll-addon-row select { width: auto; margin: 0; min-width: 84px; }
+        .scroll-addon-tier { min-width: 180px !important; }
+        .scroll-addon-from { color: var(--dc-slate); font-size: 0.88rem; }
+        .scroll-addon-note { font-size: 0.82rem; }
+        .scroll-addon-list { list-style: none; margin: 0; padding: 0; }
+        .scroll-addon-list li { font-size: 0.92rem; line-height: 1.6; color: var(--dc-ink); }
+        .scroll-addon-list .scroll-addon-tag { font-family: var(--font-stamp); font-size: 0.55rem;
+            letter-spacing: var(--tracking-stamp); text-transform: uppercase; color: var(--dc-white);
+            background: var(--dc-mauve); border-radius: 3px; padding: 1px 5px; margin-right: 6px; vertical-align: 1px; }
+        .scroll-addon-list .scroll-addon-tag.is-free { background: var(--dc-moss); }
+        .scroll-addon-cost { color: var(--dc-slate); }
+        .scroll-addon-total { margin: 8px 0 0; font-weight: 700; color: var(--dc-ink); }
+        .scroll-addon-short { margin: 8px 0 0; color: var(--dc-blood); font-size: 0.88rem; }
+        @media (max-width: 600px) {
+            .scroll-addon-row label { min-width: 100%; }
+            .scroll-addon-tier { min-width: 150px !important; }
+        }
 
         /* ---- Collection manager ---- */
         .coll-toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; margin-bottom: 20px; }
@@ -936,7 +957,8 @@
 
                     <div class="info-box">
                         <p><strong>Staring at a blank scroll?</strong> Pick a rarity and it rolls you a design.</p>
-                        <p><strong>How a roll works:</strong> a coat colour at that rarity, one marking, modifier, or carrier (that rarity or lower), a 1-in-10 shot at an anomaly, a 1-in-20 shot at a variant, and the temperament you pick.</p>
+                        <p><strong>What the scroll gives you free:</strong> a coat colour at that rarity, one marking, modifier or carrier at that rarity or lower, a 1-in-10 shot at an anomaly, a 1-in-20 shot at a variant, and a temperament.</p>
+                        <p><strong>Add-ons</strong> are the extras you buy with potions. Say how many you want and which rarity to draw them from, and it tells you what they cost. A tier costs what it costs whatever scroll you put it on, so a Legendary marking on a Common scroll is fine, just dear.</p>
                     </div>
 
                     <div style="margin-bottom: 20px;">
@@ -948,6 +970,53 @@
                             <option value="Epic">Epic</option>
                             <option value="Legendary">Legendary</option>
                         </select>
+                    </div>
+
+                    <h2 class="section-head">Add-ons</h2>
+                    <p class="blurb">On top of the free trait. Leave them at none for a plain roll.</p>
+                    <div class="scroll-addons">
+                        <div class="scroll-addon-row">
+                            <label for="scrollMarkings">Markings</label>
+                            <select id="scrollMarkings" class="scroll-addon-count">
+                                <option value="0">none</option>
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                            </select>
+                            <span class="scroll-addon-from">from</span>
+                            <select id="scrollMarkingTier" class="scroll-addon-tier">
+                                <option value="">any up to the scroll</option>
+                                <option value="common">Common</option>
+                                <option value="uncommon">Uncommon</option>
+                                <option value="rare">Rare</option>
+                                <option value="epic">Epic</option>
+                                <option value="legendary">Legendary</option>
+                            </select>
+                        </div>
+                        <div class="scroll-addon-row">
+                            <label for="scrollModifiers">Modifiers</label>
+                            <select id="scrollModifiers" class="scroll-addon-count">
+                                <option value="0">none</option>
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                            </select>
+                            <span class="scroll-addon-from">from</span>
+                            <select id="scrollModifierTier" class="scroll-addon-tier">
+                                <option value="">any up to the scroll</option>
+                                <option value="common">Common</option>
+                                <option value="uncommon">Uncommon</option>
+                                <option value="rare">Rare</option>
+                                <option value="epic">Epic</option>
+                                <option value="legendary">Legendary</option>
+                            </select>
+                        </div>
+                        <div class="scroll-addon-row">
+                            <label for="scrollAnomalies">Anomalies</label>
+                            <select id="scrollAnomalies" class="scroll-addon-count">
+                                <option value="0">none</option>
+                                <option value="1">1</option><option value="2">2</option>
+                            </select>
+                            <span class="scroll-addon-from scroll-addon-note">two per scroll is the limit, and they have no rarity to pick</span>
+                        </div>
                     </div>
 
                     <button class="generate-btn" onclick="displayCustomScrollResult()">Roll me a scroll</button>

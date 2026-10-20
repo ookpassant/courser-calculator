@@ -2405,85 +2405,205 @@ function getRandomElement(array) {
     return array[Math.floor(Math.random() * array.length)];
 }
 
-function generateCustomScroll(rarity) {
-    const rarityKey = rarity.toLowerCase();
+const SCROLL_TIER_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+// Which pool an add-on is drawn from. A tier names itself; the empty string
+// means the scroll's own rarity and everything under it, which is what the
+// free trait gets. A tier costs what it costs whichever scroll it goes on, so
+// a Legendary marking on a Common scroll is allowed here, just expensive.
+function scrollAddonPool(kind, tier, scrollTier) {
+    const key = kind === 'marking' ? 'markings' : 'modifiers';
+    const tiers = tier
+        ? [tier]
+        : SCROLL_TIER_ORDER.slice(0, SCROLL_TIER_ORDER.indexOf(scrollTier) + 1);
+    let out = [];
+    tiers.forEach((t) => { out = out.concat((RARITY_GENES[t] || {})[key] || []); });
+    return out;
+}
+
+// Draw traits without landing twice on the same locus, and without killing
+// the horse.
+//
+// Two rules, and neither can be skipped once a roll can carry a dozen traits.
+//
+// A horse has two alleles at a locus, so "nT nRn" is not a horse with Tobiano
+// and Roan, it is a genotype that should have been written TRn. Rolling six
+// markings blind would produce those constantly.
+//
+// And some pairs are lethal white across different loci, Overo with Ossuary
+// being the one that turns up: each is fine, together there is no foal. That
+// is asked of the engine rather than listed here, so the roller cannot drift
+// from what the rest of the site calls lethal.
+//
+// Running out either way is possible, and is reported rather than quietly
+// handing back fewer than asked for.
+function scrollDrawTraits(pool, want, used, genes) {
+    const picked = [];
+    const bag = pool.slice();
+    while (picked.length < want && bag.length) {
+        const tokens = bag.splice(Math.floor(Math.random() * bag.length), 1)[0];
+        if (used.tokens.indexOf(tokens) !== -1) continue;
+        const parts = String(tokens).split(' ');
+        const loci = parts.map(recipeLocusOfToken).filter(Boolean);
+        if (loci.some(l => used.loci.indexOf(l) !== -1)) continue;
+        if (resolveTraits(genes.concat(parts).join(' ')).lethal) continue;
+        loci.forEach(l => used.loci.push(l));
+        used.tokens.push(tokens);
+        parts.forEach(g => genes.push(g));
+        picked.push(tokens);
+    }
+    return picked;
+}
+
+// What one add-on is called and what it costs in potions.
+function scrollAddonEntry(tokens, kind, tier) {
+    const name = (recipePoolNames(tokens) || [])[0] || tokens;
+    const realTier = tier || RECIPE_TRAIT_TIER[name] || null;
+    return { tokens: tokens, name: name, kind: kind, tier: realTier,
+        potion: realTier ? recipeScrollPotion(name, realTier) : null };
+}
+
+function generateCustomScroll(rarity, opts) {
+    const o = opts || {};
+    const rarityKey = String(rarity).toLowerCase();
     const rarityData = RARITY_GENES[rarityKey];
+    if (!rarityData) return null;
 
-    if (!rarityData) {
-        alert('Invalid rarity level!');
-        return null;
-    }
+    const want = {
+        marking: Math.max(0, Number(o.markings) || 0),
+        modifier: Math.max(0, Number(o.modifiers) || 0),
+        // Two anomaly potions per scroll is the game's limit, not ours.
+        anomaly: Math.min(RECIPE_ANOMALY_POTION_LIMIT, Math.max(0, Number(o.anomalies) || 0))
+    };
 
-    // Build the menu of coats available at this rarity tier (no substitutions)
-    let availableCoatColors = [...rarityData.coatColors];
-
-    // Collect markings/modifiers from this tier and below — you can always slum it
-    const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-    const rarityIndex = rarityOrder.indexOf(rarityKey);
-
-    let availableMarkings = [];
-    let availableModifiers = [];
-
-    for (let i = 0; i <= rarityIndex; i++) {
-        const currentRarity = rarityOrder[i];
-        availableMarkings = availableMarkings.concat(RARITY_GENES[currentRarity].markings);
-        availableModifiers = availableModifiers.concat(RARITY_GENES[currentRarity].modifiers);
-    }
-
-    // Conjure forth a horse from the scroll's arcane randomness
     const genes = [];
+    // The coat's own genes hold their loci, so an add-on can never land on top
+    // of the dilution the coat is made of.
+    const used = { loci: [], tokens: [] };
+    const selectedCoat = getRandomElement(rarityData.coatColors);
+    selectedCoat.genes.forEach((g) => {
+        genes.push(g);
+        const l = recipeLocusOfToken(g);
+        if (l) used.loci.push(l);
+    });
 
-    // 1. Spin the coat color wheel of fortune
-    const selectedCoat = getRandomElement(availableCoatColors);
-    genes.push(...selectedCoat.genes);
+    // The one trait the scroll comes with, free, at its own rarity or lower.
+    const freePool = scrollAddonPool('marking', '', rarityKey)
+        .concat(scrollAddonPool('modifier', '', rarityKey));
+    const freeTokens = scrollDrawTraits(freePool, 1, used, genes)[0] || null;
+    const free = freeTokens
+        ? scrollAddonEntry(freeTokens, RECIPE_TRAIT_KIND[(recipePoolNames(freeTokens) || [])[0]] || 'marking', null)
+        : null;
 
-    // 2. Blindly reach into the trait grab-bag — what do we get??
-    const allTraits = [...availableMarkings, ...availableModifiers];
-    if (allTraits.length > 0) {
-        const selectedTrait = getRandomElement(allTraits);
-        // Handle multi-gene traits — some come as a package deal, like Fewspot's "LpLp patnpatn"
-        if (selectedTrait.includes(' ')) {
-            selectedTrait.split(' ').forEach(g => genes.push(g));
-        } else {
-            genes.push(selectedTrait);
+    // The paid ones.
+    const addons = [], short = [];
+    [['marking', o.markingTier], ['modifier', o.modifierTier]].forEach(([kind, tier]) => {
+        if (!want[kind]) return;
+        const pool = scrollAddonPool(kind, tier || '', rarityKey);
+        const got = scrollDrawTraits(pool, want[kind], used, genes);
+        got.forEach((tokens) => { addons.push(scrollAddonEntry(tokens, kind, tier || null)); });
+        if (got.length < want[kind]) {
+            short.push({ kind: kind, asked: want[kind], got: got.length, tier: tier || '' });
         }
-    }
+    });
 
-    // 3. 10% chance the scroll throws in a bonus anomaly — dealer's choice
+    // The scroll's own 1-in-10 anomaly, then any you paid for, never repeated.
     const anomalies = [];
+    const freeAnomalies = [];
     if (Math.random() < 0.10) {
-        anomalies.push(getRandomElement(ALL_ANOMALIES));
+        const one = getRandomElement(ALL_ANOMALIES);
+        anomalies.push(one);
+        freeAnomalies.push(one);
+    }
+    const anomalyBag = ALL_ANOMALIES.filter(a => anomalies.indexOf(a) === -1);
+    for (let i = 0; i < want.anomaly && anomalyBag.length; i++) {
+        const one = anomalyBag.splice(Math.floor(Math.random() * anomalyBag.length), 1)[0];
+        anomalies.push(one);
+        addons.push({ tokens: null, name: one, kind: 'anomaly', tier: null,
+            potion: { item: RECIPE_SCROLL_ADDONS.anomaly, count: 1, kind: 'anomaly',
+                coin: recipeItemCost(RECIPE_SCROLL_ADDONS.anomaly).coin,
+                sold: recipeItemCost(RECIPE_SCROLL_ADDONS.anomaly).sold } });
     }
 
-    // 4. 5% chance the scroll goes "surprise! you're special now"
     let variant = 'Standard';
     if (Math.random() < 0.05) {
-        const nonStandardVariants = VARIANTS.filter(v => v !== 'Standard');
-        variant = getRandomElement(nonStandardVariants);
+        variant = getRandomElement(VARIANTS.filter(v => v !== 'Standard'));
     }
 
-    // 5. Random temperament — the horse's personality is non-negotiable
-    const temperament = getRandomElement(TEMPERAMENTS);
-
-    // Stitch the genotype string together like a scroll inscription
     let genotype = genes.join(' ');
-    if (anomalies.length > 0) {
-        genotype += ' + ' + anomalies.join(', ');
-    }
+    if (anomalies.length) genotype += ' + ' + anomalies.join(', ');
 
     return {
         genotype: genotype,
-        temperament: temperament,
+        temperament: getRandomElement(TEMPERAMENTS),
         variant: variant,
-        rarity: rarity
+        rarity: rarity,
+        free: free,
+        freeAnomalies: freeAnomalies,
+        addons: addons,
+        short: short
     };
+}
+
+// The add-on list under a rolled scroll: what came free, what you are paying
+// for, and what the potions come to.
+function scrollAddonsHtml(result) {
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const lines = [];
+    const tierWord = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+
+    if (result.free) {
+        lines.push('<li><span class="scroll-addon-tag is-free">free</span>' + esc(result.free.name) +
+            (result.free.tier ? ' <span class="scroll-addon-cost">' + esc(tierWord(result.free.tier)) + ' ' + esc(result.free.kind) + ', included</span>' : '') + '</li>');
+    }
+    result.freeAnomalies.forEach((a) => {
+        lines.push('<li><span class="scroll-addon-tag is-free">free</span>' + esc(a) +
+            ' <span class="scroll-addon-cost">the scroll\'s own 1-in-10 anomaly</span></li>');
+    });
+
+    let coin = 0, fromPlay = 0;
+    result.addons.forEach((a) => {
+        const p = a.potion;
+        let cost = 'no price on record';
+        if (p) {
+            cost = p.count + ' x ' + p.item.name;
+            if (p.sold) coin += p.coin; else fromPlay += p.count;
+        }
+        lines.push('<li><span class="scroll-addon-tag">add-on</span>' + esc(a.name) +
+            ' <span class="scroll-addon-cost">' + esc(cost) + '</span></li>');
+    });
+
+    if (!lines.length) return '';
+    let foot = '';
+    if (result.addons.length) {
+        const bits = [];
+        if (coin) bits.push(coin.toLocaleString() + ' coin');
+        if (fromPlay) bits.push(fromPlay + ' potion' + (fromPlay === 1 ? '' : 's') + ' you have to earn, the Super ones are not sold');
+        if (bits.length) foot = '<p class="scroll-addon-total">Add-ons come to ' + bits.join(', plus ') + '.</p>';
+    }
+    // Asking for more than the pool holds is a real answer, not a silent short.
+    const short = result.short.map(s =>
+        'Only ' + s.got + ' of the ' + s.asked + ' ' + s.kind + 's would fit' +
+        (s.tier ? ' at ' + tierWord(s.tier) : '') +
+        '. A horse has two alleles per locus, so the roller will not put two traits on the same one.'
+    ).map(t => '<p class="scroll-addon-short">' + esc(t) + '</p>').join('');
+
+    return '<div class="result-section"><h4>What is on it</h4>' +
+        '<ul class="scroll-addon-list">' + lines.join('') + '</ul>' + foot + short + '</div>';
 }
 
 function displayCustomScrollResult() {
     const raritySelect = document.getElementById('scrollRarity');
     const rarity = raritySelect.value;
+    const pick = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
 
-    const result = generateCustomScroll(rarity);
+    const result = generateCustomScroll(rarity, {
+        markings: pick('scrollMarkings'),
+        markingTier: pick('scrollMarkingTier'),
+        modifiers: pick('scrollModifiers'),
+        modifierTier: pick('scrollModifierTier'),
+        anomalies: pick('scrollAnomalies')
+    });
     if (!result) return;
 
     const resultDiv = document.getElementById('scrollResult');
@@ -2502,6 +2622,7 @@ function displayCustomScrollResult() {
                 <h4>Genotype:</h4>
                 <p class="geno">${result.genotype}</p>
             </div>
+            ${scrollAddonsHtml(result)}
             <div class="result-section">
                 <h4>Stats:</h4>
                 <p><strong>Temperament:</strong> ${result.temperament}</p>
