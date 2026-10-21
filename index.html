@@ -72,6 +72,11 @@
         .offline-indicator.is-offline { color: #f0c674; }
         .dc-navbar .nav-user { font-family: var(--font-stamp); color: var(--dc-white); font-size: 0.8rem; letter-spacing: var(--tracking-stamp); text-decoration: none; opacity: 0.85; }
 
+        .dc-navbar .nav-kofi { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: var(--radius-sm); }
+        .dc-navbar .nav-kofi:hover { background: rgba(255,255,255,0.12); }
+        .dc-navbar .nav-kofi:focus-visible { outline: 2px solid var(--dc-white); outline-offset: 2px; }
+        .dc-navbar .nav-kofi img { display: block; width: 30px; height: auto; }
+
         /* ---- Hero ---- */
         .dc-hero { position: relative; overflow: hidden; background-color: var(--dc-charcoal); background-image: var(--texture-grain); padding: 38px 40px 56px; min-height: 150px; }
         .dc-hero h1 { font-family: var(--font-display); font-weight: 400; color: var(--dc-crimson); font-size: 3.5rem; line-height: 1; letter-spacing: 0.01em; text-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
@@ -682,6 +687,9 @@
         <div class="nav-right">
             <span class="offline-indicator" id="offlineIndicator">● Online</span>
             <a class="nav-user" href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">OOK</a>
+            <a class="nav-kofi" href="https://ko-fi.com/whimsee" target="_blank" rel="noopener noreferrer" aria-label="Support Whimsee on Ko-fi (opens in a new tab)" title="Support Whimsee on Ko-fi">
+                <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" width="30" height="24">
+            </a>
         </div>
     </nav>
 
@@ -780,7 +788,7 @@
                 <div class="changelog" id="changelog"></div>
 
                 <div class="panel-footer">
-                    A free fan tool by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a> · <a href="https://ko-fi.com/ookpassant" target="_blank" rel="noopener">Buy Ook a coffee</a>
+                    A free fan tool by <a href="https://dungeon-coursers.com/user/Ook" target="_blank" rel="noopener">Ook</a>
                     <details class="privacy-note">
                         <summary>Privacy: no cookies, no accounts, and your genotypes never leave your browser</summary>
                         <p>Your collection and calculations stay in this browser. Anonymous usage counts record tool use, without your inputs or session recordings. Feedback is sent only when you submit it. Do Not Track is respected.</p>
