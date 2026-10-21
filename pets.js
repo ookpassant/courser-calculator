@@ -561,7 +561,7 @@ function showPets() {
         ${wishlist.length ? `<div class="recipe-stable"><h3 class="recipe-head">Who drops what you asked for</h3>
             <ul class="recipe-near-list">${lookups}</ul></div>` : ''}
         <div class="recipe-stable"><h3 class="recipe-head">Where to send them</h3>
-            <p class="recipe-stable-blurb">One pet can only be on one excursion, so this hands them out across all seven at once. The strict areas get first refusal, and everywhere else takes the least-bonded pet that still qualifies, which keeps your Devoted ones free for the Castle.</p>
+            <p class="recipe-stable-blurb">Each pet is assigned once. Areas with stricter requirements are filled first, keeping Devoted pets available for the Castle.</p>
             <ul class="recipe-fit-list">${rows}</ul>${idle}${busy}</div>`;
 }
 
