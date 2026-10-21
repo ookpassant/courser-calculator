@@ -65,117 +65,157 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
-    { date: '21 Oct 2026', items: [
-      'The Scroll Generator can stack traits on top of the free one now. Say how many markings, modifiers and anomalies you want and which rarity each should be drawn from, and it rolls a horse that carries the lot, priced by the same code Recipe uses, with the potions and the coin total on the card. A tier costs what it costs whatever scroll it goes on, so Legendary add-ons on a Common scroll are allowed, just dear. Two anomalies is the game\'s limit, and if a tier does not hold as many as you asked for it says so instead of quietly handing back fewer.'
-    ] },
-    { date: '12 Oct 2026', items: [
-      'Fixed: Recipe only ever showed five pairings and never said there were more, so a pair that works read as a pair that cannot. Harlan and Calen really do breed a Cold Ash Ether, about one foal in eight, and they were fourteenth on a list cut off at five. It now says how many pairings can do it and folds the rest away a click below. Ta Sasha!',
-      'The pairings are sorted by what the card actually shows, fewest items then best odds. It used to rank them on a coin total that was never on screen, which put the plainly best pairing third and made the whole list look unsorted.'
-    ] },
-    { date: '8 Oct 2026', items: [
-      'Fixed: ten group horses had a recessive trait down as a hidden copy when they actually have it. Tower marks those "(Recessive)" to say the trait needs a copy from each parent to show, and I read it as meaning the horse only carried one. Flaxen on Moritz, Cerridwen and Goud, Filigree on Calix, and Sepulchered on Inkwell, Calen, Caldera, Bastion, Aurelia and Mobberley all show properly now. Ta Springfoss for spotting it and Tower for setting me straight!',
-      'Checked the whole group roster against Tower\'s latest sheet while I was in there. Inkwell is a Classic Champagne rather than a Smoky Black, and Calen is an Ombre Ash Ether rather than an Ombre Ether, so he costs a Juicy Apple now instead of a Berry. Everything else matches.',
-      'Fixed: a scroll charged nothing at all for Sepulchered or Flaxen. The rarity pools list the carried spelling, so the expressed trait had no rarity and no price. Both now cost 2 Modifier Potions, same as any Uncommon modifier.',
-      'The item list under each Recipe pairing folds away now, with a tally on the summary so you can see what it costs without opening it. Forcing an allele through and blocking one out are tagged and grouped apart instead of sitting in one grey list, and only the cheapest pairing starts open.',
-      'Checked all 44 group horses against the Group Horse Masterlist on site, gene for gene. Calix has two copies of Tobiano rather than one, so every foal from a Calix breeding gets Tobiano instead of roughly half. The other 43 match exactly, and Alcyone and Bold now spell their Roan Tobiano RnT the way the masterlist does.'
-    ] },
-    { date: '7 Oct 2026', items: [
-      'Smart Search has the same "just the coat" tickbox. Search for a coat with a marking and it used to drop every pair that could not do both; tick the box and it shows the ones that can throw the coat, saying what each can and cannot add and what else it might bring along.',
-      'Fixed: the Probability on each search result was guesswork, comparing the first three letters of a trait name against the genotype text, which almost never matched. Nearly every pair read as "Low (~5-10%)" however good it was. It now breeds the pair and counts, so a pairing that really throws Woad a quarter of the time says so.',
-      'Recipe has a "just the coat" tickbox. Tick it and it stops trying to keep every other gene out, so it finds pairs that can throw the coat and tells you what markings, modifiers and anomalies each one might bring along for the ride. Usually more pairs and much better odds, since nothing is spent blocking.'
-    ] },
-    { date: '6 Oct 2026', items: [
-      'Fixed: Recipe called real pairings impossible because it demanded the exact pair of alleles the target happened to be written with. A bay shows on one A or two, a chestnut looks the same whatever sits at A, and Woad is nTp or TpTp alike. It now works out for itself which spellings give the same horse, so Cream stays strict (nCr is a Buckskin, CrCr a Perlino) while the rest loosen. Moritz x Salvia really does breed all three Nacres. Ta Sasha!',
-      'Fixed: Recipe offered pairings that could never work, where a parent had no spare allele to pass and so always handed down a gene the target did not want. A root can force an allele a horse carries but never create one, so those are gone from the list rather than sitting there at zero.'
-    ] },
-    { date: '5 Oct 2026', items: [
-      'New Modifier: Counterpoint (nCp, Uncommon) swaps a bay-based coat round, so the body takes the mane, tail and stocking colour and they take the body\'s, with optional black-and-tan patterning. Every tool knows it, and a scroll charges 2 Modifier Potions for it.'
-    ] },
-    { date: '2 Oct 2026', items: [
-      'Fixed: a shared locus written the other way round was thrown away as a typo. OpPr, CwCu, spLu, erCh, prlCr, CrTp and prlTp now read the same as PrOp, CuCw, Lusp, Cher, Crprl, TpCr and Tpprl, so a horse with any of them translates, searches and breeds properly instead of quietly losing a gene. Ta Sasha!'
-    ] },
-    { date: '15 Sep 2026', items: [
-      'Group horses are in. All 44 now show up in the Foal Generator parent pickers, in Smart Search and in Recipe, with the Juicy Berry or Juicy Apple each one costs counted in the price. GG Tower for the amazing sheet!',
-      'Recipe suggests a Creation Scroll when no pair can breed your target, and prices it at the Wizard\'s rates: the scroll, which potion each leftover trait takes, and what it all comes to.',
-      'Fixed: Recipe missed pairs that could really work, because it decided which parent gave which allele once for the whole horse instead of locus by locus.',
-      'Fixed: item costs were the resale values, which read like prices for things the Wizard does not even sell. Only what he stocks shows coin now. Everything else is listed by rarity and marked as coming out of gameplay.'
-    ] },
-    { date: '12 Sep 2026', items: [
-      'Three new Modifiers: Ingot (nIn, Legendary) makes every white marking one metallic colour, Mithril (mtmt, Epic) is a recessive gloss over the whole coat, and Damascus (nDm, Uncommon) sits on Dun\'s locus and only shows as DmD.',
-      'Every tool knows them, and Recipe reads "damascus" as the visible DmD pair, so one ideal parent brings Damascus and the other brings Dun.',
-      'All 24 Ether coats rewritten from their updated pages in the index\'s sheen language, with none of the old blue-gray or ghostly wording left.',
-      'Sepulchered, Sooty, Pangare and Prism rewritten from their updated pages, including Sepulchered on gray and Prism taking Pangare or Sooty but never both.',
-      'Lacquer rewritten from its updated page: it recolours Gilt, Ingot, Kintsugi and Swarf, never matches the coat, and overrides Illuminated and Sepulchered on Gilt skin and hooves.',
-      'Fixed: Smart Search now uses the same carrier wording Translate prints, and "carries damascus" or "carrying mithril" finds pairs instead of nothing.'
-    ] },
-    { date: '10 Sep 2026', items: [
-      'Recipe now takes plain English. Say what you want ("a cerulean bay nacre with tobiano") and it builds the genotype, shows you what it read so you can correct it, and runs. Name a coat family without a base ("cream ether") and it offers the three coats as buttons. Each ideal parent is now also named in words, so you know what to look for.',
-      'Fixed: a capitalised coat name in Recipe ("Saffron Black Nacre") was read as just its base colour; case no longer matters.',
-      'New Legendary coats from the coat overhaul: Double Cream Champagne (CrCr with Champagne: Cremello, Perlino and Smoky Cream Champagne), Ash Ether (CrCr erer: Cold, Ombre and Classic Ash Ether) and Nacre (prlprl Cher: Rose Gold, Cerulean Bay and Saffron Black Nacre). Those genotypes used to name as their single-Cream or Pearl Champagne cousins.',
-      'Translate describes the new coats in the index\'s sheen language, Layers links their Trait Index pages, Smart Search and Recipe know them by name, and the Scroll Generator can roll them.',
-      'Ether has been redefined by the coat overhaul: it desaturates and lightens the base coat and lays a sheen over it, silvery along the topline and muted purple or blue below. Translate now describes Cold, Ombre and Classic Ether that way, and the old blue-gray and purple-pink wording is gone.',
-      'Trait Index links follow the consolidated pages: Palomino, Buckskin and Smoky Black now link to the Cream page, and Weld, Madder and Woad to the Tapestry page.',
-      'Fixed: Smart Search now understands coat families. "nacre" found nothing, and two-word families like "cream ether" or "pearl champagne" quietly searched for just one word of it, so a pair that could only make a Buckskin came back for "cream ether". A family now matches any of its three coats, and only those.'
-    ] },
-    { date: '9 Sep 2026', items: [
-      'New traits: Pitch (nPt, Rare) blackens with age the way Gray whitens and shares Gray\'s locus (GPt when both); Greaves (nGr) and Apron (nAp) are Common white markings that share a locus (GrAp when both).',
-      'Every tool knows the new traits: breeding, Translate, Layers, Somatic, Smart Search, Recipe and the Scroll Generator.',
-      'Fixed: Smart Search only counted a trait when a parent was written the carrier way (nGi), so GiGi or shared-locus pairs like GiCo and TRn scored nothing; any spelling that carries it now counts, across twenty traits.',
-      'Fixed: "false leopard" in Smart Search was read as the Leopard complex and never matched.',
-      'Fixed: "Every possible foal" left Chimera out even when a parent carried it and the example foals rolled it; inherited anomalies are now listed from the parents directly. Reported by Springfoss.'
-    ] },
-    { date: '20 Aug 2026', items: [
-      'Recipe now checks your own stable, ranking the pairs you could field cheapest first with the roots each would need; horses missing an allele outright are listed as near misses with what they lack.',
-      'Recipe costs the job out in Breeding Roll Add-Ons: the cheapest roots to guarantee the foal (Cave or Strong by rarity, Unusual for an anomaly) against a Tome of Imperfect Creation, whichever is cheaper.',
-      'Odds are now per breeding roll, since a roll gives two foal options and only one has to match; a Bunch of Grapes adds a third.'
-    ] },
-    { date: '19 Aug 2026', items: [
-      'New Recipe tab, the Foal Generator backwards: paste the foal you want and get what the parents must carry, locus by locus, with the odds, and which parts can\'t be planned (anomalies, and the lethal-white caps on Overo, Ossuary and Dominant White).'
-    ] },
-    { date: '13 Aug 2026', items: [
-      'New "Made by friends" section on the front page, starting with Rev\'s Group Horse Roller, which picks two temperament-compatible group horses and flags lethal white risk and cost.'
-    ] },
-    { date: '31 Jul 2026', items: [
-      'New Somatic tab: paste a genotype and see every trait Somatic could hide, what the patch reads as with each one switched off, and the drawing rules.',
-      'Genotype boxes now accept "+ Somatic" instead of flagging it, and Translate describes it.'
-    ] },
-    { date: '17 Jul 2026', items: [
-      'New Layers tab: paste a genotype and its traits are laid out in the official visual hierarchy, base coat at the bottom, so you can paint in order; every trait links to its Trait Index page.',
-      'Header menu sorted into Breeding and Design dropdowns.',
-      'An optional one-time feedback prompt may appear; it only sends what you type.'
-    ] },
-    { date: '5 Jul 2026', items: [
-      'Genotype boxes now read "patn" as one copy (same as "npatn"), flag any token the engine doesn\'t recognise instead of silently dropping it, and keep every anomaly after a second "+" (so "Kintsugi + Swarf" keeps both).',
-      'Imports no longer silently swallow bad data: rows with no genotype show as skipped, blank temperaments are kept and flagged, and unrecognised variants or tokens are called out in the preview and in the Foal Generator.'
-    ] },
-    { date: '4 Jul 2026', items: [
-      'New Translate tab: paste a genotype and get a plain-English description of the horse, from body colour through markings, anomalies and variant, read from the same data as the phenotype namer.'
-    ] },
-    { date: '16 Jun 2026', items: [
-      'Smart Search now finds pairs for Prism, Opal and Harlequin, which were never scored and so returned no matches. Reported by Criri.'
-    ] },
-    { date: '12 Jun 2026', items: [
-      'Fixed Pearl: a single copy (nprl) now reads as Carries Pearl, not an expressed coat, since Pearl only shows with two copies or in a compound.',
-      'Smart Search now matches coat colours exactly against the genetics engine, so it never suggests a coat a pair can\'t make (fixes Woad and several Cream Champagne and Cream Ether coats).',
-      'Chimera Calculator now handles Creations (no parents): the patch can be any base colour plus the horse\'s own traits. Requested by Ursa_Gayjor.',
-      'Rarity scoring now matches the Trait Index tier by tier: the Uncommon tier was scoring as Common, the leopard complex was under-rated, and Carries Filigree/Starfield now sit at Epic.'
-    ] },
-    { date: '10 Jun 2026', items: [
-      'Clearer front page: every tool and import option is laid out with a short description and a way in.',
-      'Mass-import your whole stable: one bookmarklet on your My Characters page imports every courser at once (Collection tab).',
-      'Import a single courser with a bookmarklet: add to your stable, or drop straight into a Parent slot (Collection tab).',
-      'Removed offline mode (it was sometimes serving an old cached version).',
-      'Foal Generator now lists every possible foal from a pairing, like the Chimera breakdown.',
-      'Import your coursers from a CSV right on the homepage.',
-      'Stained Glass and Ore are now one trait, Stained Glass. Older genos still read fine.'
-    ] },
-    { date: '6 Jun 2026', items: [
-      'Breedings can roll twins (5%), shown as two foals.',
-      'Same-temperament pairs no longer breed, matching the handbook.',
-      'Fixed foals showing variants neither parent had.',
-      'New look to match dungeon-coursers.com, with offline support and a saved collection.'
-    ] }
-  ];
+  {
+    "date": "21 Oct 2026",
+    "items": [
+      "Scroll Generator now supports extra markings, modifiers and up to two anomalies. Choose their rarities to see the required potions and available shop prices."
+    ]
+  },
+  {
+    "date": "12 Oct 2026",
+    "items": [
+      "Recipe now shows the full pairing count, with more results available to expand. Pairings are ordered by fewest items, then best odds. Thanks to Sasha for reporting the missing results."
+    ]
+  },
+  {
+    "date": "8 Oct 2026",
+    "items": [
+      "Corrected recessive traits and coat details in the group horse roster, including Calix’s two Tobiano copies. Thanks to Springfoss and Tower.",
+      "Scroll costs now include expressed Sepulchered and Flaxen. Recipe item lists can be expanded for each pairing."
+    ]
+  },
+  {
+    "date": "7 Oct 2026",
+    "items": [
+      "Smart Search now offers coat-only matching and calculates breeding probabilities from simulated foals. Recipe also supports coat-only matching."
+    ]
+  },
+  {
+    "date": "6 Oct 2026",
+    "items": [
+      "Recipe now accepts equivalent genotypes that produce the same coat and traits. Impossible pairings are excluded. Thanks to Sasha."
+    ]
+  },
+  {
+    "date": "5 Oct 2026",
+    "items": [
+      "Added Counterpoint (nCp, Uncommon) across the tools. Scroll add-ons cost two Modifier Potions."
+    ]
+  },
+  {
+    "date": "2 Oct 2026",
+    "items": [
+      "Shared-locus genotypes are now recognised in either order, including OpPr, CwCu and erCh. Thanks to Sasha."
+    ]
+  },
+  {
+    "date": "15 Sep 2026",
+    "items": [
+      "Added all 44 group horses to breeding tools, including slot costs. Thanks to Tower for the roster.",
+      "Recipe now suggests Creation Scrolls for targets that cannot be bred. Item prices reflect the Wizard’s shop; gameplay items are listed by rarity.",
+      "Fixed Recipe missing some valid combinations of parents."
+    ]
+  },
+  {
+    "date": "12 Sep 2026",
+    "items": [
+      "Added Ingot, Mithril and Damascus across the tools.",
+      "Updated Ether, Sepulchered, Sooty, Pangare, Prism and Lacquer descriptions to match their Trait Index pages.",
+      "Smart Search now recognises carrier searches for Damascus and Mithril."
+    ]
+  },
+  {
+    "date": "10 Sep 2026",
+    "items": [
+      "Recipe now accepts coat and trait names as well as genotypes, and describes its suggested parents.",
+      "Added Double Cream Champagne, Ash Ether and Nacre coats. Updated Ether descriptions and Trait Index links.",
+      "Fixed searches for coat families and capitalised coat names."
+    ]
+  },
+  {
+    "date": "9 Sep 2026",
+    "items": [
+      "Added Pitch, Greaves and Apron across the tools.",
+      "Fixed trait matching in Smart Search, including False Leopard and shared-locus combinations.",
+      "Possible foal outcomes now include inherited Chimera. Thanks to Springfoss."
+    ]
+  },
+  {
+    "date": "20 Aug 2026",
+    "items": [
+      "Recipe now checks your stable for suitable pairs and lists the breeding items needed.",
+      "Breeding odds account for two foal options per roll, or three with a Bunch of Grapes."
+    ]
+  },
+  {
+    "date": "19 Aug 2026",
+    "items": [
+      "Added Recipe: enter a target foal to see suggested parents, breeding odds and limitations."
+    ]
+  },
+  {
+    "date": "13 Aug 2026",
+    "items": [
+      "Added Rev’s Group Horse Roller to the homepage."
+    ]
+  },
+  {
+    "date": "31 Jul 2026",
+    "items": [
+      "Added Somatic: explore traits a patch could hide and the drawing rules. Genotype fields now accept + Somatic."
+    ]
+  },
+  {
+    "date": "17 Jul 2026",
+    "items": [
+      "Added Layers: view traits in drawing order with Trait Index links.",
+      "Grouped the navigation into Breeding and Design tools. Added an optional feedback prompt."
+    ]
+  },
+  {
+    "date": "5 Jul 2026",
+    "items": [
+      "Genotype fields now accept patn as one copy and keep multiple anomalies. Unrecognised tokens are flagged.",
+      "CSV imports now report skipped rows, missing temperaments and unrecognised values."
+    ]
+  },
+  {
+    "date": "4 Jul 2026",
+    "items": [
+      "Added Translate: turn a genotype into a description of the courser."
+    ]
+  },
+  {
+    "date": "16 Jun 2026",
+    "items": [
+      "Fixed Smart Search matches for Prism, Opal and Harlequin. Thanks to Criri."
+    ]
+  },
+  {
+    "date": "12 Jun 2026",
+    "items": [
+      "Corrected single-copy Pearl and coat matching in Smart Search.",
+      "Chimera Calculator now supports Creations without parents. Thanks to Ursa_Gayjor.",
+      "Updated rarity scoring to match the Trait Index."
+    ]
+  },
+  {
+    "date": "10 Jun 2026",
+    "items": [
+      "Updated the homepage with tool descriptions and import options.",
+      "Added bookmarks to import a stable or an individual courser, plus CSV import from the homepage.",
+      "Removed offline mode to prevent outdated versions loading.",
+      "Foal Generator now lists every possible outcome. Stained Glass and Ore are treated as one trait."
+    ]
+  },
+  {
+    "date": "6 Jun 2026",
+    "items": [
+      "Added a 5% twin chance and saved collections. Same-temperament pairs cannot breed.",
+      "Fixed foals inheriting variants absent from both parents. Updated the site design."
+    ]
+  }
+];
 
   function renderChangelog() {
     const host = $('#changelog');
@@ -315,7 +355,7 @@
     // "tapping Somatic opens the Foal Generator": silent, and it looks like a
     // routing bug rather than a caching one. Say what's actually wrong instead.
     if (!AREAS[area] && document.getElementById('area-' + area)) {
-      toast('That tool needs a fresh copy of the page — your browser is running an older version of the app. Reload to get it.', 'error');
+      toast('This tool needs a newer version of the app. Reload the page to continue.', 'error');
       return;
     }
     if (!AREAS[area] || !toolEnabled(area)) area = firstEnabledArea();
@@ -353,7 +393,7 @@
     if (!dot) return;
     const off = !navigator.onLine;
     dot.classList.toggle('is-offline', off);
-    dot.textContent = off ? '● Offline · from cache' : '● Online';
+    dot.textContent = off ? '● Offline' : '● Online';
   }
 
   // =========================================================================
@@ -885,7 +925,7 @@
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); done(); } catch (e) { toast("Couldn't copy that, sorry.", 'error'); }
+    try { document.execCommand('copy'); done(); } catch (e) { toast("Could not copy the genotype. Select and copy it manually.", 'error'); }
     ta.remove();
   }
 

@@ -655,7 +655,7 @@ function chatOpenDraft(file) {
     const box = document.getElementById('chatScript');
     if (!box || !file) return;
     if (file.size > CHAT_DRAFT_LIMIT) {
-        if (window.toast) window.toast('That file is too big to be a chat script, so I have left it alone.', 'error');
+        if (window.toast) window.toast('This file is too large to open as a chat script.', 'error');
         return;
     }
     const reader = new FileReader();
@@ -695,7 +695,7 @@ function chatReset() {
     box.value = CHAT_EXAMPLE;
     chatUpdate();
     chatRefreshUndo();
-    if (window.toast) window.toast('Example put back. Your own script is kept, press Undo to get it again.', 'success', 6000);
+    if (window.toast) window.toast('Example restored. Press Undo to recover your script.', 'success', 6000);
 }
 
 function chatUndo() {

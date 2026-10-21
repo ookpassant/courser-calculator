@@ -1001,7 +1001,7 @@ function joinList(items) {
 // Returns text with the coat name wrapped in **bold**. `variant` is optional.
 function genotypeToPlainEnglish(genoString, variant) {
     if (!genoString || !genoString.trim()) {
-        return "Give me a genotype and I'll tell you what the horse actually looks like. Right now you've given me nothing, which describes a lot of things but not a horse.";
+        return "Enter a genotype to see the horse’s coat and traits.";
     }
 
     const t = resolveTraits(genoString);
@@ -1125,7 +1125,7 @@ function translateGenotype() {
     if (!geno) {
         out.style.display = 'block';
         out.innerHTML = renderTranslateMarkup(
-            "You haven't given me a genotype yet. Paste one in, or pick a horse from your collection, and I'll tell you what it looks like."
+            "Paste a genotype or choose a saved courser to see its coat and traits."
         );
         return;
     }
@@ -1145,7 +1145,7 @@ function translateGenotype() {
         if (unknownGenes.length) bits.push((unknownGenes.length === 1 ? 'gene' : 'genes') + ' ' + unknownGenes.map(g => `<code>${esc(g)}</code>`).join(', '));
         if (unknownAnomalies.length) bits.push((unknownAnomalies.length === 1 ? 'anomaly' : 'anomalies') + ' ' + unknownAnomalies.map(a => `<code>${esc(a)}</code>`).join(', '));
         warnHtml =
-            `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${bits.join(' and ')}, ` +
+            `<div class="translate-warn"><strong>Unrecognised input:</strong> ${bits.join(' and ')}, ` +
             `so ${unknownGenes.length + unknownAnomalies.length === 1 ? 'it was' : 'they were'} left out of the description below. ` +
             `Check the spelling (one copy is usually written like <code>nLp</code>, two like <code>LpLp</code>).</div>`;
     }
@@ -1370,7 +1370,7 @@ function showLayers() {
 
     if (!geno) {
         out.style.display = 'block';
-        out.innerHTML = '<p class="layers-empty">Paste a genotype, or pick a horse from your collection, and I\'ll lay its traits out in paint order.</p>';
+        out.innerHTML = '<p class="layers-empty">Paste a genotype or choose a saved courser to see its drawing layers.</p>';
         return;
     }
 
@@ -1379,7 +1379,7 @@ function showLayers() {
     out.style.display = 'block';
 
     if (data.lethal) {
-        out.innerHTML = '<p class="layers-empty">This genotype is a lethal white, so there\'s no horse to lay out. Check the Translate tab for why.</p>';
+        out.innerHTML = '<p class="layers-empty">This genotype is lethal white. Translate explains the conflicting genes.</p>';
         return;
     }
 
@@ -1391,7 +1391,7 @@ function showLayers() {
         trackUse('layers_unknown_tokens');
         const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const stray = unknownGenes.concat(unknownAnomalies);
-        warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
+        warnHtml = `<div class="translate-warn"><strong>Unrecognised input:</strong> ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
     }
 
     const coatLine = `<p class="layers-coat">Painting <strong>${String(data.coatColor).replace(/</g, '&lt;')}</strong>${data.variant ? ' (' + String(data.variant).replace(/</g, '&lt;') + ')' : ''}, top layer covers the ones below. Work up from the base.</p>`;
@@ -1903,13 +1903,13 @@ function generateFoals() {
     
     // Validation — you WILL fill out the form correctly or so help me
     if (!parent1.genotype || !parent2.genotype) {
-        errorMsg.textContent = 'Please enter genotypes for both parents!';
+        errorMsg.textContent = 'Enter a genotype for each parent.';
         errorMsg.style.display = 'block';
         return;
     }
     
     if (!parent1.temperament || !parent2.temperament) {
-        errorMsg.textContent = 'Please select temperaments for both parents!';
+        errorMsg.textContent = 'Choose a temperament for each parent.';
         errorMsg.style.display = 'block';
         return;
     }
@@ -2649,13 +2649,13 @@ function searchBreeding() {
     
     if (!query) {
         if (window.AppShell) window.AppShell.toast('Type a breeding question first, like "How can I make Amber Champagne?"', 'error');
-        else alert('Please enter a breeding question!');
+        else alert('Enter a coat or trait to search for.');
         return;
     }
 
     if (horseCollection.length === 0) {
         if (window.AppShell) window.AppShell.toast('Your stable is empty. Add or import horses in the Collection tab first.', 'error');
-        else alert('Please upload your horse collection CSV first!');
+        else alert('Add or import coursers in Collection first.');
         return;
     }
     
@@ -4122,7 +4122,7 @@ function calculateChimera() {
     if (mode === 'creation') {
         if (!foalGeno) {
             if (window.AppShell) window.AppShell.toast("Enter the Creation's genotype.", 'error');
-            else alert('Please enter the Creation genotype!');
+            else alert('Enter the Creation’s genotype.');
             return;
         }
         displayCreationChimera(foalGeno, generateCreationChimeraPossibilities(foalGeno));
@@ -4135,7 +4135,7 @@ function calculateChimera() {
 
     if (!foalGeno || !parent1Geno || !parent2Geno) {
         if (window.AppShell) window.AppShell.toast('Enter genotypes for the foal and both parents.', 'error');
-        else alert('Please enter genotypes for the foal and both parents!');
+        else alert('Enter genotypes for the foal and both parents.');
         return;
     }
 
@@ -4860,7 +4860,7 @@ function showSomatic() {
     out.style.display = 'block';
 
     if (!geno) {
-        out.innerHTML = '<p class="somatic-empty">Paste a genotype, or pick a horse from your collection, and I\'ll show you every Somatic it could wear.</p>';
+        out.innerHTML = '<p class="somatic-empty">Paste a genotype or choose a saved courser to explore Somatic patches.</p>';
         return;
     }
 
@@ -4868,7 +4868,7 @@ function showSomatic() {
     const data = generateSomaticPossibilities(geno);
 
     if (data.lethal) {
-        out.innerHTML = '<p class="somatic-empty">This genotype is a lethal white, so there\'s no horse to mark. Check the Translate tab for why.</p>';
+        out.innerHTML = '<p class="somatic-empty">This genotype is lethal white. Translate explains the conflicting genes.</p>';
         return;
     }
 
@@ -4882,7 +4882,7 @@ function showSomatic() {
     if (unknownGenes.length || unknownAnomalies.length) {
         trackUse('somatic_unknown_tokens');
         const stray = unknownGenes.concat(unknownAnomalies);
-        warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
+        warnHtml = `<div class="translate-warn"><strong>Unrecognised input:</strong> ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out.</div>`;
     }
 
     const total = data.traitOptions.length + data.baseOptions.length;
@@ -5325,7 +5325,7 @@ function showRecipe() {
     out.style.display = 'block';
 
     if (!geno) {
-        out.innerHTML = '<p class="recipe-empty">Paste the foal you want and I\'ll work out what its parents would have to be.</p>';
+        out.innerHTML = '<p class="recipe-empty">Describe your target foal or paste its genotype to find suitable parents.</p>';
         return;
     }
 
@@ -5371,7 +5371,7 @@ function showRecipe() {
     if (unknownGenes.length || unknownAnomalies.length) {
         trackUse('recipe_unknown_tokens');
         const stray = unknownGenes.concat(unknownAnomalies);
-        warnHtml = `<div class="translate-warn"><strong>Heads up:</strong> I didn't recognise ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out of the recipe.</div>`;
+        warnHtml = `<div class="translate-warn"><strong>Unrecognised input:</strong> ${stray.map(s => `<code>${esc(s)}</code>`).join(', ')}, so ${stray.length === 1 ? 'it was' : 'they were'} left out of the recipe.</div>`;
     }
 
     if (data.blocked) {
@@ -5382,7 +5382,7 @@ function showRecipe() {
     }
 
     if (!data.loci.length) {
-        out.innerHTML = warnHtml + '<p class="recipe-empty">There are no genes in that target for me to work backwards from. Try something like <code>Ee Aa nCr</code>.</p>';
+        out.innerHTML = warnHtml + '<p class="recipe-empty">No genes were recognised in this target. Try <code>Ee Aa nCr</code>.</p>';
         return;
     }
 
@@ -5456,7 +5456,7 @@ function showRecipe() {
     let planBlock = '';
     if (plan.freeAlready) {
         planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Items needed</h3>
-            <p class="recipe-plan-free"><strong>None.</strong> These two parents throw the target on every foal option, so there is nothing worth spending on.</p></div>`;
+            <p class="recipe-plan-free"><strong>None.</strong> Every foal option from these parents matches the target.</p></div>`;
     } else {
         const rootItems = plan.roots.map(r =>
             `<li><strong>${esc(r.item.name)}</strong> <span class="recipe-coin">${esc(recipeItemTag(r.item))}</span><br>
@@ -5486,7 +5486,7 @@ function showRecipe() {
         // Bitter Seeds only earns its place on a target with several separate
         // traits, since that is where two goes at each one adds up.
         const seeds = (plan.perFoal > 0 && plan.seedsHelps)
-            ? `<p class="recipe-plan-gamble">Bitter Seeds squashes both options into one foal, keeping every marking, modifier and anomaly either of them rolled, which takes this to roughly ${recipePercent(plan.perRollSeeds)}. The coat is the exception: the merged foal keeps whichever option's coat was rarer, so that half still has to land on its own. No twins, and it cannot be used with a Bunch of Grapes.</p>`
+            ? `<p class="recipe-plan-gamble">Bitter Seeds merges both options, keeping their markings, modifiers and anomalies, with an estimated ${recipePercent(plan.perRollSeeds)} chance of matching. The foal keeps the rarer coat. Cannot produce twins or be combined with a Bunch of Grapes.</p>`
             : '';
 
         planBlock = `<div class="recipe-plan"><h3 class="recipe-head">Fewest items to guarantee it</h3>
@@ -5523,7 +5523,7 @@ function showRecipe() {
             <li>Neither temperament nor variant lives in a genotype, so nothing above plans for them. If you want either pinned, that is what those two items are for.</li>
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
-            <li>The Wizard sells very little of this. Only the Marking, Modifier and Anomaly Potions, the Scrying Lens, a couple of tomes, the temperament herbs and the Common through Rare scrolls carry a price. Everything else, every root included, comes out of gameplay, so it is listed by rarity rather than given a figure it does not have.</li>
+            <li>Prices are shown only for items sold by the Wizard. Gameplay items, including roots, are listed by rarity.</li>
         </ul>
     </details>`;
 
@@ -5546,7 +5546,7 @@ function showRecipe() {
 
     if (!stable.size) {
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-empty">There is nothing to match against yet. Import your coursers in the <strong>Collection</strong> tab and this will fill in with the pairs you can actually field.</p></div>`;
+            <p class="recipe-stable-empty">Import coursers in <strong>Collection</strong> to check your stable for suitable pairings.</p></div>`;
     } else if (stable.pairs.length) {
         // The cheapest pairing is the answer, so its list starts open. The rest
         // stay folded, or the page is a wall of roots before you reach pair two.
@@ -5607,11 +5607,11 @@ function showRecipe() {
                 <span class="recipe-fit-miss">could be Parent ${esc(m.side)} but carries no ${m.missing.map(a => `<code>${esc(a)}</code> (${esc(recipeAlleleLabel(a))})`).join(' or ')}</span></li>`
         ).join('');
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">No pair from ${pool} can cover this target on its own. These come closest. What each one lacks is what you would have to bring in yourself.</p>
+            <p class="recipe-stable-blurb">No pair from ${pool} can produce the full target. These are the closest matches, with missing traits listed.</p>
             <ul class="recipe-near-list">${rows}</ul></div>`;
     } else {
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
-            <p class="recipe-stable-blurb">Nothing across ${pool} carries enough of this target to build it. Roots can force an allele a horse already has, but they cannot add one, so breeding alone will not get there.</p></div>`;
+            <p class="recipe-stable-blurb">No suitable pair was found in ${pool}. Roots can only select existing alleles; you need parents with the missing genes.</p></div>`;
     }
 
     // Breeding cannot always get there. When it cannot, a Creation Scroll can
@@ -6206,7 +6206,7 @@ function recipeScrollHtml(scroll) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     if (!scroll.scroll) {
         return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
-            <p class="recipe-stable-blurb">No pair can breed this, and no scroll rolls <strong>${esc(scroll.coat)}</strong> either, so there is no shortcut to fall back on.</p></div>`;
+            <p class="recipe-stable-blurb">No available pair or scroll can produce <strong>${esc(scroll.coat)}</strong>.</p></div>`;
     }
     const tierName = t => t ? RECIPE_TIER_LABEL[t] : 'no listed rarity';
     const potionLine = (t) => {
@@ -6251,7 +6251,7 @@ function recipeScrollHtml(scroll) {
         : '';
 
     return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
-        <p class="recipe-stable-blurb">No pair can breed this one, so the shortest route is to create the courser instead. A <strong>${esc(scroll.scroll)}</strong> is the one to reach for, with potions for the rest.</p>
+        <p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> and the potions listed below.</p>
         ${total}
         <ul class="recipe-near-list">${lines.join('')}</ul>${warn}${guess}${gap}${scales}</div>`;
 }

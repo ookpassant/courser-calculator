@@ -1,246 +1,79 @@
-# Bloodline: Dungeon Coursers Breeding Calculator
+# Bloodline
 
-An unofficial, client-side genetics calculator for [Dungeon Coursers](https://dungeon-coursers.com),
-built by [Ook](https://dungeon-coursers.com/user/Ook) because she can't maths.
-Everything runs in the browser. There is no account, no backend, and no data
-leaves your machine.
+A free, unofficial breeding and design toolkit for [Dungeon Coursers](https://dungeon-coursers.com), made by [Ook](https://dungeon-coursers.com/user/Ook).
 
-**Live:** https://ook.monster/courser-calc
+**[Open Bloodline](https://ook.monster/courser-calc/)**
 
-> Bloodline is a fan-made tool. It is not affiliated with, endorsed by, or run
-> by Dungeon Coursers.
+Bloodline is a fan project, unaffiliated with Dungeon Coursers. Use the game’s handbook and Trait Index as the final reference for breeding and design rules.
 
 ## Tools
 
-### Foal Generator
-- Generates four possible foals from two parent horses, each one a random roll.
-- Below the four, lists **every possible foal** the pairing can produce (coats,
-  white markings, modifiers, anomalies, temperaments, variants), the same way
-  the Chimera breakdown does.
-- Same-temperament pairs are **hard-blocked** (the handbook rule: two horses of
-  the same temperament can never breed).
-- 5% chance of **twins**: two separate foals, each shown with its own set of
-  possibilities.
-- Parents can be typed in by hand, picked from your saved collection, or picked
-  from the **group horses** that anybody can breed to.
+| Tool | What it does |
+| --- | --- |
+| Foal Generator | Generates four example foals from two parents and lists the possible outcomes. Parents must have different temperaments. |
+| Recipe | Takes a target genotype or description and suggests parents, breeding items and odds. Checks saved coursers and group horses, with a coat-only option. |
+| Chimera Calculator | Shows possible coats for a Chimera patch, for both lineaged foals and Creations. |
+| Scroll Generator | Generates a design at your chosen rarity, with optional extra traits, potion requirements and available shop prices. |
+| Translate | Describes a courser’s coat, markings, modifiers and other traits from its genotype. |
+| Layers | Arranges visible traits in drawing order, with links to the Trait Index. |
+| Somatic | Shows which traits a Somatic patch could hide and the rules for drawing it. |
+| Smart Search | Finds pairs in your saved stable that could produce a requested coat or trait. |
+| Collection | Saves coursers in this browser, with editing, search, CSV import and export. |
 
-### Recipe
-- The Foal Generator run backwards: give it the foal you want and it works out
-  what the parents would have to be, and how often that pairing would throw it.
-- Takes **plain English or a genotype** in the same box. "A cerulean bay nacre
-  with tobiano" is built into the genotype it means, and the genotype it built is
-  always shown so you can correct it. Name a coat family without a base ("cream
-  ether") and it offers the three coats as buttons.
-- Works per locus, because every pair in a genotype takes one allele from each
-  side. That makes the inverse exact rather than a guess.
-- Works out the **Breeding Roll Add-On items** a target needs and picks the
-  route that takes the fewest, weighing single roots against the Tome by the
-  rarity of the genes involved. None of those are sold, so they are listed by
-  rarity rather than given a price.
-- Refuses targets that can't exist, so a lethal white combination is explained
-  rather than costed.
-- Checks your collection **and the group horses** for pairs that already work,
-  ranks them by how few items they need, and shows near misses when nothing is
-  an exact fit, with the items it would take to block whatever a parent carries
-  in excess. A group horse needs a Juicy Berry or a Juicy Apple for the breeding
-  slot, one per group horse in the pairing, and that counts as an item too.
-- When no pair can breed the target at all, names the **Creation Scroll** that
-  would make the courser outright, spends its one free trait on whichever would
-  otherwise cost the most, and prices the rest in **Scroll Add-Ons**: a Marking
-  or Modifier Potion per Common trait, two for Uncommon, three for Rare, and the
-  Super potions for Epic and Legendary. Anomalies take one potion each, and a
-  scroll only takes two. Coin totals cover only what the Wizard actually sells,
-  which is the three plain potions and the Common through Rare scrolls. Anything
-  else, the Super potions included, is named with its rarity and flagged as
-  coming out of gameplay rather than given a price it does not have.
-- Names each ideal parent in words as well as genotype, so you know what to look
-  for.
+Two additional tools are available by direct link:
 
-### Chimera Calculator
-- For a foal born with the Chimera anomaly.
-- Enter the foal's genotype and both parents' to see what coats could appear in
-  the Chimera patch, including dilution combinations across both loci and
-  recessive carrier logic.
-- Reachable on its own from the nav, or from a foal card.
+- **[Pet Excursions](https://ook.monster/courser-calc/#pets):** assigns pets to excursions using their bonding levels and availability.
+- **[Group Chat Builder](https://ook.monster/courser-calc/#chat):** turns a plain-text script into formatted chat HTML for a Dungeon Coursers post. Supports multiple chats, direct messages, themes and downloadable drafts.
 
-### Somatic Calculator
-- For the Somatic free marking, which hides one of a horse's own traits inside
-  irregular patches.
-- Takes **one genotype, no parents** — a Somatic patch can only ever show what
-  the horse already has, so unlike Chimera there is nothing to inherit.
-- Lists every trait Somatic could switch off and what the horse reads as *inside
-  the patch*, plus the alternative of showing different base colour genes (E/A)
-  with everything else left in place.
-- The genotype never changes. Somatic switches a trait off in that area, it
-  doesn't remove the gene: the horse still carries it, still passes it to foals,
-  and still writes it in its genotype. So no altered genotype is ever shown.
-- Enforces the handbook rules: one trait at a time, never a trait *and* a base
-  change, the whole trait rather than one allele (Fewspot can't be knocked down
-  to Leopard), Double Cream → Cream as the one documented exception, and no
-  touching anomalies, which aren't attached to genes.
-- Hidden carriers are never offered, since switching one off shows nothing.
-- Shows the skin/hoof-only option for Gilt and Illuminated, the interaction
-  rules for the traits this horse actually has (Chimera, Pastiche, Fresco,
-  Harlequin, Shroud, Kintsugi), and the drawing rules no genotype can decide.
+## Add your coursers
 
-### Scroll Generator
-- Rolls a random design for a custom scroll by rarity.
-- A coat colour at that rarity, one marking/modifier/carrier at that rarity or
-  below, a 10% chance of an anomaly, and a 5% chance of a variant.
+Paste genotypes directly into a tool, choose a saved courser, or use the group horses in the parent pickers.
 
-### Translate
-- Paste a genotype (or pick one from your collection) and get a plain-English
-  description of what the horse actually looks like, in visual order: body
-  colour, shading, white markings, leopard spotting, anomalies, variant, and
-  any hidden carriers.
-- Reads its trait data from the same engine that names the phenotype, so the
-  description can never disagree with the short phenotype it shows alongside.
-- An optional variant picker factors the four breed variants in.
+To save a stable in Collection:
 
-### Layers
-- Paste a genotype (or pick one from your collection) and it lays the traits out
-  in the official visual hierarchy, so you can design in layers from the base
-  coat up.
-- Within each column the top layer covers the ones below it, and traits on the
-  same line sit on the same level. Only the traits the horse actually has are
-  shown, so it reads as a paint order.
-- Links the Trait Index page for each trait it lists.
+- **Import from the game:** drag an import button to your bookmarks bar, then use it on your Dungeon Coursers My Characters page or an individual courser’s page. These bookmarks read the open page in your browser, without AI or requests to Dungeon Coursers.
+- **Import a CSV:** use the [Google Sheets template](https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing), or supply columns for ID, Name, Genotype, Temperament and Variant. Check the import preview for warnings.
+- **Add by hand:** enter a courser’s details in Collection.
 
-### Smart Search
-- Ask a breeding goal in plain language ("How can I make Amber Champagne?",
-  "Who can breed for fewspot and starfield?", "Which pairs can produce false
-  leopard?").
-- Ranks the pairs that can actually produce what you asked for.
-- Understands exact coat names, **coat families** ("cream ether", "nacre"), bare
-  base colours, traits, and carriers. A coat is judged by asking the engine
-  whether the pair can really produce it, so a match is never a name collision.
-- Uses the same carrier wording Translate prints, and accepts either spelling, so
-  a phrase copied off a translated genotype searches for the trait it described.
-- Searches your collection alongside the **group horses**, so a pair that is half
-  yours and half theirs is offered too, as is a pair of two group horses.
-- "Breed These" auto-fills the Foal Generator.
-- Recent searches are remembered.
+Export a CSV to keep a backup or move your stable to another browser. Browser storage can be cleared; there is no account or cloud sync.
 
-### Collection
-- Your stable is saved in the browser (localStorage), so it persists between
-  visits. Nothing is uploaded.
-- Add, edit, and delete horses by hand, with live genotype validation.
-- Search, sort, and export the whole collection back to CSV.
+## Data and privacy
 
-## Importing your coursers
+Calculations run in your browser. Collections, recent searches and chat drafts are stored locally. Anonymous usage events count tool use without sending your genotypes or other inputs. Session recording is disabled and Do Not Track is respected. If you submit feedback, the text you submit is sent.
 
-Two ways to get horses in:
+Chat drafts are autosaved one at a time. Download separate drafts to keep multiple pieces. Linked images and the chat preview may load external resources.
 
-1. **CSV import wizard** (Collection tab): upload a file, preview and validate
-   the rows, then import. A [Google Sheets template](https://docs.google.com/spreadsheets/d/1WfCvxwtGRvoDcYXX9mAd5nryJpodRJ-g96eJ3yesQ9E/edit?usp=sharing)
-   is linked in-app.
-2. **Bookmarklet** (Collection tab): drag a button to your bookmarks bar, then
-   click it on one of your courser pages. "Add to Collection" saves the courser;
-   "Parent 1" / "Parent 2" drop it straight into the Foal Generator.
+## Run locally
 
-   **The bookmarklet uses no AI.** It runs a tiny script in your own browser that
-   reads the genotype and temperament off the page you are already viewing (the
-   same text the site's copy button gives you) and sends it to Bloodline.
-   Nothing is sent to Dungeon Coursers' servers, so it respects the site's
-   bot-block and `noai` directives.
+Serve this directory with a static web server, for example:
 
-## Genetics
-
-Full Mendelian inheritance with shared loci enforced (genes that share a locus
-inherit together):
-
-- **Base coat** (E/A locus) and **dilutions**: Cream, Tapestry, Pearl (locus 1),
-  Champagne, Ether (locus 2, where Ch dominates er, so Cher = Champagne +
-  Carries Ether), plus compound combos.
-  Two Cream genes with Champagne or Ether make the Legendary Double Cream
-  Champagne and Ash Ether coats, and two Pearl genes with a Cher pair make
-  Nacre; Recipe, Smart Search and the Scroll Generator all know the nine names.
-- **White markings**: Tobiano, Overo, Splash, Roan, Sabino, Blanched, False
-  Leopard, Harlequin, Shroud, Ossuary, Filigree, Crowned, Cuirass, Girdle,
-  Collar, Greaves, Apron, Rabicano, Dominant White, and Leopard Complex
-  (Snowflake to Fewspot). Greaves and Apron share a locus, as do Girdle and
-  Collar.
-  KIT locus allows max two of Tobiano/Roan/Sabino/Dominant White.
-- **Modifiers**: Dun, Pangare, Sooty, Gray, Pitch, Flaxen, Silver, Illuminated,
-  Sepulchered, Tabard, Gilt, Vellum, Opal, Prism, Lacquer, Starfield, Ingot,
-  Mithril, Damascus. Pitch shares Gray's locus and blackens with age where Gray
-  whitens; a horse with both goes a true mid gray. Mithril is recessive (mtmt).
-  Damascus shares Dun's locus and only shows paired with it (DmD), so a horse
-  holding Dm without a D carries it unseen.
-- **Anomalies**: 25% chance to pass each from a parent, plus a flat 5% chance of
-  a random one on any foal.
-- **Variants** (Heraldic, Puck, Cavedweller, Restored): 25% chance to pass from
-  each parent. There is no random variant roll.
-- **Lethal White** is flagged for OO, OsOs, WW, and nO + nOs.
-- Carrier traits are shown where appropriate (Carries Ether, Carries Patn,
-  Carrying Flaxen, etc.).
-- **Free markings** (Somatic) are written after the `+` like an anomaly, but any
-  player can add one to any horse for nothing. They are deliberately kept out of
-  the anomaly pool, so they are never rolled, never inherited, and never scored
-  for rarity — they are only recognised, described and calculated.
-- Rarity is scored against the official Dungeon Coursers trait index.
-
-These rules are matched to the official breeding handbook.
-
-> **Stained Glass and Ore are now one trait, called Stained Glass.** Older
-> coursers may still list "Ore" (or both); the parser reads any "Ore" as
-> "Stained Glass" and de-duplicates. New foals only ever roll Stained Glass.
-
-## CSV format
-
-```csv
-ID,Name,Genotype,Temperament,Variant
-3108,Soup,EE aa Tpprl nO LpLp patnpatn + Geode,Melancholic,Heraldic
-3542,Pwnco,Ee aa erer nSh nG nOs nD + Oracle,Sanguine,Standard
-9999,Example Horse,Ee Aa nCr nT + Birdcatcher Spots,Sanguine,Standard
+```sh
+python3 -m http.server 8000
 ```
 
-Headers are optional. If they are missing, the parser assumes the column order
-above (ID, Name, Genotype, Temperament, Variant). Copy genotypes directly from
-the Dungeon Coursers site. The parser handles `+` separators and quoted fields
-with commas. See `sample_horses.csv` for a complete example.
+Open `http://localhost:8000`. No build step or package installation is required.
 
-## Project layout
+## Development
 
-A static site, no build step:
+- `breeding-calculator.js`: genetics, trait data and calculator results.
+- `app.js`: navigation, collections, import/export and updates.
+- `group-horses.js`: group horse roster.
+- `pets.js`: pet data, imports and excursion planning.
+- `chat.js`: chat script parsing, previews and HTML output.
+- `index.html`: page markup and styles.
 
-- `index.html`: markup, styles, and all the views.
-- `breeding-calculator.js`: the genetics engine and the existing tools (source
-  of truth for inheritance).
-- `group-horses.js`: the group horse roster, data only, so updating it never
-  means touching code.
-- `app.js`: the app shell: routing, landing page, toasts, the
-  localStorage-backed collection, import wizard, the courser-import bookmarklets,
-  and recent searches. It talks to the engine through small optional hooks.
-- `pets.js`, `chat.js`: two unlisted pages, the pet excursion planner at
-  `#pets` and the chat builder at `#chat`. Left out of the nav on purpose.
-- `tests/`: the test suite. `node tests/run.js` runs the lot, no dependencies.
-  See [`tests/README.md`](tests/README.md).
-- `manifest.webmanifest`, `icon.svg`: basic install metadata.
-- `sw.js`: a retired service worker (kill-switch). Offline support was removed
-  because it served stale cached versions; this file just unregisters any old
-  worker and clears its caches.
-- `ook_horses.csv`, `sample_horses.csv`: example collections.
+Run the existing checks with:
 
-The design follows the dungeon-coursers.com look (mauve chrome, crimson
-blackletter wordmark, moss accents, white panels on a dungeon-stone backdrop),
-ported from a design system.
+```sh
+node tests/run.js
+```
 
-## Deploying
-
-Served on a VPS behind Apache. Every push to `main` auto-deploys via a GitHub
-Action that SSHes in and fast-forwards a clone. The same Action stamps the
-deployed commit onto the script tags as `?v=<sha>`, so a browser can never serve
-yesterday's JavaScript against today's HTML; if the stamp fails to apply, the
-deploy fails loudly rather than shipping a stale page. See
-[`DEPLOY.md`](DEPLOY.md) and [`deploy/`](deploy/) for the one-time setup.
+See [tests/README.md](tests/README.md) for coverage and [DEPLOY.md](DEPLOY.md) for hosting. Pushes to `main` trigger the VPS deployment workflow.
 
 ## Credits
 
-Created for the [Dungeon Coursers](https://dungeon-coursers.com) HARPG community
-by [Ook](https://dungeon-coursers.com/user/Ook).
+Created and maintained by Ook. Thanks to Tower (Crowned_Ladybug) for the Group Horse Directory used by the built-in roster, and to the players who report issues and suggest improvements. Try [Rev’s Group Horse Roller](https://revukan.neocities.org/code/tools/dcgrouphorse), also linked from the homepage.
 
-The landing page also links other players' fan tools, hosted on their own sites.
-Thanks to Rev for the [Group Horse Roller](https://revukan.neocities.org/code/tools/dcgrouphorse),
-and to Tower (Crowned_Ladybug) for the Group Horse Directory the built-in roster
-in `group-horses.js` is built from.
+## Licence
+
+[MIT](LICENSE).
