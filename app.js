@@ -65,6 +65,9 @@
 
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
+    { date: '21 Oct 2026', items: [
+      'The Scroll Generator can stack traits on top of the free one now. Say how many markings, modifiers and anomalies you want and which rarity each should be drawn from, and it rolls a horse that carries the lot, priced by the same code Recipe uses, with the potions and the coin total on the card. A tier costs what it costs whatever scroll it goes on, so Legendary add-ons on a Common scroll are allowed, just dear. Two anomalies is the game\'s limit, and if a tier does not hold as many as you asked for it says so instead of quietly handing back fewer.'
+    ] },
     { date: '12 Oct 2026', items: [
       'Fixed: Recipe only ever showed five pairings and never said there were more, so a pair that works read as a pair that cannot. Harlan and Calen really do breed a Cold Ash Ether, about one foal in eight, and they were fourteenth on a list cut off at five. It now says how many pairings can do it and folds the rest away a click below. Ta Sasha!',
       'The pairings are sorted by what the card actually shows, fewest items then best odds. It used to rank them on a coin total that was never on screen, which put the plainly best pairing third and made the whole list look unsorted.'
