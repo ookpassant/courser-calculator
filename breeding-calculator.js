@@ -5523,6 +5523,7 @@ function showRecipe() {
             <li>Neither temperament nor variant lives in a genotype, so nothing above plans for them. If you want either pinned, that is what those two items are for.</li>
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
+            <li>Scrolls stop at Rare in the shop. A higher coat can often be <strong>built</strong> instead: buy the cheaper scroll and add <strong>Genotype Update items</strong>, three to a geno. Only Cream and Tapestry can be added, so Pearl alongside Champagne or Ether stays out of reach.</li>
             <li>Prices are shown only for items sold by the Wizard. Gameplay items, including roots, are listed by rarity.</li>
         </ul>
     </details>`;
@@ -5675,7 +5676,12 @@ function recipeItemTag(item) {
     if (!item) return '';
     const cost = recipeItemCost(item);
     if (cost.sold) return cost.coin + ' coin';
-    return (item.rarity ? item.rarity + ', ' : '') + 'from gameplay';
+    const rarity = item.rarity ? item.rarity + ', ' : '';
+    // Known to be on the shelf without a figure to put on it. Saying "from
+    // gameplay" there would send you grinding for something you can just buy.
+    if (item.wizard) return rarity + "on the Wizard's shelf";
+    if (item.crafted) return rarity + 'crafted';
+    return rarity + 'from gameplay';
 }
 
 // The shopping list under one pairing.
@@ -6128,6 +6134,122 @@ const RECIPE_SCROLL_ADDONS = {
 const RECIPE_SCROLL_PRICE = { common: 600, uncommon: 1500, rare: 3000 };
 const RECIPE_ANOMALY_POTION_LIMIT = 2;
 
+// ---------------------------------------------------------------------------
+// Genotype Update items go on an undesigned geno, three at most, and they are
+// the reason the Wizard's shelf stopping at Rare is not the wall it looks like.
+// A Rare scroll plus two items reaches thirty of the coats no scroll can roll.
+//
+// Only Cream and Tapestry have an item behind them. Nothing adds Pearl,
+// Champagne or Ether, so a coat wanting pearl and champagne together stays out
+// of reach, and the page says so rather than leaving it off without a word.
+// ---------------------------------------------------------------------------
+
+const RECIPE_UPDATE_LIMIT = 3;
+
+const RECIPE_UPDATE_ITEMS = {
+    redHerb:      { name: 'Red Herb', weight: 50, rarity: 'Common', note: 'change the base E and A genes' },
+    cleanHerb:    { name: 'Clean Herb', weight: 50, rarity: 'Common', wizard: true, note: 'remove one trait' },
+    bloomingHerb: { name: 'Blooming Herb', weight: 75, rarity: 'Uncommon', wizard: true, note: 'add one Tapestry' },
+    sweetHerb:    { name: 'Sweet Herb', weight: 50, rarity: 'Common', note: 'add one Common marking or modifier' },
+    soothingHerb: { name: 'Soothing Herb', weight: 75, rarity: 'Uncommon', note: 'Melancholic or Phlegmatic' },
+    searingHerb:  { name: 'Searing Herb', weight: 75, rarity: 'Uncommon', note: 'Sanguine or Choleric' },
+    // Both wands are crafted out of the herbs above. Neither carries a rarity
+    // or a resale value here because I have not had the item pages, and a
+    // figure invented to fill the gap would read exactly like a real one.
+    creamWand:    { name: 'Cream Wand', crafted: true, note: 'add one Cream' },
+    tapestryWand: { name: 'Tapestry Wand', crafted: true, note: 'add one Tapestry' }
+};
+
+// Which item adds which allele. Tapestry has two, and the Blooming Herb is the
+// one named because the Wizard stocks it and the wand is crafted out of it.
+const RECIPE_ALLELE_ITEM = { Cr: 'creamWand', Tp: 'bloomingHerb' };
+
+// A coat as the pair sitting at each locus, read off the same pools the Scroll
+// Generator rolls from. A locus the coat never mentions is a plain nn.
+// RECIPE_COAT_GENES further down holds the same coats as plain token lists;
+// comparing two coats slot by slot wants them split by locus instead.
+const RECIPE_COAT_LOCUS_GENES = (function () {
+    const out = {};
+    RECIPE_TIER_ORDER.forEach((tier) => {
+        ((RARITY_GENES[tier] || {}).coatColors || []).forEach((row) => {
+            const name = resolveTraits(row.genes.join(' ')).coatColor;
+            if (!name || (name in out)) return;
+            const loci = {};
+            row.genes.forEach((token) => {
+                const locus = recipeLocusOfToken(token);
+                if (locus) loci[locus] = getGeneAlleles(token).slice().sort();
+            });
+            out[name] = loci;
+        });
+    });
+    return out;
+})();
+
+// The loci that make a coat are already worked out above for Bitter Seeds, as
+// a set. Comparing two coats wants them in a fixed order, so take that list.
+const RECIPE_COAT_LOCUS_LIST = Object.keys(RECIPE_COAT_LOCI);
+
+// What it would take to turn one coat into another with update items, or null
+// when no run of them can do it. Adding an allele to a full locus replaces one
+// that is already there, which is what makes Gold Pearl (prlprl) into Ochre
+// Pearl (Tpprl) for a single herb instead of needing a slot cleared first.
+function recipeCoatSteps(fromCoat, toCoat) {
+    const from = RECIPE_COAT_LOCUS_GENES[fromCoat];
+    const to = RECIPE_COAT_LOCUS_GENES[toCoat];
+    if (!from || !to) return null;
+    const pairAt = (c, l) => (c[l] || ['n', 'n']).slice();
+    const steps = [];
+
+    // The base is one herb however many of E and A move, since the herb changes
+    // the base colour rather than a single allele.
+    const baseLoci = RECIPE_COAT_LOCUS_LIST.filter(l => l === 'e' || l === 'a');
+    if (baseLoci.some(l => pairAt(from, l).join(' ') !== pairAt(to, l).join(' '))) {
+        steps.push({ item: RECIPE_UPDATE_ITEMS.redHerb, allele: null, label: 'the base coat' });
+    }
+
+    let stuck = false;
+    RECIPE_COAT_LOCUS_LIST.filter(l => baseLoci.indexOf(l) === -1).forEach((locus) => {
+        const have = pairAt(from, locus);
+        pairAt(to, locus).forEach((allele) => {
+            const i = have.indexOf(allele);
+            if (i !== -1) { have.splice(i, 1); return; }
+            const key = RECIPE_ALLELE_ITEM[allele];
+            // No item adds this one, and nothing takes an allele back out, so
+            // this coat cannot be reached from that one at all.
+            if (!key) { stuck = true; return; }
+            steps.push({ item: RECIPE_UPDATE_ITEMS[key], allele: allele, label: recipeAlleleLabel(allele) });
+        });
+    });
+    return stuck ? null : steps;
+}
+
+// Every way to end up holding a given coat: the scroll that rolls it outright,
+// and any cheaper scroll that update items can finish off. Best first, where
+// best means a scroll you can actually buy, then fewest items, then cheapest.
+function recipeCoatRoutes(coat) {
+    const routes = [];
+    Object.keys(RECIPE_COAT_LOCUS_GENES).forEach((from) => {
+        const tier = RECIPE_COAT_TIER[from];
+        if (!tier) return;
+        const steps = (from === coat) ? [] : recipeCoatSteps(from, coat);
+        if (!steps || steps.length > RECIPE_UPDATE_LIMIT) return;
+        const price = RECIPE_SCROLL_PRICE[tier];
+        routes.push({
+            coat: from,
+            tier: tier,
+            scroll: 'Custom Scroll: ' + RECIPE_TIER_LABEL[tier],
+            steps: steps,
+            scrollCoin: price || 0,
+            scrollSold: typeof price === 'number'
+        });
+    });
+    routes.sort((a, b) =>
+        (b.scrollSold - a.scrollSold) ||
+        (a.steps.length - b.steps.length) ||
+        (a.scrollCoin - b.scrollCoin));
+    return routes;
+}
+
 // How many potions one trait costs, and of which kind.
 function recipeScrollPotion(name, tier) {
     const kind = RECIPE_TRAIT_KIND[name];
@@ -6147,7 +6269,7 @@ function recipeScrollPotion(name, tier) {
 // Returns null when a pair can already make the target, because then there is
 // nothing to suggest.
 function computeRecipeScroll(recipe, stable) {
-    if (!recipe || recipe.blocked || (stable && stable.pairs && stable.pairs.length)) return null;
+    if (!recipe || recipe.blocked) return null;
     const resolved = resolveTraits(recipe.target || '');
     if (resolved.lethal || !resolved.coatColor) return null;
 
@@ -6158,10 +6280,26 @@ function computeRecipeScroll(recipe, stable) {
     // Price every trait as a Scroll Add-On, since that is how they go on.
     traits.forEach((t) => { t.potion = recipeScrollPotion(t.name, t.tier); });
 
-    // The scroll's rarity is set by the coat. It also carries one trait for
-    // nothing, so spend that on whichever would otherwise cost the most.
+    // The scroll to actually buy. Often the one that rolls the coat outright,
+    // but above Rare there is nothing to buy, and then a cheaper scroll
+    // finished with update items is the only route there is.
+    const routes = coatTier ? recipeCoatRoutes(coat) : [];
+    const route = routes.length ? routes[0] : null;
+    const buyTier = route ? route.tier : coatTier;
+    const upgrade = (route && route.steps.length && route.scrollSold) ? route : null;
+
+    // The scroll is normally the fallback for a target no pair can reach. The
+    // one exception is a coat above Rare that can be built out of a scroll you
+    // can buy, which is worth saying even when a pairing exists: the pairings
+    // for those run to nine or ten roots at under two percent a roll, and
+    // three thousand coin and two items is a real alternative to that.
+    const bred = !!(stable && stable.pairs && stable.pairs.length);
+    if (bred && !upgrade) return null;
+
+    // The free trait comes off the scroll you buy, so dropping a tier to
+    // upgrade the coat drops what the free trait can cover with it.
     const rank = t => (t ? RECIPE_TIER_ORDER.indexOf(t) : -1);
-    const withinScroll = traits.filter(t => t.tier && rank(t.tier) <= rank(coatTier));
+    const withinScroll = traits.filter(t => t.tier && rank(t.tier) <= rank(buyTier));
     withinScroll.sort((a, b) => (b.potion ? b.potion.coin : 0) - (a.potion ? a.potion.coin : 0));
     const covered = withinScroll.length ? withinScroll[0] : null;
     const remaining = traits.filter(t => t !== covered);
@@ -6170,7 +6308,7 @@ function computeRecipeScroll(recipe, stable) {
     const anomalyUnit = recipeItemCost(RECIPE_SCROLL_ADDONS.anomaly);
     const traitCoin = remaining.reduce((n, t) => n + (t.potion ? t.potion.coin : 0), 0);
     const anomalyCoin = anomalies.length * anomalyUnit.coin;
-    const scrollCoin = RECIPE_SCROLL_PRICE[coatTier] || 0;
+    const scrollCoin = RECIPE_SCROLL_PRICE[buyTier] || 0;
 
     // Anything whose figure is a resale stand-in rather than a shelf price, so
     // the total can admit which parts of it are guesses.
@@ -6182,7 +6320,21 @@ function computeRecipeScroll(recipe, stable) {
     return {
         coat: coat,
         coatTier: coatTier,
-        scroll: coatTier ? 'Custom Scroll: ' + RECIPE_TIER_LABEL[coatTier] : null,
+        scroll: buyTier ? 'Custom Scroll: ' + RECIPE_TIER_LABEL[buyTier] : null,
+        buyTier: buyTier,
+        // The route only counts as an upgrade when it buys a scroll you can
+        // actually get and finishes it off. The coat's own scroll is always in
+        // the list, with no steps, even at a rarity nobody sells.
+        route: route,
+        upgrade: upgrade,
+        // Whether a pairing exists too, so the card can offer itself as the
+        // alternative it is rather than claiming nothing else can do the job.
+        bred: bred,
+        // Above Rare with nothing that reaches it: worth saying out loud, since
+        // the alternative is a page that quietly offers a scroll nobody sells.
+        strandedTier: ((!route || !route.scrollSold) && coatTier && !RECIPE_SCROLL_PRICE[coatTier])
+            ? coatTier : null,
+        updateLimit: RECIPE_UPDATE_LIMIT,
         covered: covered,
         remaining: remaining,
         free: (recipe.free || []).slice(),
@@ -6218,8 +6370,29 @@ function recipeScrollHtml(scroll) {
         return `<strong>${esc(t.name)}</strong>, ${many}${esc(t.potion.item.name)} <span class="recipe-coin">${esc(tag)}</span>`;
     };
 
+    // Several of the same item read as one line with a count, the way the
+    // potions do, rather than the same wand twice in a row.
+    const stepLines = (steps) => {
+        const seen = [];
+        steps.forEach((s) => {
+            const at = seen.find(x => x.item.name === s.item.name && x.label === s.label);
+            if (at) at.count++; else seen.push({ item: s.item, label: s.label, allele: s.allele, count: 1 });
+        });
+        return seen.map((s) => {
+            const many = s.count > 1 ? s.count + ' x ' : '';
+            const does = s.allele ? `adds <strong>${esc(s.label)}</strong>` : `changes ${esc(s.label)}`;
+            return `<li>${many}${esc(s.item.name)}, which ${does} <span class="recipe-coin">${esc(recipeItemTag(s.item))}</span></li>`;
+        });
+    };
+
     const lines = [];
-    lines.push(`<li>The scroll rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
+    const up = scroll.upgrade;
+    if (up) {
+        lines.push(`<li>The scroll rolls <strong>${esc(up.coat)}</strong>, a ${esc(tierName(up.tier))} coat, and lets you pick the temperament.</li>`);
+        stepLines(up.steps).forEach(l => lines.push(l));
+    } else {
+        lines.push(`<li>The scroll rolls <strong>${esc(scroll.coat)}</strong>, a ${esc(tierName(scroll.coatTier))} coat, and lets you pick the temperament.</li>`);
+    }
     if (scroll.covered) {
         const savedTag = (scroll.covered.potion && scroll.covered.potion.sold)
             ? 'saving ' + scroll.covered.potion.coin + ' coin'
@@ -6234,26 +6407,45 @@ function recipeScrollHtml(scroll) {
         lines.push(`<li>${scroll.free.map(f => `<strong>${esc(f)}</strong>`).join(', ')}, free for anyone to add</li>`);
     }
 
+    const itemTail = up
+        ? `, plus ${up.steps.length === 1 ? 'the item' : 'the items'} for the coat`
+        : '';
     const total = scroll.scrollSold
-        ? `<p class="recipe-plan-total"><strong>${scroll.totalCoin} coin</strong> all in: ${scroll.scrollCoin} for the scroll${scroll.addOnCoin ? ` and ${scroll.addOnCoin} in potions` : ', which covers the whole courser'}.</p>`
+        ? `<p class="recipe-plan-total"><strong>${scroll.totalCoin} coin</strong> all in: ${scroll.scrollCoin} for the scroll${scroll.addOnCoin ? ` and ${scroll.addOnCoin} in potions` : (up ? '' : ', which covers the whole courser')}${itemTail}.</p>`
         : (scroll.addOnCoin
             ? `<p class="recipe-plan-total"><strong>${scroll.addOnCoin} coin</strong> in potions, plus the scroll, which the Wizard does not stock at this rarity.</p>`
-            : '<p class="recipe-plan-total">The scroll covers the whole courser on its own.</p>');
+            : '<p class="recipe-plan-total">The scroll covers the whole courser on its own, though the Wizard does not stock one at this rarity.</p>');
     const warn = scroll.tooManyAnomalies
         ? `<p class="recipe-stable-blurb">A scroll takes at most ${scroll.anomalyLimit} Anomaly Potions and this wants ${scroll.anomalies.length}, so one of them has to come from somewhere else.</p>`
         : '';
     const guess = scroll.estimated.length
         ? `<p class="recipe-stable-blurb">${scroll.estimated.map(n => `<strong>${esc(n)}</strong>`).join(' and ')} cannot be bought, so ${scroll.estimated.length === 1 ? 'that one has' : 'those have'} to come out of gameplay and ${scroll.estimated.length === 1 ? 'is' : 'are'} not in the figure above.</p>`
         : '';
-    const scales = '';
     const gap = scroll.unpriced.length
         ? `<p class="recipe-stable-blurb">No Scroll Add-On covers ${scroll.unpriced.map(n => `<strong>${esc(n)}</strong>`).join(', ')}, so that would have to go on after the courser exists.</p>`
         : '';
 
-    return `<div class="recipe-stable"><h3 class="recipe-head">Make it with a scroll</h3>
-        <p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> and the potions listed below.</p>
+    // Why a cheaper scroll is on offer than the coat's own rarity, and what the
+    // three-item cap leaves room for.
+    const upgrade = up
+        ? `<p class="recipe-stable-blurb">No scroll above Rare is sold, so <strong>${esc(scroll.coat)}</strong> is built instead: ${up.steps.length === 1 ? 'one Genotype Update item' : up.steps.length + ' Genotype Update items'} on a ${esc(tierName(up.tier))} scroll, out of the ${scroll.updateLimit} a geno takes.</p>`
+        : '';
+    // The twenty-one that nothing reaches. Saying which gene is the problem is
+    // the difference between "no" and "no, and here is why".
+    const stranded = scroll.strandedTier
+        ? `<p class="recipe-stable-blurb">No scroll above Rare is sold, and no Genotype Update item adds Pearl, Champagne or Ether, so <strong>${esc(scroll.coat)}</strong> cannot be built up to either. Only Cream and Tapestry can be added.</p>`
+        : '';
+
+    const blurb = scroll.bred
+        ? `<p class="recipe-stable-blurb">A pairing above can do it. No scroll at this rarity is sold, but a <strong>${esc(scroll.scroll)}</strong> rolling <strong>${esc(up.coat)}</strong> plus the items below gets there too.</p>`
+        : (up
+            ? `<p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> rolling <strong>${esc(up.coat)}</strong>, then finish the coat with the items below.</p>`
+            : `<p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> and the potions listed below.</p>`);
+
+    return `<div class="recipe-stable"><h3 class="recipe-head">${scroll.bred ? 'Or make it with a scroll' : 'Make it with a scroll'}</h3>
+        ${blurb}
         ${total}
-        <ul class="recipe-near-list">${lines.join('')}</ul>${warn}${guess}${gap}${scales}</div>`;
+        <ul class="recipe-near-list">${lines.join('')}</ul>${upgrade}${stranded}${warn}${guess}${gap}</div>`;
 }
 
 function computeRecipeStable(recipe, collection) {

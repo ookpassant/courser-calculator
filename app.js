@@ -66,6 +66,13 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
   {
+    "date": "29 Oct 2026",
+    "items": [
+      "Recipe can now build coats above Rare instead of only naming a scroll that is not for sale. The Wizard stocks no scroll above Rare, but 30 of those coats are reachable from one you can buy plus Genotype Update items, three per geno: Ochre Pearl from a Rare Gold Pearl scroll and one Blooming Herb, Cold Ash Ether from a Rare Cold Ether scroll and two Cream Wands. Recipe names the scroll, the items and the item slots left over, and offers the route even when a breeding pair exists.",
+      "Coats needing Pearl alongside Champagne or Ether cannot be built, because no item adds those genes. Recipe now says so instead of pointing at an unsold scroll."
+    ]
+  },
+  {
     "date": "21 Oct 2026",
     "items": [
       "Scroll Generator now supports extra markings, modifiers and up to two anomalies. Choose their rarities to see the required potions and available shop prices."
