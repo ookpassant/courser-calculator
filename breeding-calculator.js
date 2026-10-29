@@ -5523,8 +5523,8 @@ function showRecipe() {
             <li>Neither temperament nor variant lives in a genotype, so nothing above plans for them. If you want either pinned, that is what those two items are for.</li>
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
-            <li>Scrolls stop at Rare in the shop. A higher coat can often be <strong>built</strong> instead: buy the cheaper scroll and add <strong>Genotype Update items</strong>, three to a geno. Only Cream and Tapestry can be added, so Pearl alongside Champagne or Ether stays out of reach.</li>
-            <li>A <strong>wand</strong> adds Cream or Tapestry to any geno, so a pairing with no Cream between the parents can still raise a Cream foal. Herbs cannot: on a foal they are held to what the parents could have given, which is what a root already does. Pairings needing a wand are listed after the ones that do not.</li>
+            <li>Scrolls stop at Rare in the shop. Higher coats can be <strong>built</strong> instead: buy a cheaper scroll and add <strong>Genotype Update items</strong>, three per geno. Only Cream and Tapestry can be added.</li>
+            <li>A <strong>wand</strong> adds Cream or Tapestry to any foal, whatever the parents carry. Herbs on a foal are limited to what the parents could have given. Pairings needing a wand are listed last.</li>
             <li>Prices are shown only for items sold by the Wizard. Gameplay items, including roots, are listed by rarity.</li>
         </ul>
     </details>`;
@@ -5607,7 +5607,7 @@ function showRecipe() {
                 ? `${say(plain)} can breed it outright, and ${wanded} more with a wand.`
                 : `No pairing can breed it outright, but ${say(wanded)} can with a wand.`);
         const wandNote = wanded
-            ? ' A wand adds Cream or Tapestry to the foal afterwards whatever the parents carry, and those pairings come last.'
+            ? ' Pairings needing a wand are listed last.'
             : '';
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
             <p class="recipe-stable-blurb">${count} ${data.coatOnly
@@ -5711,7 +5711,7 @@ const RECIPE_ITEM_GROUPS = [
       word: n => n + ' to force' },
     { mode: 'block', label: 'Block', lead: 'keep these out of the foal',
       word: n => n + ' to block' },
-    { mode: 'wand', label: 'Wand', lead: 'added to the foal afterwards, whatever the parents carry',
+    { mode: 'wand', label: 'Wand', lead: 'add these to the foal afterwards',
       word: n => n + (n === 1 ? ' wand' : ' wands') }
 ];
 
@@ -6433,7 +6433,7 @@ function recipeScrollHtml(scroll) {
         return seen.map((s) => {
             const many = s.count > 1 ? s.count + ' x ' : '';
             const does = s.allele ? `adds <strong>${esc(s.label)}</strong>` : `changes ${esc(s.label)}`;
-            return `<li>${many}${esc(s.item.name)}, which ${does} <span class="recipe-coin">${esc(recipeItemTag(s.item))}</span></li>`;
+            return `<li>${many}${esc(s.item.name)}, ${does} <span class="recipe-coin">${esc(recipeItemTag(s.item))}</span></li>`;
         });
     };
 
@@ -6466,7 +6466,7 @@ function recipeScrollHtml(scroll) {
         ? `<p class="recipe-plan-total"><strong>${scroll.totalCoin} coin</strong> all in: ${scroll.scrollCoin} for the scroll${scroll.addOnCoin ? ` and ${scroll.addOnCoin} in potions` : (up ? '' : ', which covers the whole courser')}${itemTail}.</p>`
         : (scroll.addOnCoin
             ? `<p class="recipe-plan-total"><strong>${scroll.addOnCoin} coin</strong> in potions, plus the scroll, which the Wizard does not stock at this rarity.</p>`
-            : '<p class="recipe-plan-total">The scroll covers the whole courser on its own, though the Wizard does not stock one at this rarity.</p>');
+            : '<p class="recipe-plan-total">The scroll covers the whole courser, but is not sold at this rarity.</p>');
     const warn = scroll.tooManyAnomalies
         ? `<p class="recipe-stable-blurb">A scroll takes at most ${scroll.anomalyLimit} Anomaly Potions and this wants ${scroll.anomalies.length}, so one of them has to come from somewhere else.</p>`
         : '';
@@ -6480,18 +6480,18 @@ function recipeScrollHtml(scroll) {
     // Why a cheaper scroll is on offer than the coat's own rarity, and what the
     // three-item cap leaves room for.
     const upgrade = up
-        ? `<p class="recipe-stable-blurb">No scroll above Rare is sold, so <strong>${esc(scroll.coat)}</strong> is built instead: ${up.steps.length === 1 ? 'one Genotype Update item' : up.steps.length + ' Genotype Update items'} on a ${esc(tierName(up.tier))} scroll, out of the ${scroll.updateLimit} a geno takes.</p>`
+        ? `<p class="recipe-stable-blurb">No scroll above Rare is sold. Building <strong>${esc(scroll.coat)}</strong> uses ${up.steps.length} of the ${scroll.updateLimit} Genotype Update items a geno allows.</p>`
         : '';
     // The twenty-one that nothing reaches. Saying which gene is the problem is
     // the difference between "no" and "no, and here is why".
     const stranded = scroll.strandedTier
-        ? `<p class="recipe-stable-blurb">No scroll above Rare is sold, and no Genotype Update item adds Pearl, Champagne or Ether, so <strong>${esc(scroll.coat)}</strong> cannot be built up to either. Only Cream and Tapestry can be added.</p>`
+        ? `<p class="recipe-stable-blurb">No scroll above Rare is sold, and no item adds Pearl, Champagne or Ether. Only Cream and Tapestry can be added, so <strong>${esc(scroll.coat)}</strong> cannot be built.</p>`
         : '';
 
     const blurb = scroll.bred
-        ? `<p class="recipe-stable-blurb">A pairing above can do it. No scroll at this rarity is sold, but a <strong>${esc(scroll.scroll)}</strong> rolling <strong>${esc(up.coat)}</strong> plus the items below gets there too.</p>`
+        ? `<p class="recipe-stable-blurb">A pairing above can also do it. No scroll is sold at this rarity, so create it with a <strong>${esc(scroll.scroll)}</strong> rolling <strong>${esc(up.coat)}</strong> and the items below.</p>`
         : (up
-            ? `<p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> rolling <strong>${esc(up.coat)}</strong>, then finish the coat with the items below.</p>`
+            ? `<p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> rolling <strong>${esc(up.coat)}</strong> and the items below.</p>`
             : `<p class="recipe-stable-blurb">No available pair can breed this target. Create it with a <strong>${esc(scroll.scroll)}</strong> and the potions listed below.</p>`);
 
     return `<div class="recipe-stable"><h3 class="recipe-head">${scroll.bred ? 'Or make it with a scroll' : 'Make it with a scroll'}</h3>

@@ -195,7 +195,7 @@ ok('with no pair, the stranded coat still speaks',
 
 let card = A.recipeScrollHtml(withPairs('ee AA CrCr erer'));
 ok('the card does not claim no pair can breed it', !/No available pair can breed/.test(card));
-ok('it offers itself as the alternative', /A pairing above can do it/.test(card));
+ok('it offers itself as the alternative', /A pairing above can also do it/.test(card));
 ok('and the heading says so', /Or make it with a scroll/.test(card));
 card = A.recipeScrollHtml(scrollFor('ee AA CrCr erer'));
 ok('with no pair it reads as the only route', /No available pair can breed/.test(card));
@@ -207,16 +207,15 @@ ok('the card names the coat the scroll actually rolls', /Cold Ether/.test(html))
 ok('and names the item', /Cream Wand/.test(html));
 ok('and counts it rather than listing it twice', /2 x Cream Wand/.test(html));
 ok('and explains why a cheaper scroll is on offer', /No scroll above Rare is sold/.test(html));
-ok('and says how many item slots are left', /out of the 3 a geno takes/.test(html));
+ok('and says how many item slots are left', /uses 2 of the 3 Genotype Update items a geno allows/.test(html));
 ok('and does not claim the Wizard sells a Legendary scroll',
     !/does not stock at this rarity/.test(html));
 
 html = A.recipeScrollHtml(scrollFor('ee AA Tpprl erer'));
 ok('a stranded coat says which genes are the problem',
-    /no Genotype Update item adds Pearl, Champagne or Ether/.test(html));
+    /no item adds Pearl, Champagne or Ether/.test(html));
 ok('and does not read as though the scroll were on the shelf',
-    !/covers the whole courser on its own\./.test(html) &&
-    /does not stock one at this rarity/.test(html));
+    /but is not sold at this rarity/.test(html));
 ok('and does not offer a route it cannot do', !/Cream Wand/.test(html));
 
 // --- herbs versus wands on a foal ----------------------------------------------
