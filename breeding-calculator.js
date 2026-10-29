@@ -5524,6 +5524,7 @@ function showRecipe() {
             <li>A breeding roll gives <strong>two foal options</strong> and only one has to match, which is why the headline odds are better than the per option odds. A <strong>Bunch of Grapes</strong> adds a third.</li>
             <li>Roots choose one allele from one parent and force it to pass on every option, split by rarity: <strong>Cave Root</strong> for Common through Rare, <strong>Strong Root</strong> for Epic and Legendary. Both can also force an allele <strong>not</strong> to pass, which is how you use a parent carrying something extra without it leaking into the foal.</li>
             <li>Scrolls stop at Rare in the shop. A higher coat can often be <strong>built</strong> instead: buy the cheaper scroll and add <strong>Genotype Update items</strong>, three to a geno. Only Cream and Tapestry can be added, so Pearl alongside Champagne or Ether stays out of reach.</li>
+            <li>A <strong>wand</strong> adds Cream or Tapestry to any geno, so a pairing with no Cream between the parents can still raise a Cream foal. Herbs cannot: on a foal they are held to what the parents could have given, which is what a root already does. Pairings needing a wand are listed after the ones that do not.</li>
             <li>Prices are shown only for items sold by the Wizard. Gameplay items, including roots, are listed by rarity.</li>
         </ul>
     </details>`;
@@ -5594,13 +5595,24 @@ function showRecipe() {
                 <ul class="recipe-fit-list">${rest.map((p, i) => row(p, i + RECIPE_PAIRS_SHOWN)).join('')}</ul>
                 ${trimmed ? `<p class="recipe-more-note">${trimmed} more beyond these, not listed.</p>` : ''}</details>`
             : '';
-        const count = total === 1
-            ? 'One pairing can do it.'
-            : `${total} pairings can do it` + (rest.length ? `, ${RECIPE_PAIRS_SHOWN} of them below.` : '.');
+        // A pairing that needs a wand is not the same answer as one that does
+        // not, so the count says both rather than adding them together.
+        const plain = typeof stable.pairPlain === 'number' ? stable.pairPlain : total;
+        const wanded = total - plain;
+        const say = n => n + (n === 1 ? ' pairing' : ' pairings');
+        const count = !wanded
+            ? (total === 1 ? 'One pairing can do it.'
+                : `${total} pairings can do it` + (rest.length ? `, ${RECIPE_PAIRS_SHOWN} of them below.` : '.'))
+            : (plain
+                ? `${say(plain)} can breed it outright, and ${wanded} more with a wand.`
+                : `No pairing can breed it outright, but ${say(wanded)} can with a wand.`);
+        const wandNote = wanded
+            ? ' A wand adds Cream or Tapestry to the foal afterwards whatever the parents carry, and those pairings come last.'
+            : '';
         stableBlock = `<div class="recipe-stable"><h3 class="recipe-head">Who can make it</h3>
             <p class="recipe-stable-blurb">${count} ${data.coatOnly
                 ? `From ${pool}, fewest items first. Nothing is spent keeping their other genes out, so each one says what else it might bring.`
-                : `From ${pool}, fewest items first. A root can force an allele a horse carries but never create one, so everything here is a pairing you could really field.`}</p>
+                : `From ${pool}, fewest items first. A root can force an allele a horse carries but never create one, so everything here is a pairing you could really field.`}${wandNote}</p>
             <ul class="recipe-fit-list">${top}</ul>${more}</div>`;
     } else if (stable.nearMisses.length) {
         const rows = stable.nearMisses.map(m =>
@@ -5698,7 +5710,9 @@ const RECIPE_ITEM_GROUPS = [
     { mode: 'force', label: 'Force', lead: 'make these pass to the foal',
       word: n => n + ' to force' },
     { mode: 'block', label: 'Block', lead: 'keep these out of the foal',
-      word: n => n + ' to block' }
+      word: n => n + ' to block' },
+    { mode: 'wand', label: 'Wand', lead: 'added to the foal afterwards, whatever the parents carry',
+      word: n => n + (n === 1 ? ' wand' : ' wands') }
 ];
 
 function recipeItemsHtml(items, open) {
@@ -5984,7 +5998,7 @@ function recipeLocusCost(token, want) {
 // that can only ever hand down E must still be free to hand down 'a' next door.
 function recipePairEvaluate(recipe, h1, h2) {
     const m1 = recipeHorseLoci(h1.genotype), m2 = recipeHorseLoci(h2.genotype);
-    const res = { feasible: true, items: [], coin: 0, chance: 1, missing: [] };
+    const res = { feasible: true, items: [], coin: 0, chance: 1, missing: [], wands: 0 };
 
     const wanted = {}, written = {};
     recipe.loci.forEach((e) => {
@@ -6005,16 +6019,41 @@ function recipePairEvaluate(recipe, h1, h2) {
         // Any pair that gives the same horse will do, in either orientation.
         // Take whichever comes out cheapest, then likeliest.
         let pick = null;
+        // A wand fills one slot of the foal's pair outright, so the parent that
+        // would have supplied it is asked for nothing. Only Cream and Tapestry
+        // have a wand, and only this locus holds them, so at most two.
+        const WANDED = [[0, 0], [1, 0], [0, 1], [1, 1]];
         wanted[locus].forEach(([x, y]) => {
             [[x, y], [y, x]].forEach(([u, v]) => {
-                const one = recipeLocusCost(t1, u), two = recipeLocusCost(t2, v);
-                if (!one.ok || !two.ok) return;
-                const cand = {
-                    coin: one.coin + two.coin,
-                    chance: one.chance * two.chance,
-                    items: [one.item, two.item].filter(Boolean)
-                };
-                if (!pick || cand.coin < pick.coin || (cand.coin === pick.coin && cand.chance > pick.chance)) pick = cand;
+                WANDED.forEach(([wu, wv]) => {
+                    if (wu && !RECIPE_ALLELE_WAND[u]) return;
+                    if (wv && !RECIPE_ALLELE_WAND[v]) return;
+                    const free = { ok: true, chance: 1, coin: 0, item: null };
+                    const one = wu ? free : recipeLocusCost(t1, u);
+                    const two = wv ? free : recipeLocusCost(t2, v);
+                    if (!one.ok || !two.ok) return;
+                    const wands = [];
+                    [[wu, u], [wv, v]].forEach(([on, allele]) => {
+                        if (!on) return;
+                        wands.push({
+                            item: RECIPE_UPDATE_ITEMS[RECIPE_ALLELE_WAND[allele]],
+                            mode: 'wand', allele: allele, trait: recipeAlleleLabel(allele)
+                        });
+                    });
+                    const cand = {
+                        wands: wands.length,
+                        coin: one.coin + two.coin,
+                        chance: one.chance * two.chance,
+                        items: [one.item, two.item].filter(Boolean).concat(wands)
+                    };
+                    // Wands are a rescue, not a shortcut. A pairing that works
+                    // on roots alone always beats one that needs a wand, which
+                    // also stops an unpriced wand reading as cheaper than a root.
+                    const better = !pick || cand.wands < pick.wands ||
+                        (cand.wands === pick.wands && (cand.coin < pick.coin ||
+                            (cand.coin === pick.coin && cand.chance > pick.chance)));
+                    if (better) pick = cand;
+                });
             });
         });
         if (!pick) {
@@ -6026,8 +6065,13 @@ function recipePairEvaluate(recipe, h1, h2) {
         }
         res.coin += pick.coin;
         res.chance *= pick.chance;
+        res.wands += pick.wands;
         pick.items.forEach(it => res.items.push(it));
     });
+    // Three Genotype Update items to a geno, and a wand is one of those. Only
+    // the one locus has wands at all, so two is the most this can ever ask for,
+    // but the cap is checked rather than assumed in case the pools move.
+    if (res.wands > RECIPE_UPDATE_LIMIT) res.feasible = false;
     return res;
 }
 
@@ -6160,9 +6204,17 @@ const RECIPE_UPDATE_ITEMS = {
     tapestryWand: { name: 'Tapestry Wand', crafted: true, note: 'add one Tapestry' }
 };
 
-// Which item adds which allele. Tapestry has two, and the Blooming Herb is the
-// one named because the Wizard stocks it and the wand is crafted out of it.
+// Which item adds which allele to a geno that has no parents to answer to, such
+// as a fresh scroll creation. Tapestry has two and the Blooming Herb is the one
+// named, because the Wizard stocks it and the wand is crafted out of it.
 const RECIPE_ALLELE_ITEM = { Cr: 'creamWand', Tp: 'bloomingHerb' };
+
+// On a foal it has to be a wand. Herbs are held to what the parents could have
+// given, so a herb can only ever pick between alleles the breeding might have
+// produced anyway, which is what a root already does. A wand is not: it adds
+// Cream or Tapestry to any geno at all, which is how a pair that cannot throw
+// Cream between them still ends up with a Cream foal.
+const RECIPE_ALLELE_WAND = { Cr: 'creamWand', Tp: 'tapestryWand' };
 
 // A coat as the pair sitting at each locus, read off the same pools the Scroll
 // Generator rolls from. A locus the coat never mentions is a plain nn.
@@ -6489,7 +6541,7 @@ function computeRecipeStable(recipe, collection) {
             const fruitCoin = fruit.reduce((n, f) => n + f.item.weight, 0);
             out.pairs.push({
                 a: collection[i], b: collection[j], evalA: asA[i], evalB: asB[j],
-                coin: ev.coin + fruitCoin, chance: ev.chance,
+                coin: ev.coin + fruitCoin, chance: ev.chance, wands: ev.wands,
                 items: fruit.concat(ev.items),
                 key: [collection[i].id || collection[i].name, collection[j].id || collection[j].name].join('|')
             });
@@ -6504,7 +6556,15 @@ function computeRecipeStable(recipe, collection) {
     // match", so a list ordered by something else reads as unsorted, and the
     // plainly best pairing turning up third makes the whole thing look broken.
     // Rank on what the reader can see; coin stays as the tiebreak.
+    //
+    // Every pairing that breeds the target unaided comes before every pairing
+    // that needs a wand, whatever the item counts say. A wand pairing can look
+    // cheaper, so ranking them together let them crowd real breeders past the
+    // cap and out of the list entirely, which is the same way Harlan x Calen
+    // went missing the first time. Wands are a way to rescue a pairing that
+    // cannot work, not a reason to hide one that can.
     out.pairs.sort((x, y) =>
+        ((x.wands ? 1 : 0) - (y.wands ? 1 : 0)) ||
         (x.items.length - y.items.length) || (y.chance - x.chance) || (x.coin - y.coin));
 
     // Drop mirrored duplicates of the same two horses.
@@ -6521,6 +6581,9 @@ function computeRecipeStable(recipe, collection) {
     // that works gets read as a pair that cannot: Harlan x Calen really does
     // throw a Cold Ash Ether, it was just fourteenth. Ta Sasha.
     out.pairTotal = out.pairs.length;
+    // How many of those breed it outright, so the count can say both rather
+    // than folding a wand pairing in with the rest and calling it the same.
+    out.pairPlain = out.pairs.filter(p => !p.wands).length;
     out.pairs = out.pairs.slice(0, RECIPE_MAX_PAIRS);
 
     // Horses that would work but for one or two alleles they simply lack.

@@ -12,7 +12,7 @@ const { load, suite } = require('./harness');
 const A = load(['breeding-calculator.js'],
     '{ recipeCoatSteps, recipeCoatRoutes, computeRecipeScroll, recipeScrollHtml,' +
     '  RECIPE_COAT_LOCUS_GENES, RECIPE_COAT_TIER, RECIPE_COAT_LOCUS_LIST, RECIPE_UPDATE_ITEMS,' +
-    '  RECIPE_ALLELE_ITEM, RECIPE_UPDATE_LIMIT, RECIPE_SCROLL_PRICE, RECIPE_TIER_ORDER,' +
+    '  RECIPE_ALLELE_ITEM, RECIPE_ALLELE_WAND, RECIPE_UPDATE_LIMIT, RECIPE_SCROLL_PRICE, RECIPE_TIER_ORDER,' +
     '  resolveTraits, recipeItemTag, RARITY_GENES }');
 const t = suite('coat-upgrade');
 const ok = (l, c) => t.ok(l, c);
@@ -218,6 +218,40 @@ ok('and does not read as though the scroll were on the shelf',
     !/covers the whole courser on its own\./.test(html) &&
     /does not stock one at this rarity/.test(html));
 ok('and does not offer a route it cannot do', !/Cream Wand/.test(html));
+
+// --- herbs versus wands on a foal ----------------------------------------------
+// The distinction the whole foal side turns on. A herb used on a foal is held
+// to what the parents could have given, so it can only pick between outcomes
+// the breeding might have produced anyway, which is what a root already does.
+// A wand is not held to that, so it can put Cream on a foal of two parents that
+// have no Cream between them.
+ok('only Cream and Tapestry have a wand',
+    Object.keys(A.RECIPE_ALLELE_WAND).sort().join() === 'Cr,Tp');
+ok('and the Tapestry one is the wand, not the herb',
+    A.RECIPE_ALLELE_WAND.Tp === 'tapestryWand' &&
+    A.RECIPE_UPDATE_ITEMS[A.RECIPE_ALLELE_WAND.Tp].name === 'Tapestry Wand');
+// The scroll route has no parents to answer to, so there the herb is fine and
+// is preferred because the Wizard actually stocks it.
+ok('a scroll creation may use the herb instead',
+    A.RECIPE_ALLELE_ITEM.Tp === 'bloomingHerb');
+ok('and the two mappings differ only on Tapestry',
+    A.RECIPE_ALLELE_ITEM.Cr === A.RECIPE_ALLELE_WAND.Cr &&
+    A.RECIPE_ALLELE_ITEM.Tp !== A.RECIPE_ALLELE_WAND.Tp);
+
+const P = load(['group-horses.js', 'breeding-calculator.js'],
+    '{ GROUP_HORSES, recipePairEvaluate, recipeHorseLoci, getGeneAlleles }');
+const herd = P.GROUP_HORSES || [];
+const horse = n => herd.find(h => (h.name || '') === n);
+const creamOf = (n) => {
+    const h = horse(n);
+    const tok = h && P.recipeHorseLoci(h.genotype).prl;
+    return tok ? P.getGeneAlleles(tok) : ['n', 'n'];
+};
+ok('the roster loaded', herd.length === 44);
+// Tarot carries Tapestry and no Cream at all, which is what makes it the case
+// worth pinning: a Cream target from Tarot has to come off a wand.
+ok('Tarot carries no Cream', creamOf('Tarot').indexOf('Cr') === -1);
+ok('and Harlan carries one', creamOf('Harlan').filter(a => a === 'Cr').length === 1);
 
 // --- items are tagged honestly -------------------------------------------------
 ok('the Wizard\'s herbs say so, not "from gameplay"',

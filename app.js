@@ -68,6 +68,7 @@
   {
     "date": "29 Oct 2026",
     "items": [
+      "Recipe counts wands. A Cream or Tapestry Wand adds that gene to any foal, whatever the parents carry, so pairings that cannot breed the coat between them are now listed with the wand that finishes it. Herbs are not the same: used on a foal they are limited to what the parents could have given, so they do nothing a root cannot. Pairings needing no wand are listed first and are never pushed out by one that does.",
       "Recipe can now build coats above Rare instead of only naming a scroll that is not for sale. The Wizard stocks no scroll above Rare, but 30 of those coats are reachable from one you can buy plus Genotype Update items, three per geno: Ochre Pearl from a Rare Gold Pearl scroll and one Blooming Herb, Cold Ash Ether from a Rare Cold Ether scroll and two Cream Wands. Recipe names the scroll, the items and the item slots left over, and offers the route even when a breeding pair exists.",
       "Coats needing Pearl alongside Champagne or Ether cannot be built, because no item adds those genes. Recipe now says so instead of pointing at an unsold scroll."
     ]

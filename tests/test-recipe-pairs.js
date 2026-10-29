@@ -51,14 +51,26 @@ ok('but some pair still can', whole.pairs.length > 0);
         ok(label + ': the real total is reported', typeof st.pairTotal === 'number');
         ok(label + ': and is never less than what is kept', st.pairTotal >= st.pairs.length);
         ok(label + ': no more than the cap is kept', st.pairs.length <= A.RECIPE_MAX_PAIRS);
-        // Fewest items first, then best odds. The page shows both of those, so
-        // a list ordered by anything else reads as unsorted.
+        // Two sections: everything that breeds it unaided, then everything that
+        // needs a wand. Within each, fewest items first and then best odds. The
+        // page shows both of those, so a list ordered by anything else reads as
+        // unsorted, and a wand pairing mixed in among the rest reads as a
+        // pairing that works when it does not.
         for (let i = 1; i < st.pairs.length; i++) {
             const x = st.pairs[i - 1], y = st.pairs[i];
+            if (!x.wands && y.wands) continue;          // the boundary, by design
             ok(label + ': pair ' + i + ' is not ordered worse than the one before',
                 x.items.length < y.items.length ||
                 (x.items.length === y.items.length && x.chance >= y.chance - 1e-12));
         }
+        // No wand pairing may sit above one that needs no wand, because that is
+        // how a pairing that really works gets pushed past the cap and lost.
+        const firstWand = st.pairs.findIndex(p => p.wands);
+        ok(label + ': wand pairings never come before unaided ones',
+            firstWand === -1 || st.pairs.slice(firstWand).every(p => p.wands));
+        ok(label + ': the unaided count is reported',
+            st.pairPlain === st.pairs.filter(p => !p.wands).length ||
+            st.pairPlain >= A.RECIPE_MAX_PAIRS);
         // No pairing appears twice, in either orientation.
         const keys = st.pairs.map(p => [p.a.name, p.b.name].sort().join('|'));
         ok(label + ': no pairing is listed twice', new Set(keys).size === keys.length);
@@ -101,8 +113,30 @@ ok('swept ' + tested + ' legal pairings', tested > 500);
 ok('every pairing that breeds a ' + WANT + ' is listed' + (missed.length ? ': missing ' + missed.join(', ') : ''),
     missed.length === 0);
 
-// And the other way: nothing offered should be unable to do it.
-const bogus = coat.pairs.filter(p => trials(p.a.name, p.b.name, WANT) === 0).map(p => p.a.name + ' x ' + p.b.name);
-ok('and every pairing listed can really do it' + (bogus.length ? ': ' + bogus.join(', ') : ''), bogus.length === 0);
+// Every pairing that breeds it unaided must come before any that needs a wand,
+// so the sweep above can never be crowded out by one.
+const plain = coat.pairs.filter(p => !p.wands);
+ok('the unaided pairings are all at the top',
+    coat.pairs.slice(0, plain.length).every(p => !p.wands));
+ok('and there are some', plain.length > 0);
+
+// And the other way: nothing offered unaided should be unable to do it. A wand
+// pairing is exempt by definition, since the wand is what makes it work and
+// generateFoal knows nothing about items.
+const bogus = plain.filter(p => trials(p.a.name, p.b.name, WANT) === 0).map(p => p.a.name + ' x ' + p.b.name);
+ok('and every unaided pairing listed can really do it' + (bogus.length ? ': ' + bogus.join(', ') : ''), bogus.length === 0);
+
+// A wand pairing has to be one that genuinely cannot breed it on its own,
+// otherwise it belongs in the section above and is being needlessly charged
+// for an item.
+const needless = coat.pairs.filter(p => p.wands && trials(p.a.name, p.b.name, WANT) > 0)
+    .map(p => p.a.name + ' x ' + p.b.name);
+ok('and no pairing is charged a wand it does not need' + (needless.length ? ': ' + needless.join(', ') : ''),
+    needless.length === 0);
+// Only Cream and Tapestry have a wand, and both sit at one locus, so two is the
+// most any pairing can ever be asked for.
+ok('no pairing needs more than two wands', coat.pairs.every(p => (p.wands || 0) <= 2));
+ok('and every wand item is a wand', coat.pairs.every(p =>
+    p.items.filter(i => i.mode === 'wand').length === (p.wands || 0)));
 
 t.report();
