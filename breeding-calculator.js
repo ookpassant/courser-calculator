@@ -3996,27 +3996,33 @@ function generateChimeraPossibilities(foalGenotype, parent1Genotype, parent2Geno
         });
     });
 
-    // ── Leopard Complex — where Lp and patn combine to determine your horse's spot density ──
+    // ── Leopard Complex — Lp and patn sit at different loci but name one trait
+    // between them, so a pattern is only possible where some pair of alleles
+    // the parents can actually hand down produces it. Each locus used to be
+    // read on its own, which listed Snowflake and Varnish Roan whenever Lp was
+    // possible at all. Both need no patn whatsoever, so a parent carrying
+    // patnpatn hands one to every foal and rules both out. Reported by
+    // Weaselheart.
     const lpPattern = /^(nLp|LpLp)$/;
     const patnPattern = /^(npatn|patnpatn)$/;
     const lpGenotypes = possibleGenotypes(p1.genes, p2.genes, lpPattern);
     const patnGenotypes = possibleGenotypes(p1.genes, p2.genes, patnPattern);
 
-    const canMakeHetLp = lpGenotypes.has('nLp') || lpGenotypes.has('LpLp');
-    const canMakeHomLp = lpGenotypes.has('LpLp');
-    const canMakeHetPatn = patnGenotypes.has('npatn') || patnGenotypes.has('patnpatn');
-    const canMakeHomPatn = patnGenotypes.has('patnpatn');
-
-    if (canMakeHetLp) {
-        whiteMarkings.add('Snowflake');              // nLp, no patn
-        if (canMakeHetPatn) whiteMarkings.add('Blanket');   // nLp + npatn
-        if (canMakeHomPatn) whiteMarkings.add('Leopard');   // nLp + patnpatn
-    }
-    if (canMakeHomLp) {
-        whiteMarkings.add('Varnish Roan');           // LpLp, no patn
-        if (canMakeHetPatn) whiteMarkings.add('Snowcap');   // LpLp + npatn
-        if (canMakeHomPatn) whiteMarkings.add('Fewspot');   // LpLp + patnpatn
-    }
+    const plainTraits = resolveTraits('Ee Aa').allTraits;
+    lpGenotypes.forEach((lp) => {
+        patnGenotypes.forEach((patn) => {
+            // Ask the engine what that pair of pairs shows rather than
+            // restating the six-way table a second time here.
+            const geno = ['Ee Aa', lp === 'nn' ? '' : lp, patn === 'nn' ? '' : patn]
+                .filter(Boolean).join(' ');
+            resolveTraits(geno).allTraits
+                .filter(name => plainTraits.indexOf(name) === -1)
+                // patn with no Lp to switch it on is carried, not worn, so it
+                // belongs nowhere in a list of markings a foal could show.
+                .filter(name => name !== 'Carries Patn')
+                .forEach(name => whiteMarkings.add(name));
+        });
+    });
 
     // Collect anomalies from parents AND foal (excluding Chimera itself, that's the whole point)
     // Even spontaneous anomalies count — the chimera patch is basically a blank canvas of chaos
