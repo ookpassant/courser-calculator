@@ -70,7 +70,8 @@
     "items": [
       "Fixed Smart Search missing pairs for leopard patterns. Searching Snowflake or Varnish Roan returned nothing when either parent carried a patn gene, but a parent with one copy passes it only half the time, so those pairs can breed both. It also offered Blanket, Snowcap and Leopard for pairs that cannot produce them. Thanks to Cricri for reporting it.",
       "Fixed Smart Search offering pairs that cannot produce the trait. Damascus needs Dm from one parent and D from the other, but a parent carrying DmD passes only one of them, so pairs where a single horse held both were matched wrongly. Carrier searches had the same fault: two parents who both always pass a gene cannot produce a carrier of it.",
-      "Smart Search and the foal possibilities now use one calculation for every marking, modifier, carrier and dilution, so the two can no longer disagree. Searching a bare dilution such as pearl or ether now lists pairs that can produce a coat with it, rather than any pair with a single carrier."
+      "Smart Search and the foal possibilities now use one calculation for every marking, modifier, carrier and dilution, so the two can no longer disagree. Searching a bare dilution such as pearl or ether now lists pairs that can produce a coat with it, rather than any pair with a single carrier.",
+      "Fixed Recipe's coat-only mode treating dilutions as optional extras. Pairs that always pass Cream, Pearl, Tapestry, Champagne or Ether were offered for a plain base coat at no cost and ranked first, though no foal of theirs could have that coat. The same mode now accepts a carried recessive that leaves the coat unchanged, such as an Ether carrier for a Champagne coat, which it previously refused."
     ]
   },
   {

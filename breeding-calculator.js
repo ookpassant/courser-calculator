@@ -4863,14 +4863,21 @@ function recipeLocusSpellings(token) {
 // the other parent handing over er makes a different horse. Woad is the case
 // that needs this, written nTp but just as Woad as TpTp, while nothing else at
 // that address (TpCr, Tpprl) will do.
-function recipeAcceptablePairs(token, genes, index) {
-    const want = recipeLooks(genes);
+// On the coat alone, "the same horse" means the same coat: Cher is a Champagne
+// that carries Ether, and for a Weld Champagne that is the coat asked for.
+function recipeCoatLooks(genes) {
+    return resolveTraits(genes.join(' ')).coatColor || '';
+}
+
+function recipeAcceptablePairs(token, genes, index, coatOnly) {
+    const looks = coatOnly ? recipeCoatLooks : recipeLooks;
+    const want = looks(genes);
     const out = [];
     const seen = {};
     recipeLocusSpellings(token).forEach((spelling) => {
         const g = genes.slice();
         if (spelling === null) g.splice(index, 1); else g[index] = spelling;
-        if (recipeLooks(g) !== want) return;
+        if (looks(g) !== want) return;
         const pair = spelling === null ? ['n', 'n'] : getGeneAlleles(spelling);
         if (pair.length !== 2) return;
         const key = pair.slice().sort().join('/');
@@ -4881,7 +4888,7 @@ function recipeAcceptablePairs(token, genes, index) {
     return out.length ? out : [getGeneAlleles(token)];
 }
 
-function recipeForToken(token, genes, index) {
+function recipeForToken(token, genes, index, coatOnly) {
     const alleles = getGeneAlleles(token);
     if (alleles.length !== 2) return null;     // unknown token; flagged separately
 
@@ -4921,7 +4928,7 @@ function recipeForToken(token, genes, index) {
         a, b,
         // Every pair at this locus that gives the same horse, the written one
         // included. The pair matcher may satisfy the target with any of them.
-        accept: genes ? recipeAcceptablePairs(token, genes, index) : [alleles],
+        accept: genes ? recipeAcceptablePairs(token, genes, index, coatOnly) : [alleles],
         // Each parent hands down its side independently, so the pair's odds are
         // just the two multiplied.
         chance: a.chance * b.chance,
@@ -5035,7 +5042,7 @@ function computeRecipe(genoString, opts) {
     // left out.
     parsed.genes.forEach((token, index) => {
         if (!isKnownGeneToken(token)) return;
-        const entry = recipeForToken(token, parsed.genes, index);
+        const entry = recipeForToken(token, parsed.genes, index, coatOnly);
         if (!entry) return;
         result.loci.push(entry);
         result.geneChance *= entry.chance;
@@ -5660,8 +5667,34 @@ function recipeHorseLoci(genoString) {
     return out;
 }
 
+// The coat loci a foal can hold nothing at: the dilutions. The base loci are
+// coat loci too but are never empty, so they are left to the target.
+function recipeDilutionLoci() {
+    const base = [RECIPE_LOCUS_OF['E'], RECIPE_LOCUS_OF['A']];
+    return Object.keys(RECIPE_COAT_LOCI).filter(l => base.indexOf(l) === -1);
+}
+
+// On the coat alone, a dilution locus the target never mentioned may still
+// hold anything that leaves the coat as it is: a Black carrying Pearl is a
+// Black, a Smoky Black is not. These are the pairs at that locus which keep
+// the coat, nn included, worked out once per recipe.
+function recipeCoatSafePairs(recipe, locus) {
+    recipe._coatSafe = recipe._coatSafe || {};
+    if (recipe._coatSafe[locus]) return recipe._coatSafe[locus];
+    const base = parseGenotype(recipe.coatTarget || recipe.target || '').genes;
+    const want = recipeCoatLooks(base);
+    const out = [['n', 'n']];
+    (RECIPE_LOCUS_TOKENS[locus] || []).forEach((token) => {
+        if (recipeCoatLooks(base.concat([token])) !== want) return;
+        const pair = getGeneAlleles(token);
+        if (pair.length === 2) out.push(pair);
+    });
+    return (recipe._coatSafe[locus] = out);
+}
+
 // What one horse would cost to stand in a given role.
-function recipeEvaluateHorse(horse, roleReq, coatOnly) {
+function recipeEvaluateHorse(horse, roleReq, recipe) {
+    const coatOnly = !!(recipe && recipe.coatOnly);
     const mine = recipeHorseLoci(horse.genotype);
     const res = { horse, feasible: true, missing: [], items: [], coin: 0, chance: 1, blocks: 0, forces: 0 };
 
@@ -5670,6 +5703,14 @@ function recipeEvaluateHorse(horse, roleReq, coatOnly) {
     const loci = {};
     Object.keys(roleReq).forEach(l => { loci[l] = roleReq[l]; });
     if (!coatOnly) Object.keys(mine).forEach(l => { if (!(l in loci)) loci[l] = 'n'; });
+    // On the coat alone a dilution still has to leave the coat as it is. A
+    // side can pass anything some coat-safe pair contains; otherwise it has
+    // to pass nothing here. See recipePairEvaluate.
+    else recipeDilutionLoci().forEach((l) => {
+        if ((l in loci) || !(l in mine)) return;
+        const safe = new Set([].concat.apply([], recipeCoatSafePairs(recipe, l)));
+        if (!getGeneAlleles(mine[l]).every(a => safe.has(a))) loci[l] = 'n';
+    });
 
     Object.keys(loci).forEach((locus) => {
         const want = loci[locus];
@@ -5776,15 +5817,33 @@ function recipePairEvaluate(recipe, h1, h2) {
     });
     // Anything either horse carries that the target never mentioned has to be
     // kept out of the foal, so it counts as a locus wanting nothing. Unless the
-    // coat is all that was asked for, in which case the extras are welcome.
+    // coat is all that was asked for, in which case the extras are welcome,
+    // with one exception: a dilution is not an extra. Cream, Pearl, Tapestry,
+    // Champagne and Ether change the coat itself, so a parent who always
+    // passes one cannot throw a plain Black however little else is asked of
+    // it. Those loci stay wanted empty whenever the target says nothing there.
     if (!recipe.coatOnly) {
         [m1, m2].forEach(m => Object.keys(m).forEach(l => {
             if (!(l in wanted)) { wanted[l] = [['n', 'n']]; written[l] = ['n', 'n']; }
         }));
+    } else {
+        recipeDilutionLoci().forEach((l) => {
+            if (!(l in wanted) && (l in m1 || l in m2)) { wanted[l] = recipeCoatSafePairs(recipe, l); written[l] = ['n', 'n']; }
+        });
     }
 
     Object.keys(wanted).forEach((locus) => {
         const t1 = m1[locus], t2 = m2[locus];
+        // If every pair this pairing can produce here is an acceptable one,
+        // nothing has to be forced or blocked and the locus is free. Costing
+        // each acceptable spelling on its own cannot see that: a Black from
+        // nprl x plain comes out nn or nprl, both Black, yet each spelling
+        // alone looked like a root's worth of work.
+        const okKeys = new Set(wanted[locus].map(pr => pr.slice().sort().join('/')));
+        const sides = [t1, t2].map(t => t ? getGeneAlleles(t) : ['n']);
+        let allOk = true;
+        sides[0].forEach(x => sides[1].forEach(y => { if (!okKeys.has([x, y].sort().join('/'))) allOk = false; }));
+        if (allOk) return;
         // Any pair that gives the same horse will do, in either orientation.
         // Take whichever comes out cheapest, then likeliest.
         let pick = null;
@@ -6290,8 +6349,8 @@ function computeRecipeStable(recipe, collection) {
         if (e.p2) reqB[locus] = e.p2.allele;
     });
 
-    const asA = collection.map(h => recipeEvaluateHorse(h, reqA, recipe.coatOnly));
-    const asB = collection.map(h => recipeEvaluateHorse(h, reqB, recipe.coatOnly));
+    const asA = collection.map(h => recipeEvaluateHorse(h, reqA, recipe));
+    const asB = collection.map(h => recipeEvaluateHorse(h, reqB, recipe));
 
     // Parents still have to be two different horses with different temperaments.
     // Each pair is judged locus by locus, so the two sides are free to swap
