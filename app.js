@@ -66,6 +66,12 @@
   // Small homepage changelog. Add a new {date, items} entry at the top to update it.
   const CHANGELOG = [
   {
+    "date": "3 Nov 2026",
+    "items": [
+      "Fixed Smart Search missing pairs for leopard patterns. Searching Snowflake or Varnish Roan returned nothing when either parent carried a patn gene, but a parent with one copy passes it only half the time, so those pairs can breed both. It also offered Blanket, Snowcap and Leopard for pairs that cannot produce them. Smart Search and the foal possibilities now use the same calculation. Thanks to Cricri for reporting it."
+    ]
+  },
+  {
     "date": "30 Oct 2026",
     "items": [
       "Fixed foal possibilities listing leopard patterns that cannot occur. Lp and patn sit at different loci but name one pattern between them, and each locus was read on its own, so Varnish Roan and Snowflake appeared whenever Lp was possible. Both need no patn at all, so a parent carrying two copies rules them out. This affected the foal list and the Chimera panel. Thanks to Weaselheart for reporting it."

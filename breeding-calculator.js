@@ -3123,7 +3123,16 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
 
     // Track which traits this pair can actually produce — no false advertising
     let traitsScores = [];
+    // The full Mendelian spread for this pair, worked out once and only if a
+    // trait actually needs it, since this runs over every pair in the roster.
+    let _poss = null;
+    const poss = () => (_poss || (_poss = generateChimeraPossibilities('', parent1.genotype, parent2.genotype)));
     let _pairCoats = null; // lazily-computed set of coats this pair can actually make
+    let _pairMarkings = null;
+    const pairMakesMarking = (name) => {
+        if (!_pairMarkings) _pairMarkings = new Set(poss().whiteMarkings.map(m => m.toLowerCase()));
+        return _pairMarkings.has(name.toLowerCase());
+    };
 
     // Does either parent carry this allele at all, in any spelling? This reads
     // the pair through getGeneAlleles, the same way breeding does, so a
@@ -3144,10 +3153,7 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         // truth): the pair matches only if it can really produce that coat. This
         // covers base colour AND the exact dilution profile in one shot.
         if (CANONICAL_COATS.has(traitLower)) {
-            if (!_pairCoats) {
-                _pairCoats = new Set(generateChimeraPossibilities('', parent1.genotype, parent2.genotype)
-                    .fullCoatNames.map(c => c.toLowerCase()));
-            }
+            if (!_pairCoats) _pairCoats = new Set(poss().fullCoatNames.map(c => c.toLowerCase()));
             if (_pairCoats.has(traitLower)) {
                 const words = traitLower.split(/\s+/).length;
                 traitsScores.push(Math.min(150, 60 + 20 * words)); // rarer (longer) coats rank higher
@@ -3158,10 +3164,7 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
         // A coat family ("cream ether", "nacre") matches when the pair can make
         // any coat in it, judged by the same engine as the exact names above.
         if (COAT_FAMILIES[trait]) {
-            if (!_pairCoats) {
-                _pairCoats = new Set(generateChimeraPossibilities('', parent1.genotype, parent2.genotype)
-                    .fullCoatNames.map(c => c.toLowerCase()));
-            }
+            if (!_pairCoats) _pairCoats = new Set(poss().fullCoatNames.map(c => c.toLowerCase()));
             if (COAT_FAMILIES[trait].some(name => _pairCoats.has(name.toLowerCase()))) {
                 const words = trait.split(/\s+/).length;
                 traitsScores.push(Math.min(150, 60 + 20 * words));
@@ -3354,42 +3357,28 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             if (combinedGeno.includes('crcr') && combinedGeno.includes('ee')) traitsScores.push(100);
         } else if (traitLower.includes('amber champagne')) {
             if (/\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno) && (combinedGeno.includes('e') && combinedGeno.includes('a'))) traitsScores.push(100);
+        // The six leopard patterns are a function of both the Lp pair and the
+        // patn pair at once, so no test on the combined genotype text can get
+        // them right. Each used to be judged on whether the alleles appeared
+        // anywhere across the two parents, which read "no patn" as "neither
+        // parent carries patn". A parent with npatn passes n half the time, so
+        // pairs that really do throw Snowflake scored zero and never appeared.
+        // Reported by Cricri. These defer to the possibility engine now, the
+        // same way the coat branch above does.
         } else if (traitLower.includes('fewspot')) {
-            // Need LpLp patnpatn — BOTH parents must bring Lp AND patn or no fewspot for you
-            const p1HasLp = p1Geno.includes('lp');
-            const p2HasLp = p2Geno.includes('lp');
-            const p1HasPatn = p1Geno.includes('patn');
-            const p2HasPatn = p2Geno.includes('patn');
-            if (p1HasLp && p2HasLp && p1HasPatn && p2HasPatn) traitsScores.push(100);
+            if (pairMakesMarking('Fewspot')) traitsScores.push(100);
         } else if (traitLower.includes('snowcap')) {
-            // Need LpLp npatn — two Lp carriers and at least one patn, like assembling an adventuring party
-            const p1HasLp = p1Geno.includes('lp');
-            const p2HasLp = p2Geno.includes('lp');
-            const p1HasPatn = p1Geno.includes('patn');
-            const p2HasPatn = p2Geno.includes('patn');
-            if (p1HasLp && p2HasLp && (p1HasPatn || p2HasPatn)) traitsScores.push(100);
+            if (pairMakesMarking('Snowcap')) traitsScores.push(100);
         } else if (traitLower.includes('varnish roan')) {
-            // Need LpLp, no patn — both parents have Lp but no pattern gene, yielding the slow fade
-            const p1HasLp = p1Geno.includes('lp');
-            const p2HasLp = p2Geno.includes('lp');
-            if (p1HasLp && p2HasLp && !combinedGeno.includes('patn')) traitsScores.push(100);
+            if (pairMakesMarking('Varnish Roan')) traitsScores.push(100);
         } else if (traitLower.includes('leopard') && traitLower !== 'false leopard') {
-            // False Leopard is a KIT-family marking on its own locus (Fl), not the
-            // Leopard complex, and has its own branch further down.
-            // Need nLp patnpatn — at least one Lp carrier, both parents packing patn
-            const hasLp = combinedGeno.includes('lp');
-            const p1HasPatn = p1Geno.includes('patn');
-            const p2HasPatn = p2Geno.includes('patn');
-            if (hasLp && p1HasPatn && p2HasPatn) traitsScores.push(100);
+            // False Leopard is a KIT-family marking on its own locus (Fl), not
+            // the Leopard complex, and has its own branch further down.
+            if (pairMakesMarking('Leopard')) traitsScores.push(100);
         } else if (traitLower.includes('blanket')) {
-            // Need nLp npatn — at least one Lp and one patn somewhere in the family
-            const hasLp = combinedGeno.includes('lp');
-            const hasPatn = combinedGeno.includes('patn');
-            if (hasLp && hasPatn) traitsScores.push(100);
+            if (pairMakesMarking('Blanket')) traitsScores.push(100);
         } else if (traitLower.includes('snowflake')) {
-            // Need nLp, no patn — just Lp doing its thing solo, sprinkling snowflakes
-            const hasLp = combinedGeno.includes('lp');
-            if (hasLp && !combinedGeno.includes('patn')) traitsScores.push(100);
+            if (pairMakesMarking('Snowflake')) traitsScores.push(100);
         } else if (traitLower.includes('starfield')) {
             // Need sfsf — both parents must carry sf, stars don't align themselves
             const sfPattern = /\bsfsf\b|\bnsf\b/;

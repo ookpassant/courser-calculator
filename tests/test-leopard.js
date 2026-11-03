@@ -10,7 +10,7 @@
 // Snowflake are both off the table however much Lp is about.
 const { load, suite } = require('./harness');
 const A = load(['breeding-calculator.js'],
-    '{ generateChimeraPossibilities, resolveTraits, generateFoal, parseGenotype }');
+    '{ generateChimeraPossibilities, resolveTraits, generateFoal, parseGenotype, calculateMatchScore }');
 const t = suite('leopard');
 const ok = (l, c) => t.ok(l, c);
 
@@ -111,5 +111,118 @@ ok('and Carries Patn is not smuggled in as a marking',
 ok('the chimera panel reads the same markings',
     A.generateChimeraPossibilities('Ee Aa nLp npatn', EGLISSERON, RECTOVERSO)
         .whiteMarkings.indexOf('Varnish Roan') === -1);
+
+// --- Smart Search, which was wrong the other way round ----------------------
+//
+// Reported by Cricri: searching a phenotype with Snowflake in it returned
+// nothing, while the same pairs showed up once Snowflake was removed.
+//
+// The possibility engine ignored patn and offered patterns no foal could have.
+// Smart Search tested "no patn" as "neither parent carries patn", which is a
+// different mistake in the opposite direction: a parent with npatn passes n
+// half the time, so pairs that really do throw Snowflake scored zero.
+const score = (g1, g2, trait) => A.calculateMatchScore(
+    { genotype: g1, temperament: 'Sanguine' },
+    { genotype: g2, temperament: 'Phlegmatic' }, [trait]);
+
+// Cricri's shape: both parents carry one patn, so a no-patn foal is a quarter
+// of the rolls and Snowflake is plainly on.
+ok('a pair carrying npatn can still be searched for Snowflake',
+    score('Ee Aa nLp npatn', 'ee aa nLp npatn', 'Snowflake') > 0);
+ok('and for Varnish Roan', score('Ee Aa nLp npatn', 'ee aa nLp npatn', 'Varnish Roan') > 0);
+ok('and all six patterns are reachable from that pair', LEOPARD.every(
+    n => score('Ee Aa nLp npatn', 'ee aa nLp npatn', n) > 0));
+
+// The other direction still has to hold: Weaselheart's pair must not match.
+ok('Weaselheart\'s pair does not match Snowflake', score(EGLISSERON, RECTOVERSO, 'Snowflake') === 0);
+ok('nor Varnish Roan', score(EGLISSERON, RECTOVERSO, 'Varnish Roan') === 0);
+ok('but does match Blanket', score(EGLISSERON, RECTOVERSO, 'Blanket') > 0);
+ok('and Snowcap', score(EGLISSERON, RECTOVERSO, 'Snowcap') > 0);
+
+// Two homozygous parents can only make homozygous foals.
+ok('two LpLp parents cannot be searched for Snowflake', score(HOM, HOM2, 'Snowflake') === 0);
+ok('and only Fewspot matches',
+    LEOPARD.filter(n => score(HOM, HOM2, n) > 0).join() === 'Fewspot');
+
+// False Leopard is a KIT marking on its own locus and must not be caught by
+// the Leopard branch, which matches on the substring.
+ok('False Leopard is not judged as a leopard pattern',
+    score('Ee Aa BFl', 'ee aa BFl', 'False Leopard') > 0);
+ok('and a pair with no Lp never matches Leopard',
+    score('Ee Aa BFl', 'ee aa BFl', 'Leopard') === 0);
+
+// --- the two tools must agree, and both must agree with breeding ------------
+// This is the check that would have caught either bug on its own. Both were
+// shipped because each tool decided the question for itself.
+const PAIRS = [
+    [EGLISSERON, RECTOVERSO],
+    ['Ee Aa nLp npatn', 'ee aa nLp npatn'],
+    ['Ee Aa LpLp patnpatn', 'ee aa nLp'],
+    ['Ee Aa nLp', 'ee aa patnpatn'],
+    ['Ee Aa LpLp', 'ee aa LpLp npatn'],
+    ['Ee Aa nLp patnpatn', 'ee aa nLp patnpatn'],
+    ['Ee Aa', 'ee aa nLp npatn'],
+    [HOM, HOM2]
+];
+const disagree = [], unreal = [], missed = [];
+PAIRS.forEach(([g1, g2]) => {
+    const offered = new Set(marks(g1, g2).filter(n => LEOPARD.indexOf(n) !== -1));
+    const rolled = sweep(g1, g2, 600);
+    LEOPARD.forEach((n) => {
+        const searchSays = score(g1, g2, n) > 0;
+        if (searchSays !== offered.has(n)) disagree.push(n + ' on ' + g1 + ' x ' + g2);
+        // Breeding is the authority. A sweep can miss something very rare, so
+        // only the direction that cannot be explained by luck is an error.
+        if (searchSays && !rolled.has(n) && !offered.has(n)) unreal.push(n + ' on ' + g1);
+        if (rolled.has(n) && !searchSays) missed.push(n + ' on ' + g1 + ' x ' + g2);
+    });
+});
+ok('Smart Search and the possibility list never disagree' + (disagree.length ? ': ' + disagree.join('; ') : ''),
+    !disagree.length);
+ok('Smart Search never offers a pattern that cannot happen' + (unreal.length ? ': ' + unreal.join('; ') : ''),
+    !unreal.length);
+ok('and never refuses one that does happen' + (missed.length ? ': ' + missed.join('; ') : ''),
+    !missed.length);
+
+// --- the roster, judged against actual breeding -----------------------------
+// Both bugs were about a pairing the tool judged wrongly, so the honest test is
+// to breed real pairs and compare. A slice of the roster keeps this quick; the
+// full 44 agree too, it just takes rather longer than a test should.
+const R = load(['group-horses.js', 'breeding-calculator.js'],
+    '{ GROUP_HORSES, calculateMatchScore, generateChimeraPossibilities, resolveTraits, generateFoal }');
+const slice = (R.GROUP_HORSES || []).slice(0, 18);
+ok('a slice of the roster loaded', slice.length === 18);
+
+const wrongly = { offered: [], refused: [] };
+let judged = 0;
+for (let i = 0; i < slice.length; i++) {
+    for (let j = i + 1; j < slice.length; j++) {
+        const a = slice[i], b = slice[j];
+        if (a.temperament === b.temperament) continue;
+        judged++;
+        let rolled = new Set();
+        for (let k = 0; k < 400; k++) {
+            R.resolveTraits(R.generateFoal(a, b, k).genotype).allTraits
+                .forEach(n => { if (LEOPARD.indexOf(n) !== -1) rolled.add(n); });
+        }
+        LEOPARD.forEach((n) => {
+            const says = R.calculateMatchScore(a, b, [n]) > 0;
+            // A pattern that turned up in 400 rolls and was refused is flatly
+            // wrong. The other way round needs care: something very rare can
+            // miss 400 rolls honestly, so the possibility engine breaks the
+            // tie, and only a pattern neither of them can justify counts.
+            if (!says && rolled.has(n)) wrongly.refused.push(n + ': ' + a.name + ' x ' + b.name);
+            if (says && !rolled.has(n)) {
+                const offered = R.generateChimeraPossibilities('', a.genotype, b.genotype).whiteMarkings;
+                if (offered.indexOf(n) === -1) wrongly.offered.push(n + ': ' + a.name + ' x ' + b.name);
+            }
+        });
+    }
+}
+ok('judged a decent number of real pairings', judged > 100);
+ok('none refused a pattern it really throws' + (wrongly.refused.length ? ': ' + wrongly.refused.slice(0, 3).join('; ') : ''),
+    !wrongly.refused.length);
+ok('and none offered one it cannot' + (wrongly.offered.length ? ': ' + wrongly.offered.slice(0, 3).join('; ') : ''),
+    !wrongly.offered.length);
 
 t.report();
