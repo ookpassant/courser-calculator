@@ -3096,6 +3096,61 @@ Object.keys(SPECIAL_COAT_NAMES).forEach(key => {
 });
 // The trait page calls CrCr erer 'Ash Ether'; the engine's key still says Double Cream Ether.
 COAT_FAMILIES['Ash Ether'] = COAT_FAMILIES['Double Cream Ether'];
+// Keyed by the name as written, so a caller passing lower case used to miss
+// every family and fall through to a much looser guess. The query parser hands
+// over canonical names, so this never showed, but it is the same trap that let
+// Smart Search and the possibility lists drift apart on the leopard complex.
+const COAT_FAMILIES_LC = {};
+Object.keys(COAT_FAMILIES).forEach(k => { COAT_FAMILIES_LC[k.toLowerCase()] = COAT_FAMILIES[k]; });
+
+// Markings, modifiers and dilutions that Smart Search hands to the possibility
+// engine rather than judging for itself.
+//
+// Every one of these used to have its own test against the two parents'
+// genotypes run together as text, and text cannot see a locus. Damascus wants
+// Dm from one parent and D from the other, but a parent carrying DmD can only
+// pass one of them, so "both alleles appear somewhere" offered pairings that
+// can never throw it. The leopard complex was wrong in both directions for the
+// same reason. The engine breeds the pair out properly, so it is asked.
+//
+// The markings and modifiers come off the same pools the Scroll Generator
+// rolls from, so a new trait needs no entry here. The dilutions are listed
+// because the engine names them only when it has a pair in hand; a test keeps
+// the list honest by checking the engine can really produce each one.
+// Built on first use, not at load, because it asks the engine what it can
+// name and the engine's own tables are defined further down this file.
+let _searchEngineTraits = null;
+function searchEngineTraits() {
+    if (_searchEngineTraits) return _searchEngineTraits;
+    const out = {};
+    const plain = resolveTraits('Ee Aa').allTraits;
+    // Markings and modifiers, off the same pools the Scroll Generator rolls.
+    Object.keys(RARITY_GENES).forEach((tier) => {
+        const v = RARITY_GENES[tier] || {};
+        [].concat(v.markings || [], v.modifiers || []).forEach((tokens) => {
+            resolveTraits('Ee Aa ' + tokens).allTraits
+                .filter(n => plain.indexOf(n) === -1)
+                .forEach(n => { out[n.toLowerCase()] = n; });
+        });
+    });
+    // The "Carrying X" names, asked of the engine rather than listed here: a
+    // pair carrying one of every recessive makes it name all of them. Those
+    // are not in the rarity pools, which list what a scroll can roll.
+    const probe = 'Ee Aa nfe nsf nmt nlr nf nsp';
+    const made = generateChimeraPossibilities('', probe, probe);
+    [].concat(made.modifiers || [], made.whiteMarkings || [])
+        .forEach(n => { out[n.toLowerCase()] = n; });
+    // Bare dilutions. The engine names these only with a pair in hand, so they
+    // are listed; a test checks it can really produce each one.
+    ['Cream', 'Tapestry', 'Pearl', 'Champagne', 'Ether'].forEach(n => { out[n.toLowerCase()] = n; });
+    // The engine does not model the dilution-locus carriers or the two that
+    // sit outside its modifier tables, so these keep the allele test below.
+    // Handing them over would mean the engine never lists them and every pair
+    // scores zero, which is the failure Cricri hit from the other direction.
+    SEARCH_ENGINE_SKIPS.forEach(k => { delete out[k]; });
+    return (_searchEngineTraits = out);
+}
+const SEARCH_ENGINE_SKIPS = ['carries pearl', 'carries ether', 'carries patn', 'carries damascus'];
 
 // Which base (if any) a coat-name query requires. Longest match wins.
 function requiredBaseFromName(traitLower) {
@@ -3116,11 +3171,36 @@ function canMakeBase(parent1, parent2, baseType) {
     return true;
 }
 
-function calculateMatchScore(parent1, parent2, targetTraits) {
-    const p1Geno = parent1.genotype.toLowerCase();
-    const p2Geno = parent2.genotype.toLowerCase();
-    const combinedGeno = (p1Geno + ' ' + p2Geno);
+// Can this pairing make a foal the engine would call by this name, at the one
+// locus the trait lives on? The pairs the parents can hand down are walked and
+// the engine is asked about each, rather than the meaning of every carrier
+// spelling being restated here. It has to be done that way: a carrier is not
+// simply "the allele beside an n". Pearl beside Cream is Cream Pearl and no
+// carrier at all, while Cher expresses Champagne and carries Ether at once.
+//
+// This covers the handful generateChimeraPossibilities does not name, which is
+// the dilution-locus carriers; everything else goes through the engine branch.
+function pairMakesLocusTrait(p1, p2, allele, name) {
+    const locus = RECIPE_LOCUS_OF[allele];
+    if (!locus) return false;
+    const sideAlleles = (h) => {
+        const token = recipeHorseLoci(h.genotype || '')[locus];
+        return token ? getGeneAlleles(token) : ['n'];
+    };
+    const plain = resolveTraits('Ee Aa').allTraits;
+    const a1 = sideAlleles(p1), a2 = sideAlleles(p2);
+    for (let i = 0; i < a1.length; i++) {
+        for (let j = 0; j < a2.length; j++) {
+            const token = combineAlleles(a1[i], a2[j]);
+            if (!token || token === 'nn' || token === 'n') continue;
+            const made = resolveTraits('Ee Aa ' + token).allTraits;
+            if (made.indexOf(name) !== -1 && plain.indexOf(name) === -1) return true;
+        }
+    }
+    return false;
+}
 
+function calculateMatchScore(parent1, parent2, targetTraits) {
     // Track which traits this pair can actually produce — no false advertising
     let traitsScores = [];
     // The full Mendelian spread for this pair, worked out once and only if a
@@ -3128,10 +3208,14 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
     let _poss = null;
     const poss = () => (_poss || (_poss = generateChimeraPossibilities('', parent1.genotype, parent2.genotype)));
     let _pairCoats = null; // lazily-computed set of coats this pair can actually make
-    let _pairMarkings = null;
-    const pairMakesMarking = (name) => {
-        if (!_pairMarkings) _pairMarkings = new Set(poss().whiteMarkings.map(m => m.toLowerCase()));
-        return _pairMarkings.has(name.toLowerCase());
+    let _pairTraits = null;
+    const pairMakesTrait = (name) => {
+        if (!_pairTraits) {
+            const p = poss();
+            _pairTraits = new Set([].concat(p.whiteMarkings || [], p.modifiers || [], p.dilutions || [])
+                .map(m => m.toLowerCase()));
+        }
+        return _pairTraits.has(name.toLowerCase());
     };
 
     // Does either parent carry this allele at all, in any spelling? This reads
@@ -3163,9 +3247,10 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
 
         // A coat family ("cream ether", "nacre") matches when the pair can make
         // any coat in it, judged by the same engine as the exact names above.
-        if (COAT_FAMILIES[trait]) {
+        const _family = COAT_FAMILIES[trait] || COAT_FAMILIES_LC[traitLower];
+        if (_family) {
             if (!_pairCoats) _pairCoats = new Set(poss().fullCoatNames.map(c => c.toLowerCase()));
-            if (COAT_FAMILIES[trait].some(name => _pairCoats.has(name.toLowerCase()))) {
+            if (_family.some(name => _pairCoats.has(name.toLowerCase()))) {
                 const words = trait.split(/\s+/).length;
                 traitsScores.push(Math.min(150, 60 + 20 * words));
             }
@@ -3182,350 +3267,29 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
 
         // Carrier traits — only ONE parent needs the recessive allele for a carrier foal,
         // so these are way easier than expressed (homozygous) versions.
-        // Must be checked BEFORE the expressed cases or the substring checks below would steal them.
+        // Checked before the engine branch below, because the engine does not
+        // model the dilution-locus carriers and would answer no to all of them.
         // One branch covers every carrier, whatever it is called. The allele is read
         // off the carrier's own gene token, so a compound that hides it still counts:
         // Crprl carries prl, Cher carries er, Lusp carries sp, TRn carries Rn. It also
         // means a carrier added to the trait tables is scored here without new code.
-        const _carrierAllele = recipeCarrierAllele(trait);
-        if (_carrierAllele) {
-            if (pairCarries(_carrierAllele)) traitsScores.push(60);
-        } else if (traitLower.includes('cream pearl ether') || traitLower === 'ombre cream pearl ether' ||
-            traitLower === 'classic cream pearl ether' || traitLower === 'cold cream pearl ether') {
-            // Need Crprl + erer — both parents must carry er, or the ether stays hidden
-            const hasCreamPearl = canProduceCompoundDilution(p1Geno, p2Geno, 'cr', 'prl');
-            const etherPat = /\berer\b|\bner\b|\bcher\b/;
-            const p1HasEther = etherPat.test(p1Geno);
-            const p2HasEther = etherPat.test(p2Geno);
-            const canMakeErer = p1HasEther && p2HasEther;
-            if (hasCreamPearl && canMakeErer && genBaseOK) traitsScores.push(150);
-        } else if (traitLower.includes('cream pearl champagne')) {
-            // Need Crprl + Ch — cream, pearl, AND champagne? This horse is going to prom
-            const hasCreamPearl = canProduceCompoundDilution(p1Geno, p2Geno, 'cr', 'prl');
-            const hasChampagne = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno);
-            if (hasCreamPearl && hasChampagne && genBaseOK) traitsScores.push(150);
-        } else if (traitLower.includes('tapestry pearl ether') || traitLower === 'tyrian pearl ether' ||
-                   traitLower === 'phthalo pearl ether' || traitLower === 'ochre pearl ether') {
-            // Need Tpprl + erer — tapestry pearl ether, a name longer than most quest descriptions
-            const hasTapestryPearl = canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'prl');
-            const etherPat = /\berer\b|\bner\b|\bcher\b/;
-            const p1HasEther = etherPat.test(p1Geno);
-            const p2HasEther = etherPat.test(p2Geno);
-            const canMakeErer = p1HasEther && p2HasEther;
-            if (hasTapestryPearl && canMakeErer && genBaseOK) traitsScores.push(150);
-        } else if (traitLower.includes('tapestry pearl champagne') || traitLower === 'tyrian pearl champagne' ||
-                   traitLower === 'phthalo pearl champagne' || traitLower === 'ochre pearl champagne') {
-            // Need Tpprl + Ch — good news: Ch is on a separate locus so it can sneak in independently
-            const hasTapestryPearl = canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'prl');
-            // One parent brings the tapestry-pearl combo, someone brings champagne, everyone's happy
-            const p1HasCh = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(p1Geno);
-            const p2HasCh = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(p2Geno);
-            if (hasTapestryPearl && (p1HasCh || p2HasCh) && genBaseOK) traitsScores.push(150);
-        } else if (traitLower.includes('tapestry cream ether') || traitLower === 'madder cream ether' ||
-                   traitLower === 'woad cream ether' || traitLower === 'weld cream ether') {
-            // Need TpCr + erer — both parents must carry er or no ethereal tapestry cream for you
-            const hasTapestryCream = canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'cr');
-            const etherPat = /\berer\b|\bner\b|\bcher\b/;
-            const p1HasEther = etherPat.test(p1Geno);
-            const p2HasEther = etherPat.test(p2Geno);
-            const canMakeErer = p1HasEther && p2HasEther;
-            if (hasTapestryCream && canMakeErer && genBaseOK) traitsScores.push(150);
-        } else if (traitLower.includes('tapestry cream champagne') || traitLower === 'madder cream champagne' ||
-                   traitLower === 'woad cream champagne' || traitLower === 'weld cream champagne') {
-            // Need TpCr + Ch — tapestry cream champagne, this horse is basically a dessert wine
-            const hasTapestryCream = canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'cr');
-            const hasChampagne = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno);
-            if (hasTapestryCream && hasChampagne && genBaseOK) traitsScores.push(150);
-        } else if (traitLower.includes('pearl ether') && !traitLower.includes('cream') && !traitLower.includes('tapestry')) {
-            // Need prlprl + erer — double recessive combo, both parents must carry the goods
-            const p1HasPearl = p1Geno.includes('prl');
-            const p2HasPearl = p2Geno.includes('prl');
-            const etherPat = /\berer\b|\bner\b|\bcher\b/;
-            const p1HasEther = etherPat.test(p1Geno);
-            const p2HasEther = etherPat.test(p2Geno);
-            if (p1HasPearl && p2HasPearl && p1HasEther && p2HasEther) traitsScores.push(120);
-        } else if (traitLower.includes('cream pearl') && !traitLower.includes('ether') && !traitLower.includes('champagne')) {
-            // Need Crprl — cream and pearl forced to share, classic locus drama
-            if (canProduceCompoundDilution(p1Geno, p2Geno, 'cr', 'prl')) traitsScores.push(100);
-        } else if ((traitLower.includes('tapestry pearl') ||
-                    traitLower === 'tyrian pearl' ||
-                    traitLower === 'phthalo pearl' ||
-                    traitLower === 'ochre pearl') &&
-                   !traitLower.includes('ether') && !traitLower.includes('champagne')) {
-            // Need Tpprl — tapestry and pearl, another odd-couple compound
-            // Tyrian/Phthalo/Ochre Pearl are just Tapestry Pearl with specific bases (Bay/Black/Chestnut)
-            if (canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'prl')) {
-                let baseOK = true;
-                if (traitLower === 'tyrian pearl') {
-                    const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                    const hasA = /\bAA\b|\bAa\b/.test(parent1.genotype) || /\bAA\b|\bAa\b/.test(parent2.genotype);
-                    baseOK = hasE && hasA;
-                } else if (traitLower === 'phthalo pearl') {
-                    const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                    const p1HasSmallA = /\baa\b|\bAa\b/.test(parent1.genotype);
-                    const p2HasSmallA = /\baa\b|\bAa\b/.test(parent2.genotype);
-                    baseOK = hasE && p1HasSmallA && p2HasSmallA;
-                } else if (traitLower === 'ochre pearl') {
-                    const p1Hase = /\bee\b|\bEe\b/.test(parent1.genotype);
-                    const p2Hase = /\bee\b|\bEe\b/.test(parent2.genotype);
-                    baseOK = p1Hase && p2Hase;
-                }
-                if (baseOK) traitsScores.push(100);
+        // Every marking, modifier, carrier and dilution the engine can name is
+        // its call, not ours. The score is flat because a pair only reaches the
+        // list by matching every trait asked for, so the total is the same for
+        // all of them and never decided the order.
+        const _engineName = searchEngineTraits()[traitLower];
+        if (_engineName) {
+            if (pairMakesTrait(_engineName)) traitsScores.push(100);
+        } else {
+            // What the engine cannot name: the dilution-locus carriers. A
+            // carrier foal holds exactly one copy, so one side has to pass the
+            // allele and the other something else. Asking only whether the
+            // allele is about offered a carrier from two parents who both
+            // always pass it, whose foals express it instead.
+            const _carrierAllele = recipeCarrierAllele(trait);
+            if (_carrierAllele && pairMakesLocusTrait(parent1, parent2, _carrierAllele, trait)) {
+                traitsScores.push(60);
             }
-        } else if (traitLower === 'bay pearl' || traitLower === 'black pearl' || traitLower === 'gold pearl') {
-            // Single Pearl + specific base — both parents must pass prl, plus the right E/A combo
-            const prlPat = /\bnprl\b|\bprlprl\b|\btpprl\b|\bcrprl\b/;
-            const p1HasPrl = prlPat.test(p1Geno);
-            const p2HasPrl = prlPat.test(p2Geno);
-            let baseOK = false;
-            if (traitLower === 'bay pearl') {
-                const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                const hasA = /\bAA\b|\bAa\b/.test(parent1.genotype) || /\bAA\b|\bAa\b/.test(parent2.genotype);
-                baseOK = hasE && hasA;
-            } else if (traitLower === 'black pearl') {
-                const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                const p1HasSmallA = /\baa\b|\bAa\b/.test(parent1.genotype);
-                const p2HasSmallA = /\baa\b|\bAa\b/.test(parent2.genotype);
-                baseOK = hasE && p1HasSmallA && p2HasSmallA;
-            } else { // gold pearl = chestnut + pearl
-                const p1Hase = /\bee\b|\bEe\b/.test(parent1.genotype);
-                const p2Hase = /\bee\b|\bEe\b/.test(parent2.genotype);
-                baseOK = p1Hase && p2Hase;
-            }
-            if (p1HasPrl && p2HasPrl && baseOK) traitsScores.push(100);
-        } else if (traitLower === 'madder ether' || traitLower === 'woad ether' || traitLower === 'weld ether') {
-            // Tapestry + erer + base coat — the previous logic forgot the ether part entirely
-            const hasTp = /\bntp\b|\btptp\b|\btpcr\b|\btpprl\b/.test(combinedGeno);
-            const etherPat = /\berer\b|\bner\b|\bcher\b/;
-            const canMakeErer = etherPat.test(p1Geno) && etherPat.test(p2Geno);
-            let baseOK = false;
-            if (traitLower === 'madder ether') {
-                const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                const hasA = /\bAA\b|\bAa\b/.test(parent1.genotype) || /\bAA\b|\bAa\b/.test(parent2.genotype);
-                baseOK = hasE && hasA;
-            } else if (traitLower === 'woad ether') {
-                const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                const p1HasSmallA = /\baa\b|\bAa\b/.test(parent1.genotype);
-                const p2HasSmallA = /\baa\b|\bAa\b/.test(parent2.genotype);
-                baseOK = hasE && p1HasSmallA && p2HasSmallA;
-            } else { // weld ether = chestnut tapestry + ether
-                const p1Hase = /\bee\b|\bEe\b/.test(parent1.genotype);
-                const p2Hase = /\bee\b|\bEe\b/.test(parent2.genotype);
-                baseOK = p1Hase && p2Hase;
-            }
-            if (hasTp && canMakeErer && baseOK) traitsScores.push(120);
-        } else if (traitLower === 'ombre ether' || traitLower === 'bay ether' ||
-                   traitLower === 'classic ether' || traitLower === 'black ether' ||
-                   traitLower === 'cold ether' || traitLower === 'gold ether' ||
-                   traitLower === 'chestnut ether') {
-            // Single Ether + specific base — both parents must carry er, plus the right E/A combo
-            const etherPat = /\berer\b|\bner\b|\bcher\b/;
-            const canMakeErer = etherPat.test(p1Geno) && etherPat.test(p2Geno);
-            let baseOK = false;
-            if (traitLower === 'ombre ether' || traitLower === 'bay ether') {
-                const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                const hasA = /\bAA\b|\bAa\b/.test(parent1.genotype) || /\bAA\b|\bAa\b/.test(parent2.genotype);
-                baseOK = hasE && hasA;
-            } else if (traitLower === 'classic ether' || traitLower === 'black ether') {
-                const hasE = /\bEE\b|\bEe\b/.test(parent1.genotype) || /\bEE\b|\bEe\b/.test(parent2.genotype);
-                const p1HasSmallA = /\baa\b|\bAa\b/.test(parent1.genotype);
-                const p2HasSmallA = /\baa\b|\bAa\b/.test(parent2.genotype);
-                baseOK = hasE && p1HasSmallA && p2HasSmallA;
-            } else { // cold/gold/chestnut ether = chestnut + ether
-                const p1Hase = /\bee\b|\bEe\b/.test(parent1.genotype);
-                const p2Hase = /\bee\b|\bEe\b/.test(parent2.genotype);
-                baseOK = p1Hase && p2Hase;
-            }
-            if (canMakeErer && baseOK) traitsScores.push(80);
-        } else if (traitLower.includes('woad')) {
-            if (combinedGeno.includes('tp') && (combinedGeno.includes('e') && combinedGeno.includes('aa'))) traitsScores.push(100);
-        } else if (traitLower.includes('madder')) {
-            if (combinedGeno.includes('tp') && (combinedGeno.includes('e') && combinedGeno.includes('a'))) traitsScores.push(100);
-        } else if (traitLower.includes('weld')) {
-            if (combinedGeno.includes('tp') && combinedGeno.includes('ee')) traitsScores.push(100);
-        } else if (traitLower.includes('buckskin')) {
-            if (combinedGeno.includes('cr') && (combinedGeno.includes('e') && combinedGeno.includes('a'))) traitsScores.push(100);
-        } else if (traitLower.includes('smoky black')) {
-            if (combinedGeno.includes('cr') && (combinedGeno.includes('e') && combinedGeno.includes('aa'))) traitsScores.push(100);
-        } else if (traitLower.includes('palomino')) {
-            if (combinedGeno.includes('cr') && combinedGeno.includes('ee')) traitsScores.push(100);
-        } else if (traitLower.includes('perlino')) {
-            if (combinedGeno.includes('crcr') && (combinedGeno.includes('e') && combinedGeno.includes('a'))) traitsScores.push(100);
-        } else if (traitLower.includes('smoky cream')) {
-            if (combinedGeno.includes('crcr') && (combinedGeno.includes('e') && combinedGeno.includes('aa'))) traitsScores.push(100);
-        } else if (traitLower.includes('cremello')) {
-            if (combinedGeno.includes('crcr') && combinedGeno.includes('ee')) traitsScores.push(100);
-        } else if (traitLower.includes('amber champagne')) {
-            if (/\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno) && (combinedGeno.includes('e') && combinedGeno.includes('a'))) traitsScores.push(100);
-        // The six leopard patterns are a function of both the Lp pair and the
-        // patn pair at once, so no test on the combined genotype text can get
-        // them right. Each used to be judged on whether the alleles appeared
-        // anywhere across the two parents, which read "no patn" as "neither
-        // parent carries patn". A parent with npatn passes n half the time, so
-        // pairs that really do throw Snowflake scored zero and never appeared.
-        // Reported by Cricri. These defer to the possibility engine now, the
-        // same way the coat branch above does.
-        } else if (traitLower.includes('fewspot')) {
-            if (pairMakesMarking('Fewspot')) traitsScores.push(100);
-        } else if (traitLower.includes('snowcap')) {
-            if (pairMakesMarking('Snowcap')) traitsScores.push(100);
-        } else if (traitLower.includes('varnish roan')) {
-            if (pairMakesMarking('Varnish Roan')) traitsScores.push(100);
-        } else if (traitLower.includes('leopard') && traitLower !== 'false leopard') {
-            // False Leopard is a KIT-family marking on its own locus (Fl), not
-            // the Leopard complex, and has its own branch further down.
-            if (pairMakesMarking('Leopard')) traitsScores.push(100);
-        } else if (traitLower.includes('blanket')) {
-            if (pairMakesMarking('Blanket')) traitsScores.push(100);
-        } else if (traitLower.includes('snowflake')) {
-            if (pairMakesMarking('Snowflake')) traitsScores.push(100);
-        } else if (traitLower.includes('starfield')) {
-            // Need sfsf — both parents must carry sf, stars don't align themselves
-            const sfPattern = /\bsfsf\b|\bnsf\b/;
-            const p1HasSf = sfPattern.test(p1Geno);
-            const p2HasSf = sfPattern.test(p2Geno);
-            if (p1HasSf && p2HasSf) traitsScores.push(100);
-        } else if (traitLower.includes('sepulchered')) {
-            // Need spsp — both parents carry sp; careful not to confuse nSpl (Splash) with nsp
-            const spPattern = /\bspsp\b|\bnsp\b|\blusp\b/;
-            const p1HasSp = spPattern.test(p1Geno);
-            const p2HasSp = spPattern.test(p2Geno);
-            if (p1HasSp && p2HasSp) traitsScores.push(100);
-        } else if (traitLower.includes('lacquer')) {
-            // Need lrlr — both parents carry lr, the lacquer doesn't apply itself
-            const lrPattern = /\blrlr\b|\bnlr\b/;
-            const p1HasLr = lrPattern.test(p1Geno);
-            const p2HasLr = lrPattern.test(p2Geno);
-            if (p1HasLr && p2HasLr) traitsScores.push(100);
-        } else if (traitLower.includes('flaxen')) {
-            // Need ff — both parents carry f; regex must dodge nfe (Filigree) and nfl (False Leopard)
-            const fPattern = /\bff\b|\bnf\b/;
-            const p1HasF = fPattern.test(p1Geno);
-            const p2HasF = fPattern.test(p2Geno);
-            if (p1HasF && p2HasF) traitsScores.push(100);
-        } else if (traitLower.includes('ether')) {
-            // Need erer — recessive ether requires both parents to carry the ghost gene
-            const etherPattern = /\berer\b|\bner\b|\bcher\b/;
-            const p1HasEther = etherPattern.test(p1Geno);
-            const p2HasEther = etherPattern.test(p2Geno);
-            if (p1HasEther && p2HasEther) traitsScores.push(80);
-            else if (p1HasEther || p2HasEther) traitsScores.push(40);
-        } else if (traitLower.includes('champagne')) {
-            // Champagne is dominant — just one parent needs to bring the bubbly
-            const hasCh = /\bnch\b|\bchch\b|\bcher\b|\bch\b/.test(combinedGeno);
-            if (hasCh) traitsScores.push(80);
-        } else if (traitLower === 'tapestry') {
-            // Dominant — one parent with Tp and you've got yourself a tapestry
-            const tpPattern = /\bntp\b|\btptp\b|\btpcr\b|\btpprl\b/;
-            if (tpPattern.test(combinedGeno)) traitsScores.push(80);
-        } else if (traitLower === 'cream') {
-            // Dominant — at least one Cr in the mix and cream happens
-            const crPattern = /\bncr\b|\bcrcr\b|\btpcr\b|\bcrprl\b/;
-            if (crPattern.test(combinedGeno)) traitsScores.push(80);
-        } else if (traitLower === 'pearl') {
-            // Recessive — pearl hides until BOTH parents admit they've been carrying it
-            const prlPattern = /\bnprl\b|\bprlprl\b|\btpprl\b|\bcrprl\b/;
-            const p1HasPrl = prlPattern.test(p1Geno);
-            const p2HasPrl = prlPattern.test(p2Geno);
-            if (p1HasPrl && p2HasPrl) traitsScores.push(80);
-            else if (p1HasPrl || p2HasPrl) traitsScores.push(40);
-        } else if (traitLower === 'tapestry cream') {
-            // Need TpCr compound — two dilutions, one locus, zero chill
-            if (canProduceCompoundDilution(p1Geno, p2Geno, 'tp', 'cr')) traitsScores.push(100);
-        } else if (traitLower === 'chestnut') {
-            // Need ee — both parents must secretly carry a lowercase e, the ginger gene of horses
-            const p1HasE = /\bee\b/.test(p1Geno) || /^ee\b/i.test(p1Geno.trim()) || /\bEe\b/.test(parent1.genotype);
-            const p2HasE = /\bee\b/.test(p2Geno) || /^ee\b/i.test(p2Geno.trim()) || /\bEe\b/.test(parent2.genotype);
-            if (p1HasE && p2HasE) traitsScores.push(80);
-        } else if (traitLower === 'bay') {
-            // Need E_ A_ — the classic bay combo, at least one E and one A between them
-            const hasE = /\bEe\b|\bEE\b/i.test(parent1.genotype) || /\bEe\b|\bEE\b/i.test(parent2.genotype);
-            const hasA = /\bAa\b|\bAA\b|\bAa\b/i.test(parent1.genotype) || /\bAa\b|\bAA\b/i.test(parent2.genotype);
-            if (hasE && hasA) traitsScores.push(80);
-        } else if (traitLower === 'black') {
-            // Need E_ aa — black requires E for extension but aa to banish agouti to the shadow realm
-            const hasE = /\bEe\b|\bEE\b/i.test(parent1.genotype) || /\bEe\b|\bEE\b/i.test(parent2.genotype);
-            const p1HasSmallA = /\baa\b|\bAa\b/.test(parent1.genotype);
-            const p2HasSmallA = /\baa\b|\bAa\b/.test(parent2.genotype);
-            if (hasE && p1HasSmallA && p2HasSmallA) traitsScores.push(80);
-        } else if (traitLower.includes('filigree')) {
-            // Need fefe — filigree is recessive and demands both parents carry fe
-            const fePattern = /\bfefe\b|\bnfe\b/;
-            const p1HasFe = fePattern.test(p1Geno);
-            const p2HasFe = fePattern.test(p2Geno);
-            if (p1HasFe && p2HasFe) traitsScores.push(100);
-        } else if (traitLower.includes('ossuary')) {
-            if (/\bnos\b/.test(combinedGeno)) traitsScores.push(100);
-        } else if (traitLower.includes('shroud')) {
-            if (pairCarries('Sh')) traitsScores.push(80);
-        } else if (traitLower === 'roan') {
-            if (pairCarries('Rn')) traitsScores.push(80);
-        } else if (traitLower === 'gray' || traitLower === 'grey') {
-            if (pairCarries('G')) traitsScores.push(80);
-        } else if (traitLower === 'pitch') {
-            if (pairCarries('Pt')) traitsScores.push(80);
-        } else if (traitLower === 'ingot') {
-            if (pairCarries('In')) traitsScores.push(80);
-        } else if (traitLower === 'counterpoint') {
-            if (pairCarries('Cp')) traitsScores.push(80);
-        } else if (traitLower === 'mithril') {
-            if (pairCarries('mt')) traitsScores.push(80);
-        } else if (traitLower === 'damascus') {
-            // Damascus only shows beside Dun, so the pair needs both alleles.
-            if (pairCarries('Dm') && pairCarries('D')) traitsScores.push(80);
-        } else if (traitLower === 'tobiano') {
-            if (pairCarries('T')) traitsScores.push(80);
-        } else if (traitLower === 'overo') {
-            if (pairCarries('O')) traitsScores.push(80);
-        } else if (traitLower === 'sabino') {
-            if (pairCarries('Sb')) traitsScores.push(80);
-        } else if (traitLower === 'splash') {
-            if (pairCarries('Spl')) traitsScores.push(80);
-        } else if (traitLower === 'dun') {
-            if (pairCarries('D')) traitsScores.push(80);
-        } else if (traitLower === 'silver') {
-            if (pairCarries('Z')) traitsScores.push(80);
-        } else if (traitLower === 'vellum') {
-            if (pairCarries('V')) traitsScores.push(80);
-        } else if (traitLower === 'illuminated') {
-            if (pairCarries('Lu')) traitsScores.push(80);
-        } else if (traitLower === 'tabard') {
-            if (pairCarries('Td')) traitsScores.push(80);
-        } else if (traitLower === 'gilt') {
-            if (pairCarries('Gl')) traitsScores.push(80);
-        } else if (traitLower === 'prism') {
-            // Dominant — Pr shows with one copy; PrOp shares the locus with Opal
-            if (pairCarries('Pr')) traitsScores.push(80);
-        } else if (traitLower === 'opal') {
-            // Dominant — Op shows with one copy; PrOp shares the locus with Prism
-            if (pairCarries('Op')) traitsScores.push(80);
-        } else if (traitLower === 'harlequin') {
-            // Dominant — Hq shows with one copy (nHq or HqHq)
-            if (pairCarries('Hq')) traitsScores.push(80);
-        } else if (traitLower === 'blanched') {
-            if (pairCarries('B')) traitsScores.push(80);
-        } else if (traitLower === 'dominant white') {
-            if (pairCarries('W')) traitsScores.push(80);
-        } else if (traitLower === 'rabicano') {
-            if (pairCarries('Rb')) traitsScores.push(80);
-        } else if (traitLower === 'false leopard') {
-            if (pairCarries('Fl')) traitsScores.push(80);
-        } else if (traitLower === 'collar') {
-            if (pairCarries('Co')) traitsScores.push(80);
-        } else if (traitLower === 'girdle') {
-            if (pairCarries('Gi')) traitsScores.push(80);
-        } else if (traitLower === 'apron') {
-            if (pairCarries('Ap')) traitsScores.push(80);
-        } else if (traitLower === 'greaves') {
-            if (pairCarries('Gr')) traitsScores.push(80);
-        } else if (traitLower === 'cuirass') {
-            if (pairCarries('Cu')) traitsScores.push(80);
-        } else if (traitLower === 'crowned') {
-            if (pairCarries('Cw')) traitsScores.push(80);
-        } else if (traitLower === 'pangare') {
-            if (pairCarries('P')) traitsScores.push(80);
-        } else if (traitLower === 'sooty') {
-            if (pairCarries('Sty')) traitsScores.push(80);
         }
     });
 
