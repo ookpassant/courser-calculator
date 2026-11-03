@@ -3119,6 +3119,16 @@ Object.keys(COAT_FAMILIES).forEach(k => { COAT_FAMILIES_LC[k.toLowerCase()] = CO
 // the list honest by checking the engine can really produce each one.
 // Built on first use, not at load, because it asks the engine what it can
 // name and the engine's own tables are defined further down this file.
+// A bare dilution word means any coat with that dilution in it: "pearl" is
+// Buckskin Pearl as much as Bay Pearl. The engine names the combination
+// (Cream Pearl), so these are matched on the word rather than the exact name.
+const SEARCH_BARE_DILUTIONS = ['Cream', 'Tapestry', 'Pearl', 'Champagne', 'Ether'];
+// The engine does not model the dilution-locus carriers or the two that sit
+// outside its modifier tables, so these keep the allele test in the scorer.
+// Handing them over would mean the engine never lists them and every pair
+// scores zero, which is the failure Cricri hit from the other direction.
+const SEARCH_ENGINE_SKIPS = ['carries pearl', 'carries ether', 'carries patn', 'carries damascus'];
+
 let _searchEngineTraits = null;
 function searchEngineTraits() {
     if (_searchEngineTraits) return _searchEngineTraits;
@@ -3140,17 +3150,10 @@ function searchEngineTraits() {
     const made = generateChimeraPossibilities('', probe, probe);
     [].concat(made.modifiers || [], made.whiteMarkings || [])
         .forEach(n => { out[n.toLowerCase()] = n; });
-    // Bare dilutions. The engine names these only with a pair in hand, so they
-    // are listed; a test checks it can really produce each one.
-    ['Cream', 'Tapestry', 'Pearl', 'Champagne', 'Ether'].forEach(n => { out[n.toLowerCase()] = n; });
-    // The engine does not model the dilution-locus carriers or the two that
-    // sit outside its modifier tables, so these keep the allele test below.
-    // Handing them over would mean the engine never lists them and every pair
-    // scores zero, which is the failure Cricri hit from the other direction.
+    SEARCH_BARE_DILUTIONS.forEach(n => { out[n.toLowerCase()] = n; });
     SEARCH_ENGINE_SKIPS.forEach(k => { delete out[k]; });
     return (_searchEngineTraits = out);
 }
-const SEARCH_ENGINE_SKIPS = ['carries pearl', 'carries ether', 'carries patn', 'carries damascus'];
 
 // Which base (if any) a coat-name query requires. Longest match wins.
 function requiredBaseFromName(traitLower) {
@@ -3215,7 +3218,14 @@ function calculateMatchScore(parent1, parent2, targetTraits) {
             _pairTraits = new Set([].concat(p.whiteMarkings || [], p.modifiers || [], p.dilutions || [])
                 .map(m => m.toLowerCase()));
         }
-        return _pairTraits.has(name.toLowerCase());
+        if (_pairTraits.has(name.toLowerCase())) return true;
+        // "pearl" has to find Buckskin Pearl, which the engine files under
+        // Cream Pearl. Matching the exact name refused most pearl pairings.
+        if (SEARCH_BARE_DILUTIONS.indexOf(name) !== -1) {
+            const word = new RegExp('\\b' + name.toLowerCase() + '\\b');
+            return (poss().dilutions || []).some(d => word.test(d.toLowerCase()));
+        }
+        return false;
     };
 
     // Does either parent carry this allele at all, in any spelling? This reads

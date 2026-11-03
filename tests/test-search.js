@@ -14,7 +14,7 @@ const { load, suite } = require('./harness');
 const A = load(['group-horses.js', 'breeding-calculator.js'],
     '{ GROUP_HORSES, calculateMatchScore, generateChimeraPossibilities, extractTraitsFromQuery,' +
     '  searchEngineTraits, SEARCH_ENGINE_SKIPS, resolveTraits, generateFoal, RARITY_GENES,' +
-    '  CANONICAL_COATS, COAT_FAMILIES, recipeCarrierAllele }');
+    '  CANONICAL_COATS, COAT_FAMILIES, recipeCarrierAllele, parseGenotype }');
 const t = suite('search');
 const ok = (l, c) => t.ok(l, c);
 
@@ -150,5 +150,60 @@ ok('nothing offered that it cannot' + (offered.length ? ': ' + offered.slice(0, 
         return !!vocab[l] || A.CANONICAL_COATS.has(l) || !!A.COAT_FAMILIES[n] || !!A.recipeCarrierAllele(n);
     }));
 });
+
+// --- bare dilution words -----------------------------------------------------
+// "pearl" means any coat with Pearl in it, Buckskin Pearl as much as Bay
+// Pearl. The engine files Buckskin Pearl under Cream Pearl, so matching the
+// bare word against the exact dilution name refused 160 of the 187 roster
+// pairings that really throw a pearl coat. Checked against breeding, reading
+// the foal's genes rather than its coat name so a rename cannot hide it.
+const DIL_COAT = {
+    Cream:     g => g.some(t => /Cr/.test(t)),
+    Tapestry:  g => g.some(t => /Tp/.test(t)),
+    Champagne: g => g.some(t => /Ch/.test(t)),
+    // Pearl and Ether only colour the coat with two copies, or beside Cr/Tp.
+    Pearl:     g => g.some(t => t === 'prlprl' || t === 'Crprl' || t === 'Tpprl'),
+    Ether:     g => g.some(t => t === 'erer')
+};
+const dilRefused = [], dilOffered = [];
+let dilJudged = 0;
+const dilHerd = (A.GROUP_HORSES || []).slice(0, 22);
+for (let i = 0; i < dilHerd.length; i++) {
+    for (let j = i + 1; j < dilHerd.length; j++) {
+        const a = dilHerd[i], b = dilHerd[j];
+        if (a.temperament === b.temperament) continue;
+        dilJudged++;
+        const seen = {};
+        for (let k = 0; k < 250; k++) {
+            const genes = A.parseGenotype(A.generateFoal(a, b, k).genotype).genes;
+            Object.keys(DIL_COAT).forEach(d => { if (DIL_COAT[d](genes)) seen[d] = true; });
+        }
+        Object.keys(DIL_COAT).forEach((d) => {
+            const says = A.calculateMatchScore(a, b, [d]) > 0;
+            if (seen[d] && !says) dilRefused.push(d + ': ' + a.name + ' x ' + b.name);
+            if (says && !seen[d]) dilOffered.push(d + ': ' + a.name + ' x ' + b.name);
+        });
+    }
+}
+ok('judged a decent number of pairings for dilutions', dilJudged > 150);
+ok('no bare dilution refuses a pair that really throws a coat with it' +
+    (dilRefused.length ? ': ' + dilRefused.slice(0, 3).join('; ') : ''), !dilRefused.length);
+ok('and none is offered to a pair that cannot' +
+    (dilOffered.length ? ': ' + dilOffered.slice(0, 3).join('; ') : ''), !dilOffered.length);
+
+// The case that showed it, and the one that must stay refused: a single
+// Pearl carrier gives nprl foals, which carry Pearl and show none of it.
+const crispin = (A.GROUP_HORSES || []).find(h => h.name === 'Crispin');
+const moritz = (A.GROUP_HORSES || []).find(h => h.name === 'Moritz');
+ok('Crispin x Moritz is found for "pearl"',
+    !!crispin && !!moritz && A.calculateMatchScore(crispin, moritz, ['Pearl']) > 0);
+ok('and their pearl coat is a compound the engine files under Cream Pearl',
+    !!crispin && !!moritz && A.generateChimeraPossibilities('', crispin.genotype, moritz.genotype)
+        .dilutions.indexOf('Cream Pearl') !== -1);
+ok('one Pearl carrier alone is not found for "pearl"', score('Ee Aa nprl', 'ee aa', 'Pearl') === 0);
+ok('and really throws no pearl coat', rolls('Ee Aa nprl', 'ee aa', 'Bay Pearl', 300) === 0);
+ok('but is found for "carries pearl"', score('Ee Aa nprl', 'ee aa', 'Carries Pearl') > 0);
+ok('one Cream carrier is found for "cream", since nCr already shows',
+    score('Ee Aa nCr', 'ee aa', 'Cream') > 0);
 
 t.report();
